@@ -68,5 +68,8 @@ jobs:
           # Запускаем новый контейнер
           docker run -p 80:3000 -d luna2000:latest
 
+          # Удаляем архив с образом с сервера
+          rm /tmp/luna2000_latest.tar
+
     - name: Cleanup local Docker image
       run: rm /tmp/luna2000_latest.tar
