@@ -42,6 +42,10 @@ jobs:
     - name: Install sshpass
       run: sudo apt-get install -y sshpass
 
+    - name: Add host to known_hosts
+      run: |
+        ssh-keyscan -H ${{ secrets.SERVER_HOST }} >> ~/.ssh/known_hosts
+
     - name: Copy Docker image to server via SCP
       run: |
         sshpass -p ${{ secrets.SERVER_PASSWORD }} scp /tmp/luna2000_latest.tar ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }}:/tmp
