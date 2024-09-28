@@ -20,7 +20,17 @@ jobs:
         docker images | grep luna2000 || exit 1
 
     - name: Save Docker image to file in /tmp
-      run: docker save luna2000:latest -o /tmp/luna2000_latest.tar
+      run: |
+        docker save luna2000:latest -o /tmp/luna2000_latest.tar
+        # Проверяем, что файл существует и не пустой
+        if [ ! -f /tmp/luna2000_latest.tar ]; then
+          echo "Docker image save failed: file does not exist"
+          exit 1
+        fi
+        if [ ! -s /tmp/luna2000_latest.tar ]; then
+          echo "Docker image save failed: file is empty"
+          exit 1
+        fi
 
     - name: Copy Docker image to server
       uses: appleboy/scp-action@master
@@ -28,8 +38,8 @@ jobs:
         host: ${{ secrets.SERVER_HOST }}
         username: ${{ secrets.SERVER_USER }}
         password: ${{ secrets.SERVER_PASSWORD }}
-        source: "/tmp/luna2000_latest.tar"
-        target: "/tmp/luna2000_latest.tar"
+        source: /tmp/luna2000_latest.tar
+        target: /tmp/luna2000_latest.tar
         rm: false  # Отключаем удаление после передачи, чтобы файл оставался
 
     - name: Login to server via SSH with password and deploy
