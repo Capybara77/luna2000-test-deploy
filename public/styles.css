@@ -49,7 +49,7 @@ table {
 
 /* Общие стили для всего приложения */
 :root {
-  --primary-color: #ff0c0c;
+  --primary-color: #007bff;
   --hover-color: #033f7f;
   --light-bg: #f8f9fa;
   --light-border: #ced4da;
