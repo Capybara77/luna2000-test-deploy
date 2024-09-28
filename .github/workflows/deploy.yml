@@ -14,7 +14,10 @@ jobs:
       uses: actions/checkout@v2
 
     - name: Build Docker image
-      run: docker build -t luna2000:latest .
+      run: |
+        docker build -t luna2000:latest .
+        # Проверяем, что образ был успешно создан
+        docker images | grep luna2000 || exit 1
 
     - name: Save Docker image to file in /tmp
       run: docker save luna2000:latest -o /tmp/luna2000_latest.tar
