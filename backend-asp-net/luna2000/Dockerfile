@@ -23,5 +23,6 @@ RUN dotnet publish "luna2000.csproj" -c Release -o /app/publish
 # Финальный образ для выполнения
 FROM base AS final
 WORKDIR /app
+RUN mkdir files
 COPY --from=publish /app/publish .
 ENTRYPOINT ["dotnet", "luna2000.dll", "--urls=http://0.0.0.0:8080"]
