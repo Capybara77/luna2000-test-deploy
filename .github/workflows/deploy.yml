@@ -11,26 +11,33 @@ jobs:
 
     steps:
     - name: Checkout code
-      uses: actions/checkout@v2
+      uses: actions/checkout@v2  # Репозиторий проверен
 
     - name: Build Docker image
       run: |
         docker build -t luna2000:latest .
-        # Проверяем, что образ был успешно создан
+        # Проверяем успешность сборки
         docker images | grep luna2000 || exit 1
 
     - name: Save Docker image to file in /tmp
       run: |
         docker save luna2000:latest -o /tmp/luna2000_latest.tar
-        # Проверяем, что файл существует и не пустой
+        # Проверяем существование файла и права на чтение
         if [ ! -f /tmp/luna2000_latest.tar ]; then
           echo "Docker image save failed: file does not exist"
           exit 1
         fi
+        if [ ! -r /tmp/luna2000_latest.tar ]; then
+          echo "Docker image save failed: file is not readable"
+          exit 1
+        fi
+        # Проверка размера файла
         if [ ! -s /tmp/luna2000_latest.tar ]; then
           echo "Docker image save failed: file is empty"
           exit 1
         fi
+        # Проверка прав доступа на файл
+        ls -l /tmp/luna2000_latest.tar
 
     - name: Copy Docker image to server
       uses: appleboy/scp-action@master
@@ -39,8 +46,8 @@ jobs:
         username: ${{ secrets.SERVER_USER }}
         password: ${{ secrets.SERVER_PASSWORD }}
         source: "/tmp/luna2000_latest.tar"
-        target: "tmp/"
-        rm: false  # Отключаем удаление после передачи, чтобы файл оставался
+        target: "/tmp"  # Указание директории как целевой
+        # Включение отладки для выявления ошибок
         debug: true
 
     - name: Login to server via SSH with password and deploy
