@@ -38,8 +38,8 @@ jobs:
         host: ${{ secrets.SERVER_HOST }}
         username: ${{ secrets.SERVER_USER }}
         password: ${{ secrets.SERVER_PASSWORD }}
-        source: /tmp/luna2000_latest.tar
-        target: /tmp/luna2000_latest.tar
+        source: "~/tmp/luna2000_latest.tar"
+        target: "~/tmp/luna2000_latest.tar"
         rm: false  # Отключаем удаление после передачи, чтобы файл оставался
 
     - name: Login to server via SSH with password and deploy
