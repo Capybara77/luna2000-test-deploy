@@ -1,0 +1,76 @@
+name: Deploy to Server
+
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2  # Репозиторий проверен
+
+    - name: Build Docker image
+      run: |
+        cd backend-asp-net/luna2000
+        docker build -t luna2000:latest .
+        # Проверяем успешность сборки
+        docker images | grep luna2000 || exit 1
+
+    - name: Save Docker image to file in /tmp
+      run: |
+        docker save luna2000:latest -o /tmp/luna2000_latest.tar
+        # Проверяем существование файла и права на чтение
+        if [ ! -f /tmp/luna2000_latest.tar ]; then
+          echo "Docker image save failed: file does not exist"
+          exit 1
+        fi
+        if [ ! -r /tmp/luna2000_latest.tar ]; then
+          echo "Docker image save failed: file is not readable"
+          exit 1
+        fi
+        # Проверка размера файла
+        if [ ! -s /tmp/luna2000_latest.tar ]; then
+          echo "Docker image save failed: file is empty"
+          exit 1
+        fi
+        # Проверка прав доступа на файл
+        ls -l /tmp/luna2000_latest.tar
+
+    - name: Install sshpass
+      run: sudo apt-get install -y sshpass
+
+    - name: Copy Docker image to server via SCP
+      run: |
+        sshpass -p ${{ secrets.SERVER_PASSWORD }} scp -o StrictHostKeyChecking=no /tmp/luna2000_latest.tar ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }}:/tmp
+
+    - name: Login to server via SSH with password and deploy
+      uses: appleboy/ssh-action@master
+      with:
+        host: ${{ secrets.SERVER_HOST }}
+        username: ${{ secrets.SERVER_USER }}
+        password: ${{ secrets.SERVER_PASSWORD }}
+        script: |
+          # Останавливаем текущий контейнер
+          docker stop $(docker ps -q --filter ancestor=luna2000:latest) || true
+          
+          # Удаляем старый контейнер
+          docker rm $(docker ps -a -q --filter ancestor=luna2000:latest) || true
+          
+          # Удаляем старый образ
+          docker rmi luna2000:latest || true
+          
+          # Загружаем новый образ
+          docker load -i /tmp/luna2000_latest.tar
+          
+          # Запускаем новый контейнер
+          docker run -p 80:3000 -d luna2000:latest
+
+          # Удаляем архив с образом с сервера
+          rm /tmp/luna2000_latest.tar
+
+    - name: Cleanup local Docker image
+      run: rm /tmp/luna2000_latest.tar
