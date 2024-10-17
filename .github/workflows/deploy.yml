@@ -46,7 +46,7 @@ jobs:
 
     - name: Copy archive
       run: |
-        sshpass -p ${{ secrets.SERVER_PASSWORD }} scp -o StrictHostKeyChecking=no project-archive.tar.gz ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }}:/home/luna2000-source/project-archive.tar.gz
+        sshpass -p ${{ secrets.SERVER_PASSWORD }} scp -o StrictHostKeyChecking=no project-archive.tar.gz ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }}:/home/project-archive.tar.gz
 
     - name: Login to server via SSH with password and deploy
       uses: appleboy/ssh-action@master
@@ -55,9 +55,11 @@ jobs:
         username: ${{ secrets.SERVER_USER }}
         password: ${{ secrets.SERVER_PASSWORD }}
         script: |
-          cd /home/luna2000-source
-          tar -xzf /home/luna2000-source/project-archive.tar.gz -C /home/luna2000-source
-          #rm /home/luna2000-source/project-archive.tar.gz
+          cd /home
+          mkdir luna2000-source
+          tar -xzf /home/project-archive.tar.gz -C /home/luna2000-source
+          cd luna2000-source
+          rm /home/project-archive.tar.gz
 
           # Останавливаем текущий контейнер
           #docker stop $(docker ps -q --filter ancestor=luna2000:latest) || true
@@ -80,6 +82,6 @@ jobs:
           # Удаляем архив с образом с сервера
           rm /tmp/web-api.tar
           rm /tmp/job-server.tar
-          #rmdir /home/luna2000-source
+          rmdir /home/luna2000-source
 
           docker system prune -f
