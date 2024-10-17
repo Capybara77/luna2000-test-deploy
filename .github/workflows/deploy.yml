@@ -74,8 +74,7 @@ jobs:
           docker load -i /tmp/web-api.tar
           docker load -i /tmp/job-server.tar
 
-          docker compose down
-          docker compose up -d
+          docker compose --project-name luna2000 up -d
 
           # Запускаем новый контейнер
           #docker run -p 80:3000 -d luna2000:latest
