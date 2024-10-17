@@ -74,8 +74,7 @@ jobs:
           docker load -i /tmp/web-api.tar
           docker load -i /tmp/job-server.tar
 
-          docker compose up -d
-
+          docker compose down
           docker compose up -d
 
           # Запускаем новый контейнер
