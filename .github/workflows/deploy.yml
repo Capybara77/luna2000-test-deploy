@@ -83,6 +83,6 @@ jobs:
           # Удаляем архив с образом с сервера
           rm /tmp/web-api.tar
           rm /tmp/job-server.tar
-          rm -r /home/luna2000-source
+          #rm -r /home/luna2000-source
 
           docker system prune -f
