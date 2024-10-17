@@ -16,27 +16,27 @@ jobs:
     - name: Build Docker image
       run: |
         cd backend-asp-net/luna2000
-        #docker build -t luna2000 .
+        docker build -t luna2000 .
         # Проверяем успешность сборки
         # docker images | grep luna2000 || exit 1
 
         cd ../Job\ server/
-        #docker build -t job-server .
+        docker build -t job-server .
 
         cd ../../
 
     - name: Save Docker image to file in /tmp
       run: |
-        #docker save luna2000 -o /tmp/web-api.tar
-        #docker save job-server -o /tmp/job-server.tar
+        docker save luna2000 -o /tmp/web-api.tar
+        docker save job-server -o /tmp/job-server.tar
 
     - name: Install sshpass
       run: sudo apt-get install -y sshpass
 
     - name: Copy Docker image to server via SCP
       run: |
-        #sshpass -p ${{ secrets.SERVER_PASSWORD }} scp -o StrictHostKeyChecking=no /tmp/web-api.tar ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }}:/tmp
-        #sshpass -p ${{ secrets.SERVER_PASSWORD }} scp -o StrictHostKeyChecking=no /tmp/job-server.tar ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }}:/tmp
+        sshpass -p ${{ secrets.SERVER_PASSWORD }} scp -o StrictHostKeyChecking=no /tmp/web-api.tar ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }}:/tmp
+        sshpass -p ${{ secrets.SERVER_PASSWORD }} scp -o StrictHostKeyChecking=no /tmp/job-server.tar ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }}:/tmp
 
     - name: Create repo archive
       run: |
@@ -82,6 +82,6 @@ jobs:
           # Удаляем архив с образом с сервера
           rm /tmp/web-api.tar
           rm /tmp/job-server.tar
-          rmdir /home/luna2000-source
+          rm -r /home/luna2000-source
 
           docker system prune -f
