@@ -10,6 +10,9 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+    - name: Checkout the repository
+      uses: actions/checkout@v3
+
     - name: Build Docker image
       run: |
         cd backend-asp-net/luna2000
