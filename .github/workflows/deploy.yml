@@ -56,7 +56,8 @@ jobs:
         password: ${{ secrets.SERVER_PASSWORD }}
         script: |
           cd /home/luna2000-source
-          tar -xzf /home/luna2000-source/project-archive.tar.gz -C /home/luna2000-source/ && rm /home/luna2000-source/project-archive.tar.gz
+          tar -xzf /home/luna2000-source/project-archive.tar.gz -C /home/luna2000-source
+          #rm /home/luna2000-source/project-archive.tar.gz
 
           # Останавливаем текущий контейнер
           #docker stop $(docker ps -q --filter ancestor=luna2000:latest) || true
