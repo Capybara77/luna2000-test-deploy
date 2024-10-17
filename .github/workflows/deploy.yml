@@ -37,7 +37,7 @@ jobs:
       run: |
         sshpass -p ${{ secrets.SERVER_PASSWORD }} scp -o StrictHostKeyChecking=no /tmp/web-api.tar ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }}:/tmp
         sshpass -p ${{ secrets.SERVER_PASSWORD }} scp -o StrictHostKeyChecking=no /tmp/job-server.tar ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }}:/tmp
-        sshpass -p ${{ secrets.SERVER_PASSWORD }} -o StrictHostKeyChecking=no -r ./ ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }}:/home/luna2000-source/
+        sshpass -p ${{ secrets.SERVER_PASSWORD }} scp -o StrictHostKeyChecking=no -r ./ ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }}:/home/luna2000-source/
     - name: Login to server via SSH with password and deploy
       uses: appleboy/ssh-action@master
       with:
