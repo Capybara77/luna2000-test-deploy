@@ -3,50 +3,38 @@ name: Deploy to Server
 on:
   push:
     branches:
-      - master
+      - asp-net-server
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v2  # Репозиторий проверен
-
     - name: Build Docker image
       run: |
         cd backend-asp-net/luna2000
-        docker build -t luna2000:latest .
+        docker build -t luna2000 .
         # Проверяем успешность сборки
-        docker images | grep luna2000 || exit 1
+        # docker images | grep luna2000 || exit 1
+
+        cd ../Job\ server/
+        docker build -t job-server .
+
+        cd ../../
 
     - name: Save Docker image to file in /tmp
       run: |
-        docker save luna2000:latest -o /tmp/luna2000_latest.tar
-        # Проверяем существование файла и права на чтение
-        if [ ! -f /tmp/luna2000_latest.tar ]; then
-          echo "Docker image save failed: file does not exist"
-          exit 1
-        fi
-        if [ ! -r /tmp/luna2000_latest.tar ]; then
-          echo "Docker image save failed: file is not readable"
-          exit 1
-        fi
-        # Проверка размера файла
-        if [ ! -s /tmp/luna2000_latest.tar ]; then
-          echo "Docker image save failed: file is empty"
-          exit 1
-        fi
-        # Проверка прав доступа на файл
-        ls -l /tmp/luna2000_latest.tar
+        docker save luna2000 -o /tmp/web-api.tar
+        docker save job-server -o /tmp/job-server.tar
 
     - name: Install sshpass
       run: sudo apt-get install -y sshpass
 
     - name: Copy Docker image to server via SCP
       run: |
-        sshpass -p ${{ secrets.SERVER_PASSWORD }} scp -o StrictHostKeyChecking=no /tmp/luna2000_latest.tar ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }}:/tmp
-
+        sshpass -p ${{ secrets.SERVER_PASSWORD }} scp -o StrictHostKeyChecking=no /tmp/web-api.tar ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }}:/tmp
+        sshpass -p ${{ secrets.SERVER_PASSWORD }} scp -o StrictHostKeyChecking=no /tmp/job-server.tar ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }}:/tmp
+        scp -p ${{ secrets.SERVER_PASSWORD }} -o StrictHostKeyChecking=no -r ./ ${{ secrets.SERVER_USERNAME }}@${{ secrets.SERVER_IP }}:/home/luna2000-source/
     - name: Login to server via SSH with password and deploy
       uses: appleboy/ssh-action@master
       with:
@@ -54,23 +42,29 @@ jobs:
         username: ${{ secrets.SERVER_USER }}
         password: ${{ secrets.SERVER_PASSWORD }}
         script: |
+          cd /home/luna2000-source
+
           # Останавливаем текущий контейнер
-          docker stop $(docker ps -q --filter ancestor=luna2000:latest) || true
+          #docker stop $(docker ps -q --filter ancestor=luna2000:latest) || true
           
           # Удаляем старый контейнер
-          docker rm $(docker ps -a -q --filter ancestor=luna2000:latest) || true
+          #docker rm $(docker ps -a -q --filter ancestor=luna2000:latest) || true
           
           # Удаляем старый образ
-          docker rmi luna2000:latest || true
+          #docker rmi luna2000:latest || true
           
           # Загружаем новый образ
-          docker load -i /tmp/luna2000_latest.tar
-          
+          docker load -i /tmp/web-api.tar
+          docker load -i /tmp/job-server.tar
+
+          docker compose up -d
+
           # Запускаем новый контейнер
-          docker run -p 80:3000 -d luna2000:latest
+          #docker run -p 80:3000 -d luna2000:latest
 
           # Удаляем архив с образом с сервера
-          rm /tmp/luna2000_latest.tar
+          rm /tmp/web-api.tar
+          rm /tmp/job-server.tar
+          rmdir /home/luna2000-source
 
-    - name: Cleanup local Docker image
-      run: rm /tmp/luna2000_latest.tar
+          docker system prune -f
