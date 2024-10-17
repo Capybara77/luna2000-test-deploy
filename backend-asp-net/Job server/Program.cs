@@ -1,4 +1,6 @@
 using Hangfire;
+using Hangfire.Dashboard;
+using Job_server.HangfireOptions;
 using Job_server.Jobs;
 using Job_server.Options;
 
@@ -25,7 +27,10 @@ public sealed class Program
             builder.Configuration.GetSection("ConnectionConfiguration"));
 
         var app = builder.Build();
-        app.UseHangfireDashboard("/hf");
+        app.UseHangfireDashboard("/hf", new DashboardOptions()
+        {
+            Authorization = new[] { new AuthorizationFilter() }
+        });
 
         InitJobs(builder);
 
