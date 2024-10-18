@@ -15,7 +15,7 @@ public class DriverEntity
 
     public string Fio { get; set; }
 
-    public string Note { get; set; }
+    public string? Note { get; set; }
 
     public string ParkingAddress { get; set; }
 

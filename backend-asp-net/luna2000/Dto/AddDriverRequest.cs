@@ -22,5 +22,7 @@ public class AddDriverRequest
 
     public string Registration { get; set; }
 
+    public decimal Balance { get; set; }
+
     public virtual ICollection<IFormFile>? Photos { get; set; }
 }

@@ -1,51 +1,57 @@
-﻿@model DriverEntity
+﻿@using System.Globalization
+@model DriverEntity
 
 <header>
     <h1>Редактировать Водителя</h1>
 </header>
 <main>
     <form id="editDriverForm" enctype="multipart/form-data">
-        <input id="driverId" value="@Model.Id" hidden/>
+        <input id="driverId" value="@Model.Id" hidden />
 
         <label for="fio">ФИО:</label>
-        <input type="text" id="fio" name="fio" required value="@Model.Fio"/><br/>
+        <input type="text" id="fio" name="fio" required value="@Model.Fio" /><br />
+
+        <label for="fio">Баланс:</label>
+        <input type="number" id="balance" name="balance"
+               required value="@Model.Balance.ToString(CultureInfo.InvariantCulture).Replace(',', '.')" />
+        <br />
 
         <label for="passport">Паспорт:</label>
-        <input type="text" id="passport" name="passport" required value="@Model.Passport"/><br/>
+        <input type="text" id="passport" name="passport" required value="@Model.Passport" /><br />
 
         <label for="registration">Прописка:</label>
         <input type="text"
                id="registration"
                name="registration"
-               required value="@Model.Registration"/><br/>
+               required value="@Model.Registration" /><br />
 
         <label for="address">Адрес проживания:</label>
-        <input type="text" id="address" name="address" required value="@Model.Address"/><br/>
+        <input type="text" id="address" name="address" required value="@Model.Address" /><br />
 
         <label for="driverLicense">Водительское удостоверение:</label>
         <input type="text"
                id="driverLicense"
                name="driverLicense"
-               required value="@Model.DriverLicense"/><br/>
+               required value="@Model.DriverLicense" /><br />
 
         <label for="parkingAddress">Адрес парковки:</label>
         <input type="text"
                id="parkingAddress"
                name="parkingAddress"
-               required value="@Model.ParkingAddress"/><br/>
+               required value="@Model.ParkingAddress" /><br />
 
         <label for="contacts">Контакты:</label>
-        <input type="text" id="contacts" name="contacts" required value="@Model.Contacts"/><br/>
+        <input type="text" id="contacts" name="contacts" required value="@Model.Contacts" /><br />
 
         <label for="note">Примечание:</label>
-        <textarea id="note" name="note">@Model.Note</textarea><br/>
+        <textarea id="note" name="note">@Model.Note</textarea><br />
 
         <label for="photos">Фотографии (до 4 штук):</label>
         <input type="file"
                id="photos"
                name="photos"
                multiple
-               accept="image/*"/><br/>
+               accept="image/*" /><br />
 
         <button type="submit">Редактировать</button>
         <button type="button"

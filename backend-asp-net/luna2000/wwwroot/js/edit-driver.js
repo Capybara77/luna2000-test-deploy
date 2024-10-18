@@ -39,6 +39,7 @@ document.addEventListener("DOMContentLoaded", function () {
       const formData = new FormData();
       formData.append("id", document.getElementById("driverId").value);
       formData.append("fio", document.getElementById("fio").value);
+        formData.append("balance", document.getElementById("balance").value);
       formData.append("passport", document.getElementById("passport").value);
       formData.append(
         "registration",

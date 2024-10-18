@@ -9,6 +9,7 @@ document
             Math.floor(Math.random() * (300000 - 200000 + 1)) + 200000
         );
         formData.append("fio", document.getElementById("fio").value);
+        formData.append("balance", document.getElementById("balance").value);
         formData.append("passport", document.getElementById("passport").value);
         formData.append(
             "registration",
