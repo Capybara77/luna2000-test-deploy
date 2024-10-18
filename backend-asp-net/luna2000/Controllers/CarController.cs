@@ -144,8 +144,13 @@ public class CarController : Controller
         return Ok();
     }
 
-    private void DeleteCarPhotos(ICollection<PhotoEntity> photos)
+    private void DeleteCarPhotos(ICollection<PhotoEntity>? photos)
     {
+        if (photos == null)
+        {
+            return;
+        }
+
         foreach (var photo in photos)
         {
             _fileStorage.DeletePhoto(photo.FileId);

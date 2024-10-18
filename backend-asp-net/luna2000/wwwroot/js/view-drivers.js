@@ -1,5 +1,5 @@
 function editDriver(id) {
-  window.location.href = `edit-driver.html?id=${id}`;
+  window.location.href = `driver/edit?id=${id}`;
 }
 
 function deleteDriver(id) {

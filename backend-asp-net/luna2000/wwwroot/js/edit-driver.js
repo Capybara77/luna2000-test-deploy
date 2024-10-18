@@ -61,7 +61,7 @@ document.addEventListener("DOMContentLoaded", function () {
         formData.append("photos", photoFiles[i]);
       }
 
-      fetch(`/edit-driver/${document.getElementById("driverId").value}`, {
+      fetch(`/driver/edit/${document.getElementById("driverId").value}`, {
         method: "POST",
         body: formData,
       })
@@ -69,7 +69,7 @@ document.addEventListener("DOMContentLoaded", function () {
         .then((data) => {
           if (data.success) {
             alert("Информация о водителе успешно обновлена!");
-            window.location.href = "view-drivers.html"; // Перенаправление на страницу со списком водителей
+            window.location.href = "/driver";
           } else {
             alert("Ошибка при обновлении информации о водителе.");
           }

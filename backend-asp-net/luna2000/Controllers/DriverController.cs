@@ -72,6 +72,7 @@ public class DriverController : Controller
     public IActionResult Delete(Guid id)
     {
         var driver = _dbContext.Set<DriverEntity>()
+            .Include(driverEntity => driverEntity.Photos)
             .FirstOrDefault(entity => entity.Id == id);
 
         if (driver == null)
@@ -79,9 +80,79 @@ public class DriverController : Controller
             return NotFound();
         }
 
+        DeleteDriverPhotos(driver.Photos);
+
         _dbContext.Remove(driver);
         _dbContext.SaveChanges();
 
         return Ok(new { success=true });
+    }
+
+    [HttpGet]
+    public IActionResult Edit(Guid id)
+    {
+        var driver = _dbContext.Set<DriverEntity>()
+            .Include(entity => entity.Photos)
+            .AsNoTracking()
+            .FirstOrDefault(entity => entity.Id == id);
+
+        if (driver == null)
+        {
+            return NotFound();
+        }
+
+        return View(driver);
+    }
+
+    [HttpPost]
+    [Route("/driver/edit/{id}")]
+    public async Task<IActionResult> Edit(AddDriverRequest request)
+    {
+        var driver = await _dbContext.Set<DriverEntity>()
+            .Include(entity => entity.Photos)
+            .FirstOrDefaultAsync(entity => entity.Id == request.Id);
+
+        if (driver == null)
+        {
+            return NotFound();
+        }
+
+        _mapper.Map(request, driver);
+
+        if (request.Photos != null && request.Photos.Count != 0)
+        {
+            DeleteDriverPhotos(driver.Photos);
+            driver.Photos = new List<PhotoEntity>();
+
+            foreach (var photo in request.Photos)
+            {
+                await using var memStream = new MemoryStream();
+                await photo.CopyToAsync(memStream);
+                var driverPhoto = _mapper.Map<IFormFile, PhotoEntity>(photo);
+
+                var fileId = await _fileStorage.SaveFileAsync(memStream.ToArray(), driverPhoto.FileExtension);
+
+                driverPhoto.FileId = fileId;
+
+                driver.Photos.Add(driverPhoto);
+            }
+        }
+
+        await _dbContext.SaveChangesAsync();
+
+        return Ok(new { success = true });
+    }
+
+    private void DeleteDriverPhotos(ICollection<PhotoEntity>? photos)
+    {
+        if (photos == null)
+        {
+            return;
+        }
+
+        foreach (var photo in photos)
+        {
+            _fileStorage.DeletePhoto(photo.FileId);
+        }
     }
 }

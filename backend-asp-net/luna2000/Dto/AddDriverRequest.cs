@@ -4,7 +4,7 @@ namespace luna2000.Dto;
 
 public class AddDriverRequest
 {
-    public string Id { get; set; }
+    public Guid Id { get; set; }
 
     public string Address { get; set; }
 
