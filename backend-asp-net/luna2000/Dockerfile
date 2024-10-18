@@ -14,4 +14,4 @@ WORKDIR /app
 EXPOSE 5270
 RUN mkdir files
 COPY --from=build /app/publish .
-ENTRYPOINT ["dotnet", "luna2000.dll", "--urls=http://0.0.0.0:5270"]
+ENTRYPOINT ["dotnet", "luna2000.dll", "--urls=http://work.admlistsearch.ru:5270"]
