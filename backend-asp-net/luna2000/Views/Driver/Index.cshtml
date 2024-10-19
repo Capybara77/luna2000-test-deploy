@@ -40,7 +40,9 @@
                         {
                             foreach (var photo in driver.Photos)
                             {
-                                <img src="/@photo.FileId@(photo.FileExtension)" style="width: 100px; height: auto;" alt="">
+                                <img src="/@photo.FileId@(photo.FileExtension)"
+                         style="width: 100px; height: auto;"
+                         onclick="location.replace('/photo/@photo.Id')">
                                 <br>
                             }
                         }

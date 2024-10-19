@@ -152,7 +152,7 @@ public class DriverController : Controller
 
         foreach (var photo in photos)
         {
-            _fileStorage.DeletePhoto(photo.FileId);
+            _fileStorage.DeleteFile(photo.FileId);
         }
     }
 }

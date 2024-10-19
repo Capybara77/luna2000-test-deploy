@@ -6,5 +6,5 @@ public interface IFileStorage
 
     Task<byte[]> LoadFileAsync(Guid fileId, string fileExtension);
 
-    void DeletePhoto(Guid photoId);
+    void DeleteFile(Guid fileId);
 }

@@ -1,0 +1,17 @@
+﻿@model PhotoEntity
+
+<div class="photo-wrapper">
+    <p class="photo-info photo-original-name">Оригинальное название: @Model.FileName</p>
+    <br />
+    <p class="photo-info photo-id">Id файла в системе: @Model.FileId</p>
+    <br />
+
+    <img class="main-photo" src="/@Model.FileId@Model.FileExtension" />
+    @*<div class="delete">
+    <p class="delete-char">X</p>
+    </div>*@
+
+    <form action="/photo/delete" method="post" class="delete-photo-form">
+        <button type="submit" name="id" value="@Model.Id" class="delete-btn btn btn-danger">Удалить</button>
+    </form>
+</div>

@@ -141,7 +141,7 @@ public class CarController : Controller
 
         await _dbContext.SaveChangesAsync();
 
-        return Ok();
+        return Ok(new { success = true });
     }
 
     private void DeleteCarPhotos(ICollection<PhotoEntity>? photos)
@@ -153,7 +153,7 @@ public class CarController : Controller
 
         foreach (var photo in photos)
         {
-            _fileStorage.DeletePhoto(photo.FileId);
+            _fileStorage.DeleteFile(photo.FileId);
         }
     }
 }

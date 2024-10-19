@@ -239,3 +239,51 @@ button {
             background-color: #007bff; /* Перекрашиваем заголовок */
         }
 }
+
+.photo-wrapper{
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    max-width: 1000px;
+    margin-right: 50px;
+    margin-left: 50px;
+
+    text-align: left;
+}
+
+.photo-info{
+    font-size: 20px;
+}
+
+.main-photo{
+    object-fit: contain;
+    max-height: 600px;
+    width: 100%;
+    max-width: fit-content;
+    height: auto;
+}
+
+.delete{
+    position: fixed;
+    background-color: #0056b3;
+    width: 30px;
+    height: 30px;
+    border-radius: 10px;
+    right: 10px;
+}
+
+.delete-char{
+    margin: auto;
+}
+
+.delete-btn{
+    margin: 0;
+    max-width: 200px;
+}
+
+.delete-photo-form{
+    margin-left: 0;
+    margin-right: auto;
+    background-color: auto;
+    padding: 0;
+}

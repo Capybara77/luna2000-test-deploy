@@ -33,9 +33,9 @@ public class FileStorage : IFileStorage
         return await File.ReadAllBytesAsync(path);
     }
 
-    public void DeletePhoto(Guid photoId)
+    public void DeleteFile(Guid fileId)
     {
-        var file = Directory.GetFiles(_saveDir, $"{photoId}*")
+        var file = Directory.GetFiles(_saveDir, $"{fileId}*")
             .FirstOrDefault();
 
         if (file != null)
