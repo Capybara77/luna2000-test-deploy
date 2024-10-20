@@ -4,6 +4,7 @@ using luna2000.Logs;
 using luna2000.Logs.Impl;
 using luna2000.MapperProfiles;
 using luna2000.Middlewares;
+using luna2000.Options;
 using luna2000.Service;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.EntityFrameworkCore;
@@ -23,37 +24,22 @@ public class Program
                     options.JsonSerializerOptions.Converters.Add(new DateOnlyJsonConverter());
                 });
 
-        #region Logs
-        builder.Services.AddScoped<ILogMessageGeneratorFactory, LogMessageGeneratorFactory>();
-        builder.Services.AddTransient<ILogMessageGenerator, PhotoEntityLogMessageGenerator>();
-        builder.Services.AddTransient<ILogMessageGenerator, DriverEntityLogMessageGenerator>();
-        builder.Services.AddTransient<ILogMessageGenerator, CarEntityLogMessageGenerator>();
-        builder.Services.AddTransient<ILogMessageGenerator, CarRentalEntityLogMessageGenerator>();
-        #endregion
+        AddLogs(builder);
 
         builder.Services.AddDbContext<LunaDbContext>(ServiceLifetime.Scoped);
         builder.Services.AddScoped<IDbContextFactory<LunaDbContext>, DbContextFactory>();
         builder.Services.AddScoped<IFileStorage, FileStorage>();
+        builder.Services.AddScoped<IJobServerService, JobServerService>();
         builder.Services.AddScoped<IDeductRentService, DeductRentService>();
         builder.Services.AddAutoMapper(expression => expression.AddProfiles(new []
         {
             new EntityProfiles()
         }));
 
-        builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme).AddCookie(options =>
-        {
-            options.Events.OnRedirectToLogin += context => {
-                context.HttpContext.Response.Redirect("/login");
-                return Task.CompletedTask;
-            };
-            options.Events.OnRedirectToAccessDenied += context => {
-                context.HttpContext.Response.Redirect("/login");
-                return Task.CompletedTask;
-            };
+        builder.Configuration.AddJsonFile("Configs/job-server.json");
+        builder.Services.Configure<JobServerConfiguration>(builder.Configuration.GetSection("JobServerConfiguration"));
 
-            options.LoginPath = new PathString("/login");
-            options.ReturnUrlParameter = "link";
-        });
+        AddAuthentication(builder);
 
         var app = builder.Build();
 
@@ -84,5 +70,32 @@ public class Program
             pattern: "{controller=Home}/{action=Index}/{id?}");
 
         app.Run();
+    }
+
+    private static void AddLogs(WebApplicationBuilder builder)
+    {
+        builder.Services.AddScoped<ILogMessageGeneratorFactory, LogMessageGeneratorFactory>();
+        builder.Services.AddTransient<ILogMessageGenerator, PhotoEntityLogMessageGenerator>();
+        builder.Services.AddTransient<ILogMessageGenerator, DriverEntityLogMessageGenerator>();
+        builder.Services.AddTransient<ILogMessageGenerator, CarEntityLogMessageGenerator>();
+        builder.Services.AddTransient<ILogMessageGenerator, CarRentalEntityLogMessageGenerator>();
+    }
+
+    private static void AddAuthentication(WebApplicationBuilder builder)
+    {
+        builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme).AddCookie(options =>
+        {
+            options.Events.OnRedirectToLogin += context => {
+                context.HttpContext.Response.Redirect("/login");
+                return Task.CompletedTask;
+            };
+            options.Events.OnRedirectToAccessDenied += context => {
+                context.HttpContext.Response.Redirect("/login");
+                return Task.CompletedTask;
+            };
+
+            options.LoginPath = new PathString("/login");
+            options.ReturnUrlParameter = "link";
+        });
     }
 }

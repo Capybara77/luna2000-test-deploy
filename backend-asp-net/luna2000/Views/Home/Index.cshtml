@@ -1,14 +1,12 @@
 ﻿@using System.Globalization
 @model luna2000.Dto.MainViewDto
 
-<h1>Главная страница</h1>
-
 <!-- Кнопки для навигации -->
-<div class="nav-buttons">
+@*<div class="nav-buttons">
     <a href="driver" class="nav-button">Водители</a>
     <a href="/car" class="nav-button">Машины</a>
-    @*<a href="download.html" class="nav-button">Скачать</a>*@
-</div>
+    <a href="download.html" class="nav-button">Скачать</a>
+</div>*@
 
 <!-- Таблица для отображения данных -->
 <h2>Таблица данных</h2>
@@ -46,8 +44,8 @@
                 </td>
                 <td>
                     <input type="number" class="balance"
-                           value="@rental.Driver.Balance.ToString(CultureInfo.InvariantCulture).Replace(',', '.')"
-                           readonly="">
+                       value="@rental.Driver.Balance.ToString(CultureInfo.InvariantCulture).Replace(',', '.')"
+                       readonly="">
                 </td>
                 <td>
 
@@ -56,11 +54,17 @@
                        readonly="">
                 </td>
                 <td>
+                    <button class="add-balance-button"
+                        onclick="location.replace('/driver/addbalance?driverId=@rental.DriverId')">
+                        Внести депозит
+                    </button>
                     <button class="edit-button"
-                            data-driver="@rental.DriverId"
-                            data-car="@rental.CarId"
-                            data-rent="@rental.Rent.ToString(CultureInfo.InvariantCulture).Replace(',', '.')"
-                            data-id="@rental.Id">Редактировать</button>
+                        data-driver="@rental.DriverId"
+                        data-car="@rental.CarId"
+                        data-rent="@rental.Rent.ToString(CultureInfo.InvariantCulture).Replace(',', '.')"
+                        data-id="@rental.Id">
+                        Редактировать
+                    </button>
                     <button class="delete-button" data-id="@rental.Id">Удалить</button>
                 </td>
             </tr>
@@ -99,6 +103,11 @@
 <div id="writeOffBlock">
     <h2>Списание аренды</h2>
     <button id="writeOffButton">Списать аренду</button>
+    <form action="/home/changejobstatus" method="post">
+        <p style="color: @(Model.IsJobEnable ? "green" : "red")">Автоматическое списание аренды @(Model.IsJobEnable ? "включено" : "выключено")</p>
+        <input name="newStatus" hidden value="@((!Model.IsJobEnable).ToString())"/>
+        <button type="submit">@(Model.IsJobEnable ? "Выключить" : "Включить")</button>
+    </form>
 </div>
 
 

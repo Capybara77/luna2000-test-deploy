@@ -3,9 +3,11 @@ using Microsoft.AspNetCore.Mvc;
 using System.Diagnostics;
 using luna2000.Data;
 using luna2000.Dto;
+using luna2000.Options;
 using luna2000.Service;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 
 namespace luna2000.Controllers;
 
@@ -14,28 +16,34 @@ public class HomeController : Controller
 {
     private readonly LunaDbContext _dbContext;
     private readonly IDeductRentService _deductRentService;
+    private readonly IJobServerService _jobServerService;
+    private readonly JobServerConfiguration _jobServerConfiguration;
 
-    public HomeController(LunaDbContext dbContext, IDeductRentService deductRentService)
+    public HomeController(LunaDbContext dbContext, IDeductRentService deductRentService,
+        IJobServerService jobServerService, IOptions<JobServerConfiguration> jobServerConfiguration)
     {
         _dbContext = dbContext;
         _deductRentService = deductRentService;
+        _jobServerService = jobServerService;
+        _jobServerConfiguration = jobServerConfiguration.Value;
     }
 
-    public IActionResult Index()
+    public async Task<IActionResult> Index()
     {
         var mainDto = new MainViewDto
         {
-            Cars = _dbContext.Set<CarEntity>()
+            Cars = await _dbContext.Set<CarEntity>()
                 .AsNoTracking()
-                .ToArray(),
-            Drivers = _dbContext.Set<DriverEntity>()
+                .ToArrayAsync(),
+            Drivers = await _dbContext.Set<DriverEntity>()
                 .AsNoTracking()
-                .ToArray(),
-            Rentals = _dbContext.Set<CarRentalEntity>()
+                .ToArrayAsync(),
+            Rentals = await _dbContext.Set<CarRentalEntity>()
                 .Include(entity => entity.Car)
                 .Include(entity => entity.Driver)
                 .AsNoTracking()
-                .ToArray()
+                .ToArrayAsync(),
+            IsJobEnable = await _jobServerService.IsJobExists(_jobServerConfiguration.JobId)
         };
 
         return View(mainDto);
@@ -90,6 +98,21 @@ public class HomeController : Controller
         _dbContext.SaveChanges();
 
         return Ok();
+    }
+
+    [HttpPost]
+    public async Task<IActionResult> ChangeJobStatus(bool newStatus)
+    {
+        if (newStatus)
+        {
+            await _jobServerService.EnableJob();
+        }
+        else
+        {
+            await _jobServerService.DisableJob(_jobServerConfiguration.JobId);
+        }
+
+        return LocalRedirect("/");
     }
 
     public IActionResult DeductRent()

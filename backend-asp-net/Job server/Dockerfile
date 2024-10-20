@@ -18,4 +18,5 @@ WORKDIR /app
 COPY --from=build /app/publish .
 
 # Команда для запуска приложения
-ENTRYPOINT ["dotnet", "Job server.dll"]
+EXPOSE 7890
+ENTRYPOINT ["dotnet", "Job server.dll", "urls=http://0.0.0.0:7890"]

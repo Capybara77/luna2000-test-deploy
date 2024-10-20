@@ -1,0 +1,7 @@
+{
+  "JobServerConfiguration": {
+    "BaseUrl": "localhost",
+    "Port": 5095,
+    "JobId": "balance_job"
+  }
+}

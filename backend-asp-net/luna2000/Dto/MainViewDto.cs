@@ -9,4 +9,6 @@ public class MainViewDto
     public CarEntity[] Cars { get; set; }
 
     public CarRentalEntity[] Rentals { get; set; }
+
+    public bool IsJobEnable { get; set; }
 }

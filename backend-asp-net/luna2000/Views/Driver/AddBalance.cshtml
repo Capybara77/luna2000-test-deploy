@@ -1,0 +1,17 @@
+﻿@model DriverEntity
+
+<div class="driver-add-balance-wrapper">
+    <p class="fs-4">Внести депозит для @Model.Fio</p>
+    <br />
+    <p class="fs-4">Текущий баланс: @Model.Balance</p>
+    <br />
+
+    <form action="/driver/addbalance" method="post" style="margin-left: 0">
+        <p class="fs-5">Депозит:</p>
+        <br />
+        <input name="driverId" value="@Model.Id" hidden />
+        <input name="balance" type="number" />
+
+        <button class="" type="submit">Внести депозит</button>
+    </form>
+</div>

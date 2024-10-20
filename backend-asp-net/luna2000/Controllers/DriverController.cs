@@ -85,7 +85,7 @@ public class DriverController : Controller
         _dbContext.Remove(driver);
         _dbContext.SaveChanges();
 
-        return Ok(new { success=true });
+        return Ok(new { success = true });
     }
 
     [HttpGet]
@@ -141,6 +141,32 @@ public class DriverController : Controller
         await _dbContext.SaveChangesAsync();
 
         return Ok(new { success = true });
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> AddBalance(Guid driverId)
+    {
+        var driver = await _dbContext.Set<DriverEntity>()
+            .AsNoTracking()
+            .FirstOrDefaultAsync(entity => entity.Id == driverId);
+
+        if (driver == null) { return NotFound(); }
+
+        return View(driver);
+    }
+
+    [HttpPost]
+    public async Task<IActionResult> AddBalance(Guid driverId, decimal balance)
+    {
+        var driver = await _dbContext.Set<DriverEntity>()
+            .FirstOrDefaultAsync(entity => entity.Id == driverId);
+
+        if (driver == null) { return NotFound(); }
+
+        driver.Balance += balance;
+        await _dbContext.SaveChangesAsync();
+
+        return LocalRedirect("/");
     }
 
     private void DeleteDriverPhotos(ICollection<PhotoEntity>? photos)

@@ -15,6 +15,7 @@
   <ItemGroup>
     <Folder Include="Options\" />
     <Folder Include="HangfireOptions\" />
+    <Folder Include="Controllers\" />
   </ItemGroup>
 
 </Project>

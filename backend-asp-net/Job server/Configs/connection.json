@@ -1,6 +1,9 @@
 {
   "ConnectionConfiguration": {
     "BaseUrl": "localhost",
-    "Port": 5270
+    "Port": 5270,
+    "JobId": "balance_job",
+    "Cron": "0 21 * * *",
+    "TimeZone": "Ekaterinburg Standard Time"
   }
 }

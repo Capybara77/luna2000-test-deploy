@@ -9,6 +9,7 @@ services:
     volumes:
       - /home/luna-data/files:/app/files
       - /home/luna-data/db:/app/DB
+      - /home/luna-data/web-api-configs:/app/Configs
     networks:
       - hangfire_network
 
@@ -18,7 +19,7 @@ services:
     depends_on:
       - luna2000
     ports:
-      - "7564:80"
+      - "7890:7890"
     volumes:
       - /home/luna-data/job-server-configs:/app/Configs
     networks:
