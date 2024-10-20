@@ -40,7 +40,10 @@ public class JobsController : ControllerBase
     public IActionResult EnableJob()
     {
         RecurringJob.AddOrUpdate(_configuration.Value.JobId, () => _deductRentJob.DeductRent(),
-            () => _configuration.Value.Cron);
+            () => _configuration.Value.Cron, new RecurringJobOptions()
+            {
+                TimeZone = TimeZoneInfo.FindSystemTimeZoneById(_configuration.Value.TimeZone)
+            });
 
         return Ok();
     }
