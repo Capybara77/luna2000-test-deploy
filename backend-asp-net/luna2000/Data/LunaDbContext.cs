@@ -83,7 +83,7 @@ public class LunaDbContext : DbContext
         {
             if (entry.Metadata.ClrType == typeof(BaseLog))
             {
-                return;
+                continue;
             }
 
             var entityId = entry.Properties.FirstOrDefault(p => p.Metadata.IsPrimaryKey())?.CurrentValue;
