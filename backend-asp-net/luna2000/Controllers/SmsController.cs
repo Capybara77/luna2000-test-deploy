@@ -17,7 +17,7 @@ public class SmsController : ControllerBase
         _smsParserService = smsParserService;
     }
 
-    [HttpGet]
+    [HttpPost]
     public IActionResult Receive(SmsReceiveRequest smsReceiveRequest)
     {
         var message = $"New message receive from {smsReceiveRequest.Sender} with text {smsReceiveRequest.Message}";
@@ -42,7 +42,7 @@ public class SmsController : ControllerBase
 
         var driver = _dbContext
             .Set<DriverEntity>()
-            .FirstOrDefault(driver => driver.Fio.ToLower() == smsData.Value.name.ToLower());
+            .FirstOrDefault(driver => driver.Fio.ToLower().StartsWith(smsData.Value.name.ToLower()));
 
         if (driver != null)
         {
