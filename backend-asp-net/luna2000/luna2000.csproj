@@ -30,6 +30,7 @@
     <Folder Include="Extensions\" />
     <Folder Include="Middlewares\" />
     <Folder Include="Options\" />
+    <Folder Include="files\" />
   </ItemGroup>
 
   <ItemGroup>

@@ -35,6 +35,7 @@ public class Program
         {
             new EntityProfiles()
         }));
+        builder.Services.AddSingleton<ISmsParserService, SmsParserService>();
 
         builder.Configuration.AddJsonFile("Configs/job-server.json");
         builder.Services.Configure<JobServerConfiguration>(builder.Configuration.GetSection("JobServerConfiguration"));
