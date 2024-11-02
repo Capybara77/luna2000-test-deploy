@@ -3,7 +3,7 @@ name: Deploy to Server
 on:
   push:
     branches:
-      - asp-net-server
+      - stable
 
 jobs:
   deploy:
@@ -35,8 +35,8 @@ jobs:
 
     - name: Copy Docker image to server via SCP
       run: |
-        sshpass -p ${{ secrets.SERVER_PASSWORD }} scp -o StrictHostKeyChecking=no /tmp/web-api.tar ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }}:/tmp
-        sshpass -p ${{ secrets.SERVER_PASSWORD }} scp -o StrictHostKeyChecking=no /tmp/job-server.tar ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }}:/tmp
+        sshpass -p ${{ secrets.SERVER_PASSWORD2 }} scp -o StrictHostKeyChecking=no /tmp/web-api.tar ${{ secrets.SERVER_USER2 }}@${{ secrets.SERVER_HOST2 }}:/tmp
+        sshpass -p ${{ secrets.SERVER_PASSWORD2 }} scp -o StrictHostKeyChecking=no /tmp/job-server.tar ${{ secrets.SERVER_USER2 }}@${{ secrets.SERVER_HOST2 }}:/tmp
 
     - name: Create repo archive
       run: |
@@ -46,14 +46,14 @@ jobs:
 
     - name: Copy archive
       run: |
-        sshpass -p ${{ secrets.SERVER_PASSWORD }} scp -o StrictHostKeyChecking=no project-archive.tar.gz ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }}:/home/project-archive.tar.gz
+        sshpass -p ${{ secrets.SERVER_PASSWORD2 }} scp -o StrictHostKeyChecking=no project-archive.tar.gz ${{ secrets.SERVER_USER2 }}@${{ secrets.SERVER_HOST2 }}:/home/project-archive.tar.gz
 
     - name: Login to server via SSH with password and deploy
       uses: appleboy/ssh-action@master
       with:
-        host: ${{ secrets.SERVER_HOST }}
-        username: ${{ secrets.SERVER_USER }}
-        password: ${{ secrets.SERVER_PASSWORD }}
+        host: ${{ secrets.SERVER_HOST2 }}
+        username: ${{ secrets.SERVER_USER2 }}
+        password: ${{ secrets.SERVER_PASSWORD2 }}
         script: |
           cd /home
           mkdir luna2000-source
