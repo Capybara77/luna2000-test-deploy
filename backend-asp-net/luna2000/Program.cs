@@ -9,6 +9,7 @@ using luna2000.Service;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.FileProviders;
+using System.Globalization;
 
 namespace luna2000;
 
@@ -36,6 +37,8 @@ public class Program
             new EntityProfiles()
         }));
         builder.Services.AddSingleton<ISmsParserService, SmsParserService>();
+
+        ConfigureCulture();
 
         builder.Configuration.AddJsonFile("Configs/job-server.json");
         builder.Services.Configure<JobServerConfiguration>(builder.Configuration.GetSection("JobServerConfiguration"));
@@ -71,6 +74,13 @@ public class Program
             pattern: "{controller=Home}/{action=Index}/{id?}");
 
         app.Run();
+    }
+
+    private static void ConfigureCulture()
+    {
+        var cultureInfo = new CultureInfo("en-US");
+        CultureInfo.DefaultThreadCurrentCulture = cultureInfo;
+        CultureInfo.DefaultThreadCurrentUICulture = cultureInfo;
     }
 
     private static void AddLogs(WebApplicationBuilder builder)
