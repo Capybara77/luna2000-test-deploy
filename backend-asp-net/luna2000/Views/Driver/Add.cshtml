@@ -5,7 +5,12 @@
     <form id="addDriverForm" enctype="multipart/form-data">
         <label for="fio">ФИО:</label>
         <input type="text" id="fio" name="fio" required /><br />
-        
+
+        <label for="aliases">Псевдонимы:</label>
+        <textarea type="text" id="aliases" name="aliases" placeholder="Фамилия Имя
+Фамилия И.О.
+и т.д."></textarea>
+
         <label for="fio">Баланс:</label>
         <input type="number" id="balance" name="balance" required /><br />
 
@@ -56,6 +61,6 @@
 </main>
 
 @section Scripts
-{
+    {
     <script src="/js/add-driver.js"></script>
 }

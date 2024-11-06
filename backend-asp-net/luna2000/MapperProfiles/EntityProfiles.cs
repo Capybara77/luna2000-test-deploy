@@ -22,7 +22,8 @@ public class EntityProfiles : Profile
                 expression => expression.MapFrom(file => Path.GetExtension(file.FileName)));
         CreateMap<AddDriverRequest, DriverEntity>()
             .ForMember(entity => entity.Photos, expression => expression.Ignore())
-            .ForMember(entity => entity.Id, expression => expression.Ignore());
+            .ForMember(entity => entity.Id, expression => expression.Ignore())
+            .ForMember(entity => entity.Aliases, expression => expression.Ignore());
         CreateMap<BaseLog, HistoryDto>();
     }
 }

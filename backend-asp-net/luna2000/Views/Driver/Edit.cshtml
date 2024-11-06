@@ -11,6 +11,14 @@
         <label for="fio">ФИО:</label>
         <input type="text" id="fio" name="fio" required value="@Model.Fio" /><br />
 
+        <label for="aliases">Псевдонимы:</label>
+        <textarea type="text" id="aliases" name="aliases" placeholder="Фамилия Имя
+Фамилия И.О.
+и т.д.">@if (Model.Aliases != null)
+            {
+                @(string.Join("\n", Model.Aliases.Select(a => a.Alias)))
+            }</textarea>
+
         <label for="fio">Баланс:</label>
         <input type="number" id="balance" name="balance"
                required value="@Model.Balance.ToString(CultureInfo.InvariantCulture).Replace(',', '.')" />

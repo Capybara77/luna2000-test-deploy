@@ -27,7 +27,7 @@
         </tr>
         <tr>
             <td>Дата постановки на учет:</td>
-            <td><input type="date" id="registrationDate" required value="@Model.RegistrationDate.ToString("yyyy-MM-dd")" /></td>
+            <td><input type="date" id="registrationDate" value="@(Model.RegistrationDate.HasValue ? Model.RegistrationDate.Value.ToString("yyyy-MM-dd") : "0001-01-01")" /></td>
         </tr>
         <tr>
             <td>Госномер:</td>
@@ -43,19 +43,19 @@
         </tr>
         <tr>
             <td>Техосмотр:</td>
-            <td><input type="date" id="techInspection" value="@Model.TechInspection.ToString("yyyy-MM-dd")" /></td>
+            <td><input type="date" id="techInspection" value="@(Model.TechInspection.HasValue ? Model.TechInspection.Value.ToString("yyyy-MM-dd") : "0001-01-01")" /></td>
         </tr>
         <tr>
             <td>Лицензия такси:</td>
-            <td><input type="checkbox" id="taxiLicense" @(Model.TaxiLicense ? "checked" : string.Empty) /></td>
+            <td><input type="checkbox" id="taxiLicense" @(Model.TaxiLicense.HasValue && Model.TaxiLicense.Value ? "checked" : string.Empty) /></td>
         </tr>
         <tr>
             <td>Выкуп или аренда:</td>
-            <td><input type="text" id="purchaseOrRent" required value="@Model.PurchaseOrRent" /></td>
+            <td><input type="text" id="purchaseOrRent" value="@Model.PurchaseOrRent" /></td>
         </tr>
         <tr>
             <td>В лизинге:</td>
-            <td><input type="checkbox" id="leasing" @(Model.Leasing ? "checked" : string.Empty) /></td>
+            <td><input type="checkbox" id="leasing" @(Model.Leasing.HasValue && Model.Leasing.Value ? "checked" : string.Empty) /></td>
         </tr>
         <tr>
             <td>Фото автомобиля (до 10 шт.):</td>
