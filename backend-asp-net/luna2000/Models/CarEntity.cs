@@ -17,21 +17,21 @@ public class CarEntity
 
     public string Year { get; set; }
 
-    public DateOnly RegistrationDate { get; set; }
+    public DateOnly? RegistrationDate { get; set; }
 
     public string PlateNumber { get; set; }
 
     public string Osago { get; set; }
 
-    public string Kasko { get; set; }
+    public string? Kasko { get; set; }
 
-    public DateOnly TechInspection { get; set; }
+    public DateOnly? TechInspection { get; set; }
 
-    public bool TaxiLicense { get; set; }
+    public bool? TaxiLicense { get; set; }
 
-    public string PurchaseOrRent { get; set; }
+    public string? PurchaseOrRent { get; set; }
 
-    public bool Leasing { get; set; }
+    public bool? Leasing { get; set; }
 
     public virtual ICollection<PhotoEntity>? Photos { get; set; }
 }

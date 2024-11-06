@@ -1,7 +1,7 @@
 ﻿using luna2000.Data;
 using luna2000.Dto;
 using luna2000.Models;
-using luna2000.Service;
+using luna2000.SmsServices;
 using Microsoft.AspNetCore.Mvc;
 
 namespace luna2000.Controllers;
@@ -18,6 +18,7 @@ public class SmsController : ControllerBase
     }
 
     [HttpPost]
+    [HttpGet]
     public IActionResult Receive(SmsReceiveRequest smsReceiveRequest)
     {
         var message = $"New message receive from {smsReceiveRequest.Sender} with text {smsReceiveRequest.Message}";
@@ -31,22 +32,15 @@ public class SmsController : ControllerBase
                 Note = message
             });
 
-        var smsData = _smsParserService.GetNameWithAmount(smsReceiveRequest.Message);
+        var amount = _smsParserService.GetAmountByMessageText(smsReceiveRequest.Message);
+        var driverId = _smsParserService.GetDriverIdByMessageText(smsReceiveRequest.Message);
 
-        if (smsData == null)
+        if (amount != null && driverId != null)
         {
-            _dbContext.SaveChanges();
+            var driver = _dbContext.Set<DriverEntity>()
+                .FirstOrDefault(entity => entity.Id == driverId);
 
-            return Ok();
-        }
-
-        var driver = _dbContext
-            .Set<DriverEntity>()
-            .FirstOrDefault(driver => driver.Fio.ToLower().StartsWith(smsData.Value.name.ToLower()));
-
-        if (driver != null)
-        {
-            driver.Balance += (decimal)smsData.Value.amount;
+            driver!.Balance += amount.Value;
         }
 
         _dbContext.SaveChanges();

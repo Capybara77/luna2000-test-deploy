@@ -17,6 +17,7 @@ public class JobServerService : IJobServerService
     public async Task<bool> IsJobExists(string jobId)
     {
         using var httpClient = new HttpClient();
+        httpClient.Timeout = TimeSpan.FromSeconds(1);
         using var response = await httpClient.PostAsync(
             $"http://{_jobServerConfiguration.BaseUrl}:{_jobServerConfiguration.Port}/api/jobs/exists/{jobId}", null);
 

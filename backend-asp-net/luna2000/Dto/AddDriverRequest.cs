@@ -24,5 +24,7 @@ public class AddDriverRequest
 
     public decimal Balance { get; set; }
 
+    public string? Aliases { get; set; }
+
     public virtual ICollection<IFormFile>? Photos { get; set; }
 }

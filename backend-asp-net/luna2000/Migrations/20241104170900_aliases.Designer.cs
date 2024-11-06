@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using luna2000.Data;
 
@@ -10,9 +11,10 @@ using luna2000.Data;
 namespace luna2000.Migrations
 {
     [DbContext(typeof(LunaDbContext))]
-    partial class LunaDbContextModelSnapshot : ModelSnapshot
+    [Migration("20241104170900_aliases")]
+    partial class aliases
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "6.0.33");
@@ -86,9 +88,10 @@ namespace luna2000.Migrations
                         .HasColumnType("TEXT");
 
                     b.Property<string>("Kasko")
+                        .IsRequired()
                         .HasColumnType("TEXT");
 
-                    b.Property<bool?>("Leasing")
+                    b.Property<bool>("Leasing")
                         .HasColumnType("INTEGER");
 
                     b.Property<string>("Osago")
@@ -104,19 +107,20 @@ namespace luna2000.Migrations
                         .HasColumnType("TEXT");
 
                     b.Property<string>("PurchaseOrRent")
+                        .IsRequired()
                         .HasColumnType("TEXT");
 
-                    b.Property<DateOnly?>("RegistrationDate")
+                    b.Property<DateOnly>("RegistrationDate")
                         .HasColumnType("TEXT");
 
                     b.Property<string>("Sts")
                         .IsRequired()
                         .HasColumnType("TEXT");
 
-                    b.Property<bool?>("TaxiLicense")
+                    b.Property<bool>("TaxiLicense")
                         .HasColumnType("INTEGER");
 
-                    b.Property<DateOnly?>("TechInspection")
+                    b.Property<DateOnly>("TechInspection")
                         .HasColumnType("TEXT");
 
                     b.Property<string>("Vin")

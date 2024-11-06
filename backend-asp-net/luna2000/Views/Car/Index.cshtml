@@ -61,9 +61,9 @@
                 <td>@car.Osago</td>
                 <td>@car.Kasko</td>
                 <td>@car.TechInspection</td>
-                <td>@(car.TaxiLicense ? "Да" : "Нет")</td>
+                <td>@(car.TaxiLicense.HasValue && car.TaxiLicense.Value ? "Да" : "Нет")</td>
                 <td>@car.PurchaseOrRent</td>
-                <td>@(car.Leasing ? "Да" : "Нет")</td>
+                <td>@(car.Leasing.HasValue && car.Leasing.Value ? "Да" : "Нет")</td>
                 <td>
                     <button onclick="editCar('@(car.Id)')">Редактировать</button>
                     <button onclick="deleteCar('@(car.Id)')">Удалить</button>

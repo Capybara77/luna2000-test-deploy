@@ -42,9 +42,17 @@ public class HomeController : Controller
                 .Include(entity => entity.Car)
                 .Include(entity => entity.Driver)
                 .AsNoTracking()
-                .ToArrayAsync(),
-            IsJobEnable = await _jobServerService.IsJobExists(_jobServerConfiguration.JobId)
+                .ToArrayAsync()
         };
+
+        try
+        {
+            mainDto.IsJobEnable = await _jobServerService.IsJobExists(_jobServerConfiguration.JobId);
+        }
+        catch
+        {
+            mainDto.IsJobServerDown = true;
+        }
 
         return View(mainDto);
     }

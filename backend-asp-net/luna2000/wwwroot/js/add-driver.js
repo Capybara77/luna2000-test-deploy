@@ -26,6 +26,7 @@ document
         );
         formData.append("contacts", document.getElementById("contacts").value);
         formData.append("note", document.getElementById("note").value);
+        formData.append("aliases", document.getElementById("aliases").value)
 
         const photoFiles = document.getElementById("photos").files;
         for (let i = 0; i < photoFiles.length; i++) {

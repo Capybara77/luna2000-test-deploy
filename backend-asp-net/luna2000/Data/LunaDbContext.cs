@@ -1,4 +1,5 @@
 ﻿using luna2000.Logs;
+using luna2000.Markers;
 using luna2000.Models;
 using Microsoft.EntityFrameworkCore;
 
@@ -81,7 +82,7 @@ public class LunaDbContext : DbContext
 
         foreach (var entry in entries)
         {
-            if (entry.Metadata.ClrType == typeof(BaseLog))
+            if (entry.Metadata.ClrType.GetInterface(nameof(IDoNotLog)) != null)
             {
                 continue;
             }

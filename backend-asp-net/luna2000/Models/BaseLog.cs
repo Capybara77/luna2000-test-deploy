@@ -1,9 +1,10 @@
 ﻿using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
+using luna2000.Markers;
 
 namespace luna2000.Models;
 
-public class BaseLog
+public class BaseLog : IDoNotLog
 {
     [Key]
     public Guid Id { get; set; }

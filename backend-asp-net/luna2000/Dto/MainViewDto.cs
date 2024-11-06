@@ -11,4 +11,6 @@ public class MainViewDto
     public CarRentalEntity[] Rentals { get; set; }
 
     public bool IsJobEnable { get; set; }
+
+    public bool IsJobServerDown { get; set; }
 }

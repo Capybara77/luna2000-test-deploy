@@ -100,16 +100,24 @@
 </form>
 
 <!-- Блок для кнопки списания аренды -->
-<div id="writeOffBlock">
-    <h2>Списание аренды</h2>
-    <button id="writeOffButton">Списать аренду</button>
-    <form action="/home/changejobstatus" method="post">
-        <p style="color: @(Model.IsJobEnable ? "green" : "red")">Автоматическое списание аренды @(Model.IsJobEnable ? "включено" : "выключено")</p>
-        <input name="newStatus" hidden value="@((!Model.IsJobEnable).ToString())"/>
-        <button type="submit">@(Model.IsJobEnable ? "Выключить" : "Включить")</button>
-    </form>
-</div>
 
+
+<div id="writeOffBlock">
+    <button id="writeOffButton">Списать аренду</button>
+
+    @if (!@Model.IsJobServerDown)
+    {
+        <form action="/home/changejobstatus" method="post">
+            <p style="color: @(Model.IsJobEnable ? "green" : "red")">Автоматическое списание аренды @(Model.IsJobEnable ? "включено" : "выключено")</p>
+            <input name="newStatus" hidden value="@((!Model.IsJobEnable).ToString())" />
+            <button type="submit">@(Model.IsJobEnable ? "Выключить" : "Включить")</button>
+        </form>
+    }
+    else
+    {
+        <h2 style="color: red;">Job server is down</h2>
+    }
+</div>
 
 @section Scripts
     {

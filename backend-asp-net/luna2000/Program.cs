@@ -6,6 +6,7 @@ using luna2000.MapperProfiles;
 using luna2000.Middlewares;
 using luna2000.Options;
 using luna2000.Service;
+using luna2000.SmsServices;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.FileProviders;
@@ -36,7 +37,7 @@ public class Program
         {
             new EntityProfiles()
         }));
-        builder.Services.AddSingleton<ISmsParserService, SmsParserService>();
+        builder.Services.AddScoped<ISmsParserService, SmsParserService>();
 
         ConfigureCulture();
 

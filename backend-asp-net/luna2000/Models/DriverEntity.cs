@@ -25,5 +25,7 @@ public class DriverEntity
 
     public decimal Balance { get; set; }
 
+    public virtual ICollection<AliasEntity>? Aliases { get; set; }
+
     public virtual ICollection<PhotoEntity>? Photos { get; set; }
 }

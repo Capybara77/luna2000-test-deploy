@@ -61,10 +61,27 @@ public class DriverController : Controller
             }
         }
 
+        var aliases = GetAliases(request, driver);
+
         await _dbContext.AddAsync(driver);
+        await _dbContext.AddRangeAsync(aliases);
         await _dbContext.SaveChangesAsync();
 
         return Ok(new { success = true });
+    }
+
+    private static IEnumerable<AliasEntity>? GetAliases(AddDriverRequest request, DriverEntity driver)
+    {
+        var aliases = request.Aliases?.Split("\n")
+            .Distinct()
+            .Where(s => !string.IsNullOrWhiteSpace(s))
+            .Select(s => new AliasEntity
+        {
+            Alias = s,
+            Driver = driver
+        });
+
+        return aliases;
     }
 
     [HttpDelete]
@@ -93,6 +110,7 @@ public class DriverController : Controller
     {
         var driver = _dbContext.Set<DriverEntity>()
             .Include(entity => entity.Photos)
+            .Include(entity => entity.Aliases)
             .AsNoTracking()
             .FirstOrDefault(entity => entity.Id == id);
 
@@ -109,6 +127,7 @@ public class DriverController : Controller
     public async Task<IActionResult> Edit(AddDriverRequest request)
     {
         var driver = await _dbContext.Set<DriverEntity>()
+            .Include(entity => entity.Aliases)
             .Include(entity => entity.Photos)
             .FirstOrDefaultAsync(entity => entity.Id == request.Id);
 
@@ -138,6 +157,10 @@ public class DriverController : Controller
             }
         }
 
+        var aliases = GetAliases(request, driver);
+
+        _dbContext.RemoveRange(driver.Aliases);
+        _dbContext.AddRangeAsync(aliases);
         await _dbContext.SaveChangesAsync();
 
         return Ok(new { success = true });
