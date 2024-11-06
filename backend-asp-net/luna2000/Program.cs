@@ -42,7 +42,9 @@ public class Program
         ConfigureCulture();
 
         builder.Configuration.AddJsonFile("Configs/job-server.json");
+        builder.Configuration.AddJsonFile("Configs/common-data.json");
         builder.Services.Configure<JobServerConfiguration>(builder.Configuration.GetSection("JobServerConfiguration"));
+        builder.Services.Configure<CommonDataConfiguration>(builder.Configuration.GetSection("CommonData"));
 
         AddAuthentication(builder);
 
