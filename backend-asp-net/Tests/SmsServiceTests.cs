@@ -30,10 +30,14 @@ public class SmsServiceTests
         2100)]
     [InlineData("VISA8535 07:57 перевод 3000р Баланс: 2551.67р",
         3000)]
-    [InlineData("SBP. Poluchen perevod 04.11 06:39 (msk). Schet 6962. Zachisleno 7000 r. ot Il'ya Aleksandrovich B iz PAO Sberbank BIK 044525225.",
+    [InlineData(
+        "SBP. Poluchen perevod 04.11 06:39 (msk). Schet 6962. Zachisleno 7000 r. ot Il'ya Aleksandrovich B iz PAO Sberbank BIK 044525225.",
         7000)]
     [InlineData("Karta *7105: 04.11.2024 06:39, popolnenie 7000.00 RUR. Dostupno 14859.20 RUR.",
         7000)]
+    [InlineData("VISA8535 20:23 Перевод из Т‑Банк +1800р от АЛЕКСЕЙ К. Баланс: 39783",
+    1800)]
+
     public void GetAmountByMessage(string message, decimal expectedAmount)
     {
         var smsService = new SmsParserService(null);

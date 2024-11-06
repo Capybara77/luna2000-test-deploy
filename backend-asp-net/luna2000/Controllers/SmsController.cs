@@ -21,8 +21,30 @@ public class SmsController : ControllerBase
     [HttpGet]
     public IActionResult Receive(SmsReceiveRequest smsReceiveRequest)
     {
-        var message = $"New message receive from {smsReceiveRequest.Sender} with text {smsReceiveRequest.Message}";
+        var message = $"Сообщение от: {smsReceiveRequest.Sender}\r\nТекст сообщения: {smsReceiveRequest.Message}";
+        CreateSmsLog(message);
 
+        var amount = _smsParserService.GetAmountByMessageText(smsReceiveRequest.Message);
+        var driverId = _smsParserService.GetDriverIdByMessageText(smsReceiveRequest.Message);
+
+        AddDriverBalance(amount, driverId);
+
+        _dbContext.SaveChanges();
+        return Ok();
+    }
+
+    private void AddDriverBalance(decimal? amount, Guid? driverId)
+    {
+        if (amount == null || driverId == null) return;
+
+        var driver = _dbContext.Set<DriverEntity>()
+            .FirstOrDefault(entity => entity.Id == driverId);
+
+        driver!.Balance += amount.Value;
+    }
+
+    private void CreateSmsLog(string message)
+    {
         _dbContext.Set<BaseLog>()
             .Add(new BaseLog
             {
@@ -31,19 +53,5 @@ public class SmsController : ControllerBase
                 EventType = EventType.Add,
                 Note = message
             });
-
-        var amount = _smsParserService.GetAmountByMessageText(smsReceiveRequest.Message);
-        var driverId = _smsParserService.GetDriverIdByMessageText(smsReceiveRequest.Message);
-
-        if (amount != null && driverId != null)
-        {
-            var driver = _dbContext.Set<DriverEntity>()
-                .FirstOrDefault(entity => entity.Id == driverId);
-
-            driver!.Balance += amount.Value;
-        }
-
-        _dbContext.SaveChanges();
-        return Ok();
     }
 }
