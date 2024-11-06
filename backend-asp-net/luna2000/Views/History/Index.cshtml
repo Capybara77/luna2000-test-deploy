@@ -1,5 +1,8 @@
 ﻿@using luna2000.Extensions
+@using luna2000.Options
+@using Microsoft.Extensions.Options
 @model IEnumerable<IGrouping<Guid, luna2000.Dto.HistoryDto>>
+@inject IOptions<CommonDataConfiguration> Configuration
 
 <table>
     <thead>
@@ -41,7 +44,8 @@
                         <br>
                     }
                 </td>
-                <td>@firstLog.Created.ToLocalTime()</td>
+
+                <td>@TimeZoneInfo.ConvertTimeFromUtc(firstLog.Created, TimeZoneInfo.FindSystemTimeZoneById(Configuration.Value.TimeZone)).ToString("HH:mm dd.MM.yyyy")</td>
             </tr>
         }
     </tbody>
