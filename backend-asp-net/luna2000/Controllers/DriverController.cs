@@ -75,6 +75,7 @@ public class DriverController : Controller
         var aliases = request.Aliases?.Split("\n")
             .Distinct()
             .Where(s => !string.IsNullOrWhiteSpace(s))
+            .Select(s => s.Replace("\r", string.Empty))
             .Select(s => new AliasEntity
         {
             Alias = s,
