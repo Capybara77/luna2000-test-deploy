@@ -25,6 +25,7 @@ public class HistoryController : Controller
         var logs = _dbContext
             .Set<BaseLog>()
             .AsNoTracking()
+            .OrderByDescending(log => log.Created)
             .ToArray();
 
         return View(_mapper.Map<IEnumerable<HistoryDto>>(logs).GroupBy(dto => dto.ChangeId));
