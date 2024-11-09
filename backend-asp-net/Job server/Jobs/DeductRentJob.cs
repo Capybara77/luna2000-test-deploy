@@ -5,6 +5,7 @@ namespace Job_server.Jobs;
 
 public class DeductRentJob
 {
+    private static readonly HttpClient HttpClient = new();
     private readonly ConnectionConfiguration _connectionOptions;
 
     public DeductRentJob(IOptions<ConnectionConfiguration> connectionOptions)
@@ -14,8 +15,7 @@ public class DeductRentJob
 
     public async Task DeductRent()
     {
-        using var client = new HttpClient();
-        await client
+        await HttpClient
             .PostAsync($"http://{_connectionOptions.BaseUrl}:{_connectionOptions.Port}/api/deduct-rent", null);
     }
 }
