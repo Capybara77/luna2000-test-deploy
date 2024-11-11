@@ -4,8 +4,9 @@
 @model IEnumerable<IGrouping<Guid, luna2000.Dto.HistoryDto>>
 @inject IOptions<CommonDataConfiguration> Configuration
 
-<table>
-    <thead>
+<div class="container">
+    <table class="table is-hoverable is-striped is-fullwidth">
+        <thead>
         <tr>
             <th>Событие</th>
             <th>Текстовое описание</th>
@@ -14,8 +15,8 @@
             <th>Новое значение</th>
             <th>Время</th>
         </tr>
-    </thead>
-    <tbody>
+        </thead>
+        <tbody>
         @foreach (var logGroup in Model)
         {
             var firstLog = logGroup.First();
@@ -27,26 +28,23 @@
                     @foreach (var objName in logGroup.Select(dto => dto.ObjectName))
                     {
                         <p>@objName</p>
-                        <br>
                     }
                 </td>
                 <td>
                     @foreach (var old in logGroup.Select(dto => dto.OldValue))
                     {
                         <p>@old</p>
-                        <br>
                     }
                 </td>
                 <td>
                     @foreach (var newValue in logGroup.Select(dto => dto.NewValue))
                     {
                         <p>@newValue</p>
-                        <br>
                     }
                 </td>
-
                 <td>@TimeZoneInfo.ConvertTimeFromUtc(firstLog.Created, TimeZoneInfo.FindSystemTimeZoneById(Configuration.Value.TimeZone)).ToString("HH:mm dd.MM.yyyy")</td>
             </tr>
         }
-    </tbody>
-</table>
+        </tbody>
+    </table>
+</div>

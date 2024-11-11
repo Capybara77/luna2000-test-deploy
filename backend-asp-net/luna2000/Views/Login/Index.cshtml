@@ -1,17 +1,38 @@
-﻿<div class="login-container">
-    <h1>Вход</h1>
-    <form id="loginForm">
-        <label for="username">Логин</label>
-        <input type="text" id="username" name="username" required />
+﻿<div class="section is-medium">
+    <div class="container">
+        <div class="columns is-centered">
+            <div class="column is-4">
+                <div class="box">
+                    <h1 class="title is-3 has-text-centered">Вход</h1>
+                    <form id="loginForm" method="post">
+                        <div class="field">
+                            <label class="label" for="username">Логин</label>
+                            <div class="control">
+                                <input class="input" type="text" id="username" name="username" required />
+                            </div>
+                        </div>
 
-        <label for="password">Пароль</label>
-        <input type="password" id="password" name="password" required />
+                        <div class="field">
+                            <label class="label" for="password">Пароль</label>
+                            <div class="control">
+                                <input class="input" type="password" id="password" name="password" required />
+                            </div>
+                        </div>
 
-        <button type="submit">Войти</button>
-    </form>
-    <p id="error" style="color: red; display: none">
-        Неверный логин или пароль
-    </p>
+                        <div class="field">
+                            <div class="control has-text-centered">
+                                <button type="submit" class="button is-primary">Войти</button>
+                            </div>
+                        </div>
+
+                        <p id="error" class="help is-danger" style="display: none">
+                            Неверный логин или пароль
+                        </p>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 
 @section Scripts

@@ -1,61 +1,77 @@
 ﻿@model DriverEntity[]
 
-<div class="container">
-    <div class="header">
-        <h1>Список водителей</h1>
-        <a href="/driver/add" class="nav-button">Добавить водителя</a>
-        <a href="/" class="nav-button">На главную</a>
-    </div>
-    <table id="driversTable">
-        <thead>
-            <tr>
-                <th>ФИО</th>
-                <th>Баланс</th>
-                <th>Паспорт</th>
-                <th>Прописка</th>
-                <th>Адрес проживания</th>
-                <th>ВУ</th>
-                <th>Адрес парковки</th>
-                <th>Контакты</th>
-                <th>Примечание</th>
-                <th>Фотографии</th>
-                <th>Действия</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach (var driver in Model)
-            {
+<section class="section">
+    <div class="container">
+        <h1 class="title">Список водителей</h1>
+
+        <nav class="breadcrumb" aria-label="breadcrumbs">
+            <ul>
+                <li><a href="/">Главная</a></li>
+                <li class="is-active"><a href="#" aria-current="page">Водители</a></li>
+            </ul>
+        </nav>
+
+        <div class="field is-grouped">
+            <p class="control">
+                <a class="button is-primary" href="/driver/add">
+                    Добавить водителя
+                </a>
+            </p>
+        </div>
+
+
+        <table class="table is-hoverable is-striped is-fullwidth" id="driversTable">
+            <thead>
                 <tr>
-                    <td>@driver.Fio</td>
-                    <td>@driver.Balance</td>
-                    <td>@driver.Passport</td>
-                    <td>@driver.Registration</td>
-                    <td>@driver.Address</td>
-                    <td>@driver.DriverLicense</td>
-                    <td>@driver.ParkingAddress</td>
-                    <td>@driver.Contacts</td>
-                    <td>@driver.Note</td>
-                    <td>
-                        @if (driver.Photos != null)
-                        {
-                            foreach (var photo in driver.Photos)
-                            {
-                                <img src="/@photo.FileId@(photo.FileExtension)"
-                         style="width: 100px; height: auto;"
-                         onclick="location.replace('/photo/@photo.Id')">
-                                <br>
-                            }
-                        }
-                    </td>
-                    <td>
-                        <button onclick="editDriver('@(driver.Id)')">Редактировать</button>
-                        <button onclick="deleteDriver('@(driver.Id)')">Удалить</button>
-                    </td>
+                    <th>ФИО</th>
+                    <th>Баланс</th>
+                    <th>Паспорт</th>
+                    <th>Прописка</th>
+                    <th>Адрес проживания</th>
+                    <th>ВУ</th>
+                    <th>Адрес парковки</th>
+                    <th>Контакты</th>
+                    <th>Примечание</th>
+                    <th>Фотографии</th>
+                    <th>Действия</th>
                 </tr>
-            }
-        </tbody>
-    </table>
-</div>
+            </thead>
+            <tbody>
+                @foreach (var driver in Model)
+                {
+                    <tr>
+                        <td>@driver.Fio</td>
+                        <td>@driver.Balance</td>
+                        <td>@driver.Passport</td>
+                        <td>@driver.Registration</td>
+                        <td>@driver.Address</td>
+                        <td>@driver.DriverLicense</td>
+                        <td>@driver.ParkingAddress</td>
+                        <td>@driver.Contacts</td>
+                        <td>@driver.Note</td>
+                        <td>
+                            @if (driver.Photos != null)
+                            {
+                                foreach (var photo in driver.Photos)
+                                {
+                                    <a href="/photo/@photo.Id">
+                                        <img src="/@photo.FileId@(photo.FileExtension)" style="max-width: 100px; height: auto;" alt="">
+                                    </a>
+                                }
+                            }
+                        </td>
+                        <td>
+                            <div class="buttons">
+                                <button class="button is-warning" onclick="editDriver('@(driver.Id)')">Редактировать</button>
+                                <button class="button is-danger" onclick="deleteDriver('@(driver.Id)')">Удалить</button>
+                            </div>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</section>
 
 @section Scripts
     {

@@ -1,45 +1,71 @@
 ﻿@using Microsoft.AspNetCore.Mvc.TagHelpers
 @model luna2000.Dto.EditorViewDto
 
-<h1>Редактор документов</h1>
-<div class="container">
-    <div class="header">
-        <a href="/" class="nav-button">На главную</a>
+<section class="section">
+    <div class="container">
+        <h1 class="title">Редактор документов</h1>
+
+        <nav class="breadcrumb" aria-label="breadcrumbs">
+            <ul>
+                <li><a href="/">Главная</a></li>
+                <li class="is-active"><a href="#" aria-current="page">Редактор</a></li>
+            </ul>
+        </nav>
+
+        <form id="documentForm" action="/doceditor/EditFile" method="POST">
+            <div class="field">
+                <label class="label" for="template">Выберите шаблон:</label>
+                <div class="control">
+                    <div class="select">
+                        <select name="fileName" id="template">
+                            @foreach (var docName in Model.FileNames)
+                            {
+                                <option value="@docName">@docName</option>
+                            }
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <div class="field">
+                <label class="label" for="driver">Выберите водителя:</label>
+                <div class="control">
+                    <div class="select">
+                        <select name="driverId" id="driver">
+                            @foreach (var driver in Model.Drivers)
+                            {
+                                <option value="@driver.driverId">@driver.name</option>
+                            }
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <div class="field">
+                <label class="label" for="car">Выберите машину:</label>
+                <div class="control">
+                    <div class="select">
+                        <select name="carId" id="car">
+                            @foreach (var car in Model.Cars)
+                            {
+                                <option value="@car.carId">@car.name</option>
+                            }
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <div class="field">
+                <div class="control">
+                    <button class="button is-primary" type="submit">Сгенерировать документ</button>
+                </div>
+            </div>
+        </form>
     </div>
-    <!-- Выбор шаблона Word-документа -->
-    <form id="documentForm" action="/doceditor/EditFile" method="POST">
-        <label for="template">Выберите шаблон:</label>
-        <select name="fileName" id="template">
-            <!-- Шаблоны будут загружаться динамически -->
-            @foreach (var docName in Model.FileNames)
-            {
-                <option value="@docName">@docName</option>
-            }
-        </select>
-
-        <label for="driver">Выберите водителя:</label>
-        <select name="driverId" id="driver">
-            @foreach (var driver in Model.Drivers)
-            {
-                <option value="@driver.driverId">@driver.name</option>
-            }
-        </select>
-
-        <label for="car">Выберите машину:</label>
-        <select name="carId" id="car">
-            <!-- Машины будут загружаться динамически -->
-            @foreach (var car in Model.Cars)
-            {
-                <option value="@car.carId">@car.name</option>
-            }
-        </select>
-
-        <button type="submit">Сгенерировать документ</button>
-    </form>
-</div>
+</section>
 
 @section Scripts
     {
     <script src="js/editor.js"></script>
-    <link rel="stylesheet" href="~/css/editor.css" asp-append-version="true" />
+    @*<link rel="stylesheet" href="~/css/editor.css" asp-append-version="true" />*@
 }
