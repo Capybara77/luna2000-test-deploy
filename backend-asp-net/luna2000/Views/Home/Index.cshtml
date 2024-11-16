@@ -55,7 +55,7 @@
 
         <h1 class="title">Добавить или редактировать пару</h1>
 
-        <form id="pairForm">
+        <form id="pairForm" class="block box">
             <div class="field">
                 <label class="label" for="driverSelect">Выберите водителя:</label>
                 <div class="control">
@@ -106,8 +106,8 @@
         </form>
 
         <h1 class="title">Списание аренды</h1>
-        <div id="writeOffBlock">
-            <button class="button is-danger" id="writeOffButton">Списать аренду</button>
+        <button class="button is-danger block" id="writeOffButton">Списать аренду</button>
+        <div id="writeOffBlock" class="block box">
 
             @if (!@Model.IsJobServerDown)
             {
