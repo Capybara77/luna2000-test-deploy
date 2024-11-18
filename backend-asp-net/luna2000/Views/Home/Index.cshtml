@@ -2,10 +2,11 @@
 @model luna2000.Dto.MainViewDto
 
 <section class="section">
-    <div class="container">
+    <div class="container table-container">
         <h1 class="title">Таблица данных</h1>
 
-        <table class="table is-hoverable is-striped is-fullwidth" id="mainTable">
+        <table class="table is-hoverable is-striped is-fullwidth table-container" id="mainTable">
+            <div class="is-clipped">
             <thead>
                 <tr>
                     <th>Водитель</th>
@@ -16,15 +17,15 @@
                 </tr>
             </thead>
             <tbody>
-                @foreach (var rental in Model.Rentals)
-                {
-                    @if (rental.Driver == null || rental.Car == null)
+                    @foreach (var rental in Model.Rentals)
                     {
+                        @if (rental.Driver == null || rental.Car == null)
+                        {
                         <tr>
                             <td colspan="5" class="has-text-centered">Bad Data</td>
                         </tr>
-                        continue;
-                    }
+                            continue;
+                        }
 
                     <tr>
                         <td>@rental.Driver.Fio</td>
@@ -49,79 +50,80 @@
                             <button class="button is-danger delete-button" data-id="@rental.Id">Удалить</button>
                         </td>
                     </tr>
-                }
+                    }
             </tbody>
-        </table>
+    </div>
+    </table>
+    </div>
 
-        <h1 class="title">Добавить или редактировать пару</h1>
+    <h1 class="title">Добавить или редактировать пару</h1>
 
-        <form id="pairForm" class="block box">
-            <div class="field">
-                <label class="label" for="driverSelect">Выберите водителя:</label>
-                <div class="control">
-                    <div class="select">
-                        <select id="driverSelect" required>
-                            @foreach (var driver in Model.Drivers)
-                            {
-                                <option value="@driver.Id">@driver.Fio</option>
-                            }
-                        </select>
-                    </div>
+    <form id="pairForm" class="block box">
+        <div class="field">
+            <label class="label" for="driverSelect">Выберите водителя:</label>
+            <div class="control">
+                <div class="select">
+                    <select id="driverSelect" required>
+                        @foreach (var driver in Model.Drivers)
+                        {
+                            <option value="@driver.Id">@driver.Fio</option>
+                        }
+                    </select>
                 </div>
             </div>
-
-            <div class="field">
-                <label class="label" for="carSelect">Выберите машину:</label>
-                <div class="control">
-                    <div class="select">
-                        <select id="carSelect" required>
-                            @foreach (var car in Model.Cars)
-                            {
-                                <option value="@car.Id">@car.BrandModel (@car.PlateNumber)</option>
-                            }
-                        </select>
-                    </div>
-                </div>
-            </div>
-
-            <div class="field">
-                <label class="label" for="rent">Аренда:</label>
-                <div class="control">
-                    <input class="input" type="number" id="rent" step="0.01" required>
-                </div>
-            </div>
-
-
-            <input type="hidden" id="pairId">
-
-            <div class="field is-grouped">
-                <div class="control">
-                    <button class="button is-primary" type="submit" id="saveButton">Добавить пару</button>
-                </div>
-                <div class="control">
-                    <button class="button is-link is-light" type="button" id="cancelButton">Отмена</button>
-                </div>
-            </div>
-
-        </form>
-
-        <h1 class="title">Списание аренды</h1>
-        <button class="button is-danger block" id="writeOffButton">Списать аренду</button>
-        <div id="writeOffBlock" class="block box">
-
-            @if (!@Model.IsJobServerDown)
-            {
-                <form action="/home/changejobstatus" method="post">
-                    <p class="is-size-5" style="color: @(Model.IsJobEnable ? "green" : "red")">Автоматическое списание аренды @(Model.IsJobEnable ? "включено" : "выключено")</p>
-                    <input name="newStatus" hidden value="@((!Model.IsJobEnable).ToString())">
-                    <button class="button is-@(Model.IsJobEnable ? "danger" : "success")" type="submit">@(Model.IsJobEnable ? "Выключить" : "Включить")</button>
-                </form>
-            }
-            else
-            {
-                <h2 class="title is-2" style="color: red;">Job server is down</h2>
-            }
         </div>
+
+        <div class="field">
+            <label class="label" for="carSelect">Выберите машину:</label>
+            <div class="control">
+                <div class="select">
+                    <select id="carSelect" required>
+                        @foreach (var car in Model.Cars)
+                        {
+                            <option value="@car.Id">@car.BrandModel (@car.PlateNumber)</option>
+                        }
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <div class="field">
+            <label class="label" for="rent">Аренда:</label>
+            <div class="control">
+                <input class="input" type="number" id="rent" step="0.01" required>
+            </div>
+        </div>
+
+
+        <input type="hidden" id="pairId">
+
+        <div class="field is-grouped">
+            <div class="control">
+                <button class="button is-primary" type="submit" id="saveButton">Добавить пару</button>
+            </div>
+            <div class="control">
+                <button class="button is-link is-light" type="button" id="cancelButton">Отмена</button>
+            </div>
+        </div>
+
+    </form>
+
+    <h1 class="title">Списание аренды</h1>
+    <button class="button is-danger block" id="writeOffButton">Списать аренду</button>
+    <div id="writeOffBlock" class="block box">
+
+        @if (!Model.IsJobServerDown)
+        {
+            <form action="/home/changejobstatus" method="post">
+                <p class="is-size-5" style="color: @(Model.IsJobEnable ? "green" : "red")">Автоматическое списание аренды @(Model.IsJobEnable ? "включено" : "выключено")</p>
+                <input name="newStatus" hidden value="@((!Model.IsJobEnable).ToString())">
+                <button class="button is-@(Model.IsJobEnable ? "danger" : "success")" type="submit">@(Model.IsJobEnable ? "Выключить" : "Включить")</button>
+            </form>
+        }
+        else
+        {
+            <h2 class="title is-2" style="color: red;">Job server is down</h2>
+        }
     </div>
 </section>
 

@@ -1,0 +1,7 @@
+﻿.table-container {
+    overflow-x: auto;
+}
+
+    .table-container .is-clipped {
+        overflow-x: hidden;
+    }
