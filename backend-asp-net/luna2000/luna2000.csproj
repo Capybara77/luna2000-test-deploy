@@ -34,7 +34,8 @@
     <Folder Include="files\" />
     <Folder Include="files\" />
     <Folder Include="Markers\" />
-    <Folder Include="Telegram\" />
+    <Folder Include="Telegram\Commands\" />
+    <Folder Include="Telegram\IoC\" />
   </ItemGroup>
 
   <ItemGroup>

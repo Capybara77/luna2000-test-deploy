@@ -12,6 +12,7 @@ using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.FileProviders;
 using System.Globalization;
+using luna2000.Telegram.IoC;
 
 namespace luna2000;
 
@@ -40,6 +41,7 @@ public class Program
             new EntityProfiles()
         }));
         builder.Services.AddScoped<ISmsParserService, SmsParserService>();
+        builder.Services.AddTelegramCommands();
 
         ConfigureCulture();
 
