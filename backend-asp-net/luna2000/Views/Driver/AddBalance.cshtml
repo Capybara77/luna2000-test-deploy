@@ -1,17 +1,33 @@
 ﻿@model DriverEntity
 
-<div class="driver-add-balance-wrapper">
-    <p class="fs-4">Внести депозит для @Model.Fio</p>
-    <br />
-    <p class="fs-4">Текущий баланс: @Model.Balance</p>
-    <br />
+<section class="section">
+    <div class="container">
+        <nav class="breadcrumb" aria-label="breadcrumbs">
+            <ul>
+                <li><a href="/">Главная</a></li>
+                <li><a href="/driver">Водители</a></li>
+                <li class="is-active"><a href="#" aria-current="page">Пополнить баланс</a></li>
+            </ul>
+        </nav>
 
-    <form action="/driver/addbalance" method="post" style="margin-left: 0">
-        <p class="fs-5">Депозит:</p>
-        <br />
-        <input name="driverId" value="@Model.Id" hidden />
-        <input name="balance" type="number" />
+        <h1 class="title">Внести депозит для @Model.Fio</h1>
+        <p class="subtitle">Текущий баланс: @Model.Balance</p>
 
-        <button class="" type="submit">Внести депозит</button>
-    </form>
-</div>
+        <form action="/driver/addbalance" method="post">
+            <input name="driverId" value="@Model.Id" hidden>
+
+            <div class="field">
+                <label class="label" for="balanceInput">Депозит:</label>
+                <div class="control">
+                    <input class="input" name="balance" type="number" id="balanceInput" required>
+                </div>
+            </div>
+
+            <div class="field">
+                <div class="control">
+                    <button class="button is-primary" type="submit">Внести депозит</button>
+                </div>
+            </div>
+        </form>
+    </div>
+</section>

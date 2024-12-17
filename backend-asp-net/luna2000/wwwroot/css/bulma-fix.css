@@ -1,0 +1,11 @@
+﻿.table-container {
+    overflow-x: auto;
+}
+
+    .table-container .is-clipped {
+        overflow-x: hidden;
+    }
+
+input{
+    min-width: 95px !important;
+}

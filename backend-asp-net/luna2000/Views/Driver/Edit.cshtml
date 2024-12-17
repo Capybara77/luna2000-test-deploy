@@ -1,74 +1,121 @@
 ﻿@using System.Globalization
 @model DriverEntity
 
-<header>
-    <h1>Редактировать Водителя</h1>
-</header>
-<main>
-    <form id="editDriverForm" enctype="multipart/form-data">
-        <input id="driverId" value="@Model.Id" hidden />
+<section class="section">
+    <div class="container">
+        <h1 class="title">Редактировать Водителя</h1>
 
-        <label for="fio">ФИО:</label>
-        <input type="text" id="fio" name="fio" required value="@Model.Fio" /><br />
+        <nav class="breadcrumb" aria-label="breadcrumbs">
+            <ul>
+                <li><a href="/">Главная</a></li>
+                <li><a href="/driver">Водители</a></li>
+                <li class="is-active"><a href="#" aria-current="page">Редактировать</a></li>
+            </ul>
+        </nav>
 
-        <label for="aliases">Псевдонимы:</label>
-        <textarea type="text" id="aliases" name="aliases" placeholder="Фамилия Имя
+        <form id="editDriverForm" enctype="multipart/form-data">
+            <input id="driverId" value="@Model.Id" hidden>
+
+            <div class="field">
+                <label class="label" for="fio">ФИО:</label>
+                <div class="control">
+                    <input class="input" type="text" id="fio" name="fio" required value="@Model.Fio">
+                </div>
+            </div>
+
+            <div class="field">
+                <label class="label" for="aliases">Псевдонимы:</label>
+                <div class="control">
+                    <textarea class="textarea" id="aliases" name="aliases" placeholder="Фамилия Имя
 Фамилия И.О.
 и т.д.">@if (Model.Aliases != null)
-            {
-                @(string.Join("\n", Model.Aliases.Select(a => a.Alias)))
-            }</textarea>
+                        {
+                            @(string.Join("\n", Model.Aliases.Select(a => a.Alias)))
+                        }</textarea>
+                </div>
+            </div>
 
-        <label for="fio">Баланс:</label>
-        <input type="number" id="balance" name="balance"
-               required value="@Model.Balance.ToString(CultureInfo.InvariantCulture).Replace(',', '.')" />
-        <br />
+            <div class="field">
+                <label class="label" for="balance">Баланс:</label>
+                <div class="control">
+                    <input class="input" type="number" id="balance" name="balance" required value="@Model.Balance.ToString(CultureInfo.InvariantCulture).Replace(',', '.')">
+                </div>
+            </div>
 
-        <label for="passport">Паспорт:</label>
-        <input type="text" id="passport" name="passport" required value="@Model.Passport" /><br />
+            <div class="field">
+                <label class="label" for="passport">Паспорт:</label>
+                <div class="control">
+                    <input class="input" type="text" id="passport" name="passport" required value="@Model.Passport">
+                </div>
+            </div>
 
-        <label for="registration">Прописка:</label>
-        <input type="text"
-               id="registration"
-               name="registration"
-               required value="@Model.Registration" /><br />
+            <div class="field">
+                <label class="label" for="registration">Прописка:</label>
+                <div class="control">
+                    <input class="input" type="text" id="registration" name="registration" required value="@Model.Registration">
+                </div>
+            </div>
 
-        <label for="address">Адрес проживания:</label>
-        <input type="text" id="address" name="address" required value="@Model.Address" /><br />
+            <div class="field">
+                <label class="label" for="address">Адрес проживания:</label>
+                <div class="control">
+                    <input class="input" type="text" id="address" name="address" required value="@Model.Address">
+                </div>
+            </div>
 
-        <label for="driverLicense">Водительское удостоверение:</label>
-        <input type="text"
-               id="driverLicense"
-               name="driverLicense"
-               required value="@Model.DriverLicense" /><br />
+            <div class="field">
+                <label class="label" for="driverLicense">Водительское удостоверение:</label>
+                <div class="control">
+                    <input class="input" type="text" id="driverLicense" name="driverLicense" required value="@Model.DriverLicense">
+                </div>
+            </div>
 
-        <label for="parkingAddress">Адрес парковки:</label>
-        <input type="text"
-               id="parkingAddress"
-               name="parkingAddress"
-               required value="@Model.ParkingAddress" /><br />
+            <div class="field">
+                <label class="label" for="parkingAddress">Адрес парковки:</label>
+                <div class="control">
+                    <input class="input" type="text" id="parkingAddress" name="parkingAddress" required value="@Model.ParkingAddress">
+                </div>
+            </div>
 
-        <label for="contacts">Контакты:</label>
-        <input type="text" id="contacts" name="contacts" required value="@Model.Contacts" /><br />
+            <div class="field">
+                <label class="label" for="contacts">Контакты:</label>
+                <div class="control">
+                    <input class="input" type="text" id="contacts" name="contacts" required value="@Model.Contacts">
+                </div>
+            </div>
 
-        <label for="note">Примечание:</label>
-        <textarea id="note" name="note">@Model.Note</textarea><br />
+            <div class="field">
+                <label class="label" for="note">Примечание:</label>
+                <div class="control">
+                    <textarea class="textarea" id="note" name="note">@Model.Note</textarea>
+                </div>
+            </div>
+            
+            <div class="field">
+                <label class="label" for="note">Telegram ID:</label>
+                <div class="control">
+                    <input class="input" type="number" id="TelegramChatId" name="TelegramChatId" value="@Model.TelegramChatId">
+                </div>
+            </div>
 
-        <label for="photos">Фотографии (до 4 штук):</label>
-        <input type="file"
-               id="photos"
-               name="photos"
-               multiple
-               accept="image/*" /><br />
+            <div class="field">
+                <label class="label" for="photos">Фотографии (до 4 штук):</label>
+                <div class="control">
+                    <input class="input" type="file" id="photos" name="photos" multiple accept="image/*">
+                </div>
+            </div>
 
-        <button type="submit">Редактировать</button>
-        <button type="button"
-                class="add-button"
-                onclick="window.history.back();">
-            Назад
-        </button>
-    </form>
-</main>
+            <div class="field is-grouped">
+                <div class="control">
+                    <button class="button is-primary" type="submit">Сохранить изменения</button>
+                </div>
+                <div class="control">
+                    <button class="button is-light" type="button" onclick="window.history.back();">Назад</button>
+                </div>
+            </div>
+        </form>
+    </div>
+</section>
 
 @section Scripts
     {

@@ -1,17 +1,29 @@
 ﻿@model PhotoEntity
 
-<div class="photo-wrapper">
-    <p class="photo-info photo-original-name">Оригинальное название: @Model.FileName</p>
-    <br />
-    <p class="photo-info photo-id">Id файла в системе: @Model.FileId</p>
-    <br />
+<section class="section">
+    <div class="container">
+        <nav class="breadcrumb" aria-label="breadcrumbs">
+            <ul>
+                <li><a href="/">Главная</a></li>
+                <li class="is-active"><a href="#" aria-current="page">Фотография</a></li>
+            </ul>
+        </nav>
 
-    <img class="main-photo" src="/@Model.FileId@Model.FileExtension" />
-    @*<div class="delete">
-    <p class="delete-char">X</p>
-    </div>*@
-
-    <form action="/photo/delete" method="post" class="delete-photo-form">
-        <button type="submit" name="id" value="@Model.Id" class="delete-btn btn btn-danger">Удалить</button>
-    </form>
-</div>
+        <div class="card">
+            <div class="card-image">
+                <figure class="image is-4by3">
+                    <img src="/@Model.FileId@Model.FileExtension" alt="@Model.FileName">
+                </figure>
+            </div>
+            <div class="card-content">
+                <div class="content">
+                    <p><strong>Оригинальное название:</strong> @Model.FileName</p>
+                    <p><strong>Id файла в системе:</strong> @Model.FileId</p>
+                    <form action="/photo/delete" method="post" class="delete-photo-form">
+                        <button type="submit" name="id" value="@Model.Id" class="button is-danger">Удалить</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>

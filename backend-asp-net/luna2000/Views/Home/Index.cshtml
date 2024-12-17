@@ -1,123 +1,131 @@
 ﻿@using System.Globalization
 @model luna2000.Dto.MainViewDto
 
-<!-- Кнопки для навигации -->
-@*<div class="nav-buttons">
-    <a href="driver" class="nav-button">Водители</a>
-    <a href="/car" class="nav-button">Машины</a>
-    <a href="download.html" class="nav-button">Скачать</a>
-</div>*@
+<section class="section">
+    <div class="container table-container">
+        <h1 class="title">Таблица данных</h1>
 
-<!-- Таблица для отображения данных -->
-<h2>Таблица данных</h2>
-<table id="mainTable">
-    <thead>
-        <tr>
-            <th>Водитель</th>
-            <th>Авто</th>
-            <th>Баланс</th>
-            <th>Аренда</th>
-            <th>Действия</th>
-        </tr>
-    </thead>
-    <tbody>
-        <!-- Данные будут вставлены с помощью JavaScript -->
-        @foreach (var rental in Model.Rentals)
-        {
-            @if (rental.Driver == null || rental.Car == null)
-            {
+        <table class="table is-hoverable is-striped is-fullwidth table-container" id="mainTable">
+            <div class="is-clipped">
+            <thead>
                 <tr>
-                    <div>
-                        Bad Data
-                    </div>
+                    <th>Водитель</th>
+                    <th>Авто</th>
+                    <th>Баланс</th>
+                    <th>Аренда</th>
+                    <th>Действия</th>
                 </tr>
+            </thead>
+            <tbody>
+                    @foreach (var rental in Model.Rentals)
+                    {
+                        @if (rental.Driver == null || rental.Car == null)
+                        {
+                        <tr>
+                            <td colspan="5" class="has-text-centered">Bad Data</td>
+                        </tr>
+                            continue;
+                        }
 
-                continue;
-            }
+                    <tr>
+                        <td>@rental.Driver.Fio</td>
+                        <td>@rental.Car.BrandModel (@rental.Car.PlateNumber)</td>
+                        <td>
+                            <input type="number" class="input balance is-medium" value="@rental.Driver.Balance.ToString(CultureInfo.InvariantCulture).Replace(',', '.')" readonly>
+                        </td>
+                        <td>
+                            <input type="number" step=".01" class="input rent is-medium" value="@rental.Rent.ToString(CultureInfo.InvariantCulture).Replace(',', '.')" readonly>
+                        </td>
+                        <td>
+                            <a class="button is-info" href="/driver/addbalance?driverId=@rental.DriverId">
+                                Внести депозит
+                            </a>
+                            <button class="button is-warning edit-button"
+                                data-driver="@rental.DriverId"
+                                data-car="@rental.CarId"
+                                data-rent="@rental.Rent.ToString(CultureInfo.InvariantCulture).Replace(',', '.')"
+                                data-id="@rental.Id">
+                                Редактировать
+                            </button>
+                            <button class="button is-danger delete-button" data-id="@rental.Id">Удалить</button>
+                        </td>
+                    </tr>
+                    }
+            </tbody>
+    </div>
+    </table>
+    </div>
 
-            <tr>
-                <td>
-                    @rental.Driver.Fio
-                </td>
-                <td>
-                    @rental.Car.BrandModel (@rental.Car.PlateNumber)
-                </td>
-                <td>
-                    <input type="number" class="balance"
-                       value="@rental.Driver.Balance.ToString(CultureInfo.InvariantCulture).Replace(',', '.')"
-                       readonly="">
-                </td>
-                <td>
+    <h1 class="title">Добавить или редактировать пару</h1>
 
-                    <input type="number" step=".01" class="rent"
-                       value="@rental.Rent.ToString(CultureInfo.InvariantCulture).Replace(',', '.')"
-                       readonly="">
-                </td>
-                <td>
-                    <button class="add-balance-button"
-                        onclick="location.replace('/driver/addbalance?driverId=@rental.DriverId')">
-                        Внести депозит
-                    </button>
-                    <button class="edit-button"
-                        data-driver="@rental.DriverId"
-                        data-car="@rental.CarId"
-                        data-rent="@rental.Rent.ToString(CultureInfo.InvariantCulture).Replace(',', '.')"
-                        data-id="@rental.Id">
-                        Редактировать
-                    </button>
-                    <button class="delete-button" data-id="@rental.Id">Удалить</button>
-                </td>
-            </tr>
-        }
-    </tbody>
-</table>
+    <form id="pairForm" class="block box">
+        <div class="field">
+            <label class="label" for="driverSelect">Выберите водителя:</label>
+            <div class="control">
+                <div class="select">
+                    <select id="driverSelect" required>
+                        @foreach (var driver in Model.Drivers)
+                        {
+                            <option value="@driver.Id">@driver.Fio</option>
+                        }
+                    </select>
+                </div>
+            </div>
+        </div>
 
-<!-- Форма для добавления и редактирования пары -->
-<h2>Добавить или редактировать пару</h2>
-<form id="pairForm">
-    <label for="driverSelect">Выберите водителя:</label>
-    <select id="driverSelect" required>
-        @foreach (var driver in Model.Drivers)
+        <div class="field">
+            <label class="label" for="carSelect">Выберите машину:</label>
+            <div class="control">
+                <div class="select">
+                    <select id="carSelect" required>
+                        @foreach (var car in Model.Cars)
+                        {
+                            <option value="@car.Id">@car.BrandModel (@car.PlateNumber)</option>
+                        }
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <div class="field">
+            <label class="label" for="rent">Аренда:</label>
+            <div class="control">
+                <input class="input" type="number" id="rent" step="0.01" required>
+            </div>
+        </div>
+
+
+        <input type="hidden" id="pairId">
+
+        <div class="field is-grouped">
+            <div class="control">
+                <button class="button is-primary" type="submit" id="saveButton">Добавить пару</button>
+            </div>
+            <div class="control">
+                <button class="button is-link is-light" type="button" id="cancelButton">Отмена</button>
+            </div>
+        </div>
+
+    </form>
+
+    <h1 class="title">Списание аренды</h1>
+    <button class="button is-danger block" id="writeOffButton">Списать аренду</button>
+    <div id="writeOffBlock" class="block box">
+
+        @if (!Model.IsJobServerDown)
         {
-            <option value="@driver.Id">@driver.Fio</option>
+            <form action="/home/changejobstatus" method="post">
+                <p class="is-size-5" style="color: @(Model.IsJobEnable ? "green" : "red")">Автоматическое списание аренды @(Model.IsJobEnable ? "включено" : "выключено")</p>
+                <input name="newStatus" hidden value="@((!Model.IsJobEnable).ToString())">
+                <button class="button is-@(Model.IsJobEnable ? "danger" : "success")" type="submit">@(Model.IsJobEnable ? "Выключить" : "Включить")</button>
+            </form>
         }
-    </select><br />
-
-    <label for="carSelect">Выберите машину:</label>
-    <select id="carSelect" required>
-        @foreach (var car in Model.Cars)
+        else
         {
-            <option value="@car.Id">@car.BrandModel (@car.PlateNumber)</option>
+            <h2 class="title is-2" style="color: red;">Job server is down</h2>
         }
-    </select><br />
-
-    <label for="rent">Аренда:</label>
-    <input type="number" id="rent" step="0.01" required /><br />
-
-    <input type="hidden" id="pairId" />
-    <button type="submit" id="saveButton">Добавить пару</button>
-    <button type="button" id="cancelButton">Отмена</button>
-</form>
-
-<!-- Блок для кнопки списания аренды -->
-
-
-<div id="writeOffBlock">
-    <button id="writeOffButton">Списать аренду</button>
-
-    @if (!@Model.IsJobServerDown)
-    {
-        <form action="/home/changejobstatus" method="post">
-            <p style="color: @(Model.IsJobEnable ? "green" : "red")">Автоматическое списание аренды @(Model.IsJobEnable ? "включено" : "выключено")</p>
-            <input name="newStatus" hidden value="@((!Model.IsJobEnable).ToString())" />
-            <button type="submit">@(Model.IsJobEnable ? "Выключить" : "Включить")</button>
-        </form>
-    }
-    else
-    {
-        <h2 style="color: red;">Job server is down</h2>
-    }
-</div>
+    </div>
+</section>
 
 @section Scripts
     {

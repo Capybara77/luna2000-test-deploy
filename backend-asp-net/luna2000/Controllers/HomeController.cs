@@ -123,9 +123,9 @@ public class HomeController : Controller
         return LocalRedirect("/");
     }
 
-    public IActionResult DeductRent()
+    public async Task<IActionResult> DeductRent()
     {
-        _deductRentService.DeductRent();
+        await _deductRentService.DeductRent();
 
         return Ok();
     }

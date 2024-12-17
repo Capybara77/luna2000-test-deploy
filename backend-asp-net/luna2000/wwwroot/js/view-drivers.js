@@ -17,3 +17,17 @@ function deleteDriver(id) {
       .catch((error) => console.error("Ошибка при удалении водителя:", error));
   }
 }
+
+function createUrl(id) {
+    fetch(`/driver/createtgurl/${id}`, { method: "GET" })
+        .then((response) => response.json())
+        .then((data) => {
+            if (data.success) {
+                navigator.clipboard.writeText(data.url);
+                alert("Ссылка скопирована в буфер обмена");
+            } else {
+                alert("Ошибка");
+            }
+        })
+        .catch((error) => console.error("Ошибка:", error));
+}

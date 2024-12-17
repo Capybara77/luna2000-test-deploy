@@ -1,88 +1,143 @@
 ﻿@model CarEntity
 
-<h1>Редактирование автомобиля</h1>
+<section class="section">
+    <div class="container">
+        <h1 class="title">Редактирование автомобиля</h1>
 
-<form id="editCarForm">
-    <table>
-        <tr>
-            <input hidden id="carId" value="@Model.Id" />
-            <td>Марка/Модель:</td>
-            <td><input type="text" id="brandModel" required value="@Model.BrandModel"/></td>
-        </tr>
-        <tr>
-            <td>ПТС:</td>
-            <td><input type="text" id="pts" required value="@Model.Pts" /></td>
-        </tr>
-        <tr>
-            <td>СТС:</td>
-            <td><input type="text" id="sts" required value="@Model.Sts" /></td>
-        </tr>
-        <tr>
-            <td>VIN-Код:</td>
-            <td><input type="text" id="vin" required value="@Model.Vin" /></td>
-        </tr>
-        <tr>
-            <td>Год выпуска:</td>
-            <td><input type="number" id="year" required value="@Model.Year" /></td>
-        </tr>
-        <tr>
-            <td>Дата постановки на учет:</td>
-            <td><input type="date" id="registrationDate" value="@(Model.RegistrationDate.HasValue ? Model.RegistrationDate.Value.ToString("yyyy-MM-dd") : "0001-01-01")" /></td>
-        </tr>
-        <tr>
-            <td>Госномер:</td>
-            <td><input type="text" id="plateNumber" required value="@Model.PlateNumber" /></td>
-        </tr>
-        <tr>
-            <td>ОСАГО:</td>
-            <td><input type="text" id="osago" required value="@Model.Osago" /></td>
-        </tr>
-        <tr>
-            <td>КАСКО:</td>
-            <td><input type="text" id="kasko" value="@Model.Kasko" /></td>
-        </tr>
-        <tr>
-            <td>Техосмотр:</td>
-            <td><input type="date" id="techInspection" value="@(Model.TechInspection.HasValue ? Model.TechInspection.Value.ToString("yyyy-MM-dd") : "0001-01-01")" /></td>
-        </tr>
-        <tr>
-            <td>Лицензия такси:</td>
-            <td><input type="checkbox" id="taxiLicense" @(Model.TaxiLicense.HasValue && Model.TaxiLicense.Value ? "checked" : string.Empty) /></td>
-        </tr>
-        <tr>
-            <td>Выкуп или аренда:</td>
-            <td><input type="text" id="purchaseOrRent" value="@Model.PurchaseOrRent" /></td>
-        </tr>
-        <tr>
-            <td>В лизинге:</td>
-            <td><input type="checkbox" id="leasing" @(Model.Leasing.HasValue && Model.Leasing.Value ? "checked" : string.Empty) /></td>
-        </tr>
-        <tr>
-            <td>Фото автомобиля (до 10 шт.):</td>
-            <td>
-                <input type="file" id="photos" accept="image/*" multiple value="@Model.Photos"/>
+        <nav class="breadcrumb" aria-label="breadcrumbs">
+            <ul>
+                <li><a href="/">Главная</a></li>
+                <li><a href="/car">Автомобили</a></li>
+                <li class="is-active"><a href="#" aria-current="page">Редактировать</a></li>
+            </ul>
+        </nav>
+
+        <form id="editCarForm">
+            <input type="hidden" id="carId" value="@Model.Id">
+
+            <div class="field">
+                <label class="label" for="brandModel">Марка/Модель:</label>
+                <div class="control">
+                    <input class="input" type="text" id="brandModel" required value="@Model.BrandModel">
+                </div>
+            </div>
+
+            <!-- ... остальные поля ввода аналогично ... -->
+            <div class="field">
+                <label class="label" for="pts">ПТС:</label>
+                <div class="control">
+                    <input class="input" type="text" id="pts" required value="@Model.Pts">
+                </div>
+            </div>
+
+            <div class="field">
+                <label class="label" for="sts">СТС:</label>
+                <div class="control">
+                    <input class="input" type="text" id="sts" required value="@Model.Sts">
+                </div>
+            </div>
+
+            <div class="field">
+                <label class="label" for="vin">VIN-Код:</label>
+                <div class="control">
+                    <input class="input" type="text" id="vin" required value="@Model.Vin">
+                </div>
+            </div>
+
+            <div class="field">
+                <label class="label" for="year">Год выпуска:</label>
+                <div class="control">
+                    <input class="input" type="number" id="year" required value="@Model.Year">
+                </div>
+            </div>
+
+            <div class="field">
+                <label class="label" for="registrationDate">Дата постановки на учет:</label>
+                <div class="control">
+                    <input class="input" type="date" id="registrationDate" value="@(Model.RegistrationDate.HasValue ? Model.RegistrationDate.Value.ToString("yyyy-MM-dd") : "")">
+                </div>
+            </div>
+
+            <div class="field">
+                <label class="label" for="plateNumber">Госномер:</label>
+                <div class="control">
+                    <input class="input" type="text" id="plateNumber" required value="@Model.PlateNumber">
+                </div>
+            </div>
+
+            <div class="field">
+                <label class="label" for="osago">ОСАГО:</label>
+                <div class="control">
+                    <input class="input" type="text" id="osago" required value="@Model.Osago">
+                </div>
+            </div>
+
+            <div class="field">
+                <label class="label" for="kasko">КАСКО:</label>
+                <div class="control">
+                    <input class="input" type="text" id="kasko" value="@Model.Kasko">
+                </div>
+            </div>
+
+            <div class="field">
+                <label class="label" for="techInspection">Техосмотр:</label>
+                <div class="control">
+                    <input class="input" type="date" id="techInspection" value="@(Model.TechInspection.HasValue ? Model.TechInspection.Value.ToString("yyyy-MM-dd") : "")">
+                </div>
+            </div>
+
+            <div class="field">
+                <div class="control">
+                    <label class="checkbox" for="taxiLicense">
+                        <input type="checkbox" id="taxiLicense" @(Model.TaxiLicense.HasValue && Model.TaxiLicense.Value ? "checked" : string.Empty)>
+                        Лицензия такси
+                    </label>
+                </div>
+            </div>
+
+            <div class="field">
+                <label class="label" for="purchaseOrRent">Выкуп или аренда:</label>
+                <div class="control">
+                    <input class="input" type="text" id="purchaseOrRent" value="@Model.PurchaseOrRent">
+                </div>
+            </div>
+
+            <div class="field">
+                <div class="control">
+                    <label class="checkbox" for="leasing">
+                        <input type="checkbox" id="leasing" @(Model.Leasing.HasValue && Model.Leasing.Value ? "checked" : string.Empty)>
+                        В лизинге
+                    </label>
+                </div>
+            </div>
+
+            <div class="field">
+                <label class="label" for="photos">Фото автомобиля (до 10 шт.):</label>
+                <div class="control">
+                    <input class="input" type="file" id="photos" accept="image/*" multiple>
+                </div>
                 <div id="existingPhotos">
                     @if (Model.Photos != null)
                     {
                         @foreach (var photo in Model.Photos)
                         {
-                            <img src="/@photo.FileId@photo.FileExtension" style="width: 100px; height: auto;">
+                            <img src="/@photo.FileId@photo.FileExtension" style="max-width: 100px; height: auto;">
                         }
                     }
                 </div>
-            </td>
-        </tr>
-       
-    </table>
-    <div class="button-container">
-        <button type="submit" class="add-button">Редактировать автомобиль</button>
-        <button type="button"
-                class="add-button"
-                onclick="window.history.back();">
-            Назад
-        </button>
+            </div>
+
+            <div class="field is-grouped">
+                <div class="control">
+                    <button class="button is-primary" type="submit">Сохранить изменения</button>
+                </div>
+                <div class="control">
+                    <button class="button is-light" type="button" onclick="window.history.back();">Назад</button>
+                </div>
+            </div>
+        </form>
     </div>
-</form>
+</section>
 
 @section Scripts
 {
