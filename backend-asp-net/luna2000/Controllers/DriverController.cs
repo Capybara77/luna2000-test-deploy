@@ -201,16 +201,7 @@ public class DriverController : Controller
     [Route("/driver/createtgurl/{id:guid}")]
     public async Task<IActionResult> CreateTgUrl(Guid id)
     {
-        var driverId = await _dbContext.Drivers
-            .Select(entity => entity.Id)
-            .FirstOrDefaultAsync();
-
-        if (driverId == Guid.Empty)
-        {
-            return NotFound();
-        }
-
-        var url = _telegramClient.CreateUrlInvite(driverId);
+        var url = _telegramClient.CreateUrlInvite(id);
 
         return Json(new { success = true, url });
     }
