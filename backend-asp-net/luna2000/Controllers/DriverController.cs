@@ -3,6 +3,7 @@ using luna2000.Data;
 using luna2000.Dto;
 using luna2000.Models;
 using luna2000.Service;
+using luna2000.Telegram;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -15,12 +16,15 @@ public class DriverController : Controller
     private readonly LunaDbContext _dbContext;
     private readonly IMapper _mapper;
     private readonly IFileStorage _fileStorage;
+    private readonly ITelegramClient _telegramClient;
 
-    public DriverController(LunaDbContext dbContext, IMapper mapper, IFileStorage fileStorage)
+    public DriverController(LunaDbContext dbContext, IMapper mapper, IFileStorage fileStorage,
+        ITelegramClient telegramClient)
     {
         _dbContext = dbContext;
         _mapper = mapper;
         _fileStorage = fileStorage;
+        _telegramClient = telegramClient;
     }
 
     public IActionResult Index()
@@ -191,6 +195,24 @@ public class DriverController : Controller
         await _dbContext.SaveChangesAsync();
 
         return LocalRedirect("/");
+    }
+
+    [HttpGet]
+    [Route("/driver/createtgurl/{id:guid}")]
+    public async Task<IActionResult> CreateTgUrl(Guid id)
+    {
+        var driverId = await _dbContext.Drivers
+            .Select(entity => entity.Id)
+            .FirstOrDefaultAsync();
+
+        if (driverId == Guid.Empty)
+        {
+            return NotFound();
+        }
+
+        var url = _telegramClient.CreateUrlInvite(driverId);
+
+        return Json(new { success = true, url });
     }
 
     private void DeleteDriverPhotos(ICollection<PhotoEntity>? photos)

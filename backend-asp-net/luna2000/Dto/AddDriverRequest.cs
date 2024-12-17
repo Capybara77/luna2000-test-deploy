@@ -26,5 +26,7 @@ public class AddDriverRequest
 
     public string? Aliases { get; set; }
 
+    public long? TelegramChatId { get; set; }
+
     public virtual ICollection<IFormFile>? Photos { get; set; }
 }

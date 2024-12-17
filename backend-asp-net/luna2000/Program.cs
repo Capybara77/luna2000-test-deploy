@@ -7,6 +7,7 @@ using luna2000.Middlewares;
 using luna2000.Options;
 using luna2000.Service;
 using luna2000.SmsServices;
+using luna2000.Telegram;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.FileProviders;
@@ -33,6 +34,7 @@ public class Program
         builder.Services.AddScoped<IFileStorage, FileStorage>();
         builder.Services.AddScoped<IJobServerService, JobServerService>();
         builder.Services.AddScoped<IDeductRentService, DeductRentService>();
+        builder.Services.AddSingleton<ITelegramClient, TelegramClient>();
         builder.Services.AddAutoMapper(expression => expression.AddProfiles(new []
         {
             new EntityProfiles()
@@ -49,6 +51,11 @@ public class Program
         AddAuthentication(builder);
 
         var app = builder.Build();
+
+        using (var scope = app.Services.CreateScope())
+        {
+            scope.ServiceProvider.GetRequiredService<ITelegramClient>();
+        }
 
         if (!app.Environment.IsDevelopment())
         {

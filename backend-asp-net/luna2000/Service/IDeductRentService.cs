@@ -2,5 +2,5 @@
 
 public interface IDeductRentService
 {
-    void DeductRent();
+    Task DeductRent();
 }

@@ -19,65 +19,66 @@
             </p>
         </div>
 
-
-        <table class="table is-hoverable is-striped is-fullwidth" id="carsTable">
-            <thead>
-                <tr>
-                    <th>Фото</th>
-                    <th>Марка/Модель</th>
-                    <th>ПТС</th>
-                    <th>СТС</th>
-                    <th>VIN-Код</th>
-                    <th>Год выпуска</th>
-                    <th>Дата постановки на учет</th>
-                    <th>Госномер</th>
-                    <th>ОСАГО</th>
-                    <th>КАСКО</th>
-                    <th>Техосмотр</th>
-                    <th>Лицензия такси</th>
-                    <th>Выкуп или аренда</th>
-                    <th>В лизинге</th>
-                    <th>Действия</th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach (var car in Model)
-                {
+        <div class="table-container">
+            <table class="table is-hoverable is-striped is-fullwidth" id="carsTable">
+                <thead>
                     <tr>
-                        <td>
-                            @if (car.Photos != null)
-                            {
-                                foreach (var photo in car.Photos)
-                                {
-                                    <a href="/photo/@photo.Id">
-                                        <img src="/@photo.FileId@(photo.FileExtension)" style="max-width: 100px; height: auto;" alt="">
-                                    </a>
-                                }
-                            }
-                        </td>
-                        <td>@car.BrandModel</td>
-                        <td>@car.Pts</td>
-                        <td>@car.Sts</td>
-                        <td>@car.Vin</td>
-                        <td>@car.Year</td>
-                        <td>@car.RegistrationDate?.ToString("dd.MM.yyyy")</td>
-                        <td>@car.PlateNumber</td>
-                        <td>@car.Osago</td>
-                        <td>@car.Kasko</td>
-                        <td>@car.TechInspection</td>
-                        <td>@(car.TaxiLicense.HasValue && car.TaxiLicense.Value ? "Да" : "Нет")</td>
-                        <td>@car.PurchaseOrRent</td>
-                        <td>@(car.Leasing.HasValue && car.Leasing.Value ? "Да" : "Нет")</td>
-                        <td>
-                            <div class="buttons">
-                                <button class="button is-warning" onclick="editCar('@(car.Id)')">Редактировать</button>
-                                <button class="button is-danger" onclick="deleteCar('@(car.Id)')">Удалить</button>
-                            </div>
-                        </td>
+                        <th>Фото</th>
+                        <th>Марка/Модель</th>
+                        <th>ПТС</th>
+                        <th>СТС</th>
+                        <th>VIN-Код</th>
+                        <th>Год выпуска</th>
+                        <th>Дата постановки на учет</th>
+                        <th>Госномер</th>
+                        <th>ОСАГО</th>
+                        <th>КАСКО</th>
+                        <th>Техосмотр</th>
+                        <th>Лицензия такси</th>
+                        <th>Выкуп или аренда</th>
+                        <th>В лизинге</th>
+                        <th>Действия</th>
                     </tr>
-                }
-            </tbody>
-        </table>
+                </thead>
+                <tbody>
+                    @foreach (var car in Model)
+                    {
+                        <tr>
+                            <td>
+                                @if (car.Photos != null)
+                                {
+                                    foreach (var photo in car.Photos)
+                                    {
+                                        <a href="/photo/@photo.Id">
+                                            <img src="/@photo.FileId@(photo.FileExtension)" style="max-width: 100px; height: auto;" alt="">
+                                        </a>
+                                    }
+                                }
+                            </td>
+                            <td>@car.BrandModel</td>
+                            <td>@car.Pts</td>
+                            <td>@car.Sts</td>
+                            <td>@car.Vin</td>
+                            <td>@car.Year</td>
+                            <td>@car.RegistrationDate?.ToString("dd.MM.yyyy")</td>
+                            <td>@car.PlateNumber</td>
+                            <td>@car.Osago</td>
+                            <td>@car.Kasko</td>
+                            <td>@car.TechInspection</td>
+                            <td>@(car.TaxiLicense.HasValue && car.TaxiLicense.Value ? "Да" : "Нет")</td>
+                            <td>@car.PurchaseOrRent</td>
+                            <td>@(car.Leasing.HasValue && car.Leasing.Value ? "Да" : "Нет")</td>
+                            <td>
+                                <div class="buttons">
+                                    <button class="button is-warning" onclick="editCar('@(car.Id)')">Редактировать</button>
+                                    <button class="button is-danger" onclick="deleteCar('@(car.Id)')">Удалить</button>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
     </div>
 </section>
 

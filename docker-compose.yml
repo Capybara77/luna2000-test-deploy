@@ -12,6 +12,8 @@ services:
       - /home/luna-data/web-api-configs:/app/Configs
     networks:
       - hangfire_network
+    environment:
+      - telegram
 
   job-server:
     image: job-server

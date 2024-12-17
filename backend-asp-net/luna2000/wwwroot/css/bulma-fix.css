@@ -5,3 +5,7 @@
     .table-container .is-clipped {
         overflow-x: hidden;
     }
+
+input{
+    min-width: 95px !important;
+}

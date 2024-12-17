@@ -56,6 +56,7 @@ document.addEventListener("DOMContentLoaded", function () {
             );
             formData.append("contacts", document.getElementById("contacts").value);
             formData.append("note", document.getElementById("note").value);
+            formData.append("TelegramChatId", document.getElementById("TelegramChatId").value);
             formData.append("aliases", document.getElementById("aliases").value)
 
             const photoFiles = document.getElementById("photos").files;

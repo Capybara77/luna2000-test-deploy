@@ -18,9 +18,9 @@ public class ApiController : ControllerBase
     }
 
     [HttpPost("deduct-rent")]
-    public IActionResult ProcessDbTask()
+    public async Task<IActionResult> ProcessDbTask()
     {
-        _deductRentService.DeductRent();
+        await _deductRentService.DeductRent();
 
         _dbContext.Set<BaseLog>().Add(new BaseLog()
         {
@@ -30,7 +30,7 @@ public class ApiController : ControllerBase
             Note = "Автоматический вызов списания аренды"
         });
 
-        _dbContext.SaveChanges();
+        await _dbContext.SaveChangesAsync();
 
         return Ok();
     }

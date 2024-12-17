@@ -19,57 +19,61 @@
             </p>
         </div>
 
-
-        <table class="table is-hoverable is-striped is-fullwidth" id="driversTable">
-            <thead>
-                <tr>
-                    <th>ФИО</th>
-                    <th>Баланс</th>
-                    <th>Паспорт</th>
-                    <th>Прописка</th>
-                    <th>Адрес проживания</th>
-                    <th>ВУ</th>
-                    <th>Адрес парковки</th>
-                    <th>Контакты</th>
-                    <th>Примечание</th>
-                    <th>Фотографии</th>
-                    <th>Действия</th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach (var driver in Model)
-                {
+        <div class="table-container">
+            <table class="table is-hoverable is-striped is-fullwidth" id="driversTable">
+                <thead>
                     <tr>
-                        <td>@driver.Fio</td>
-                        <td>@driver.Balance</td>
-                        <td>@driver.Passport</td>
-                        <td>@driver.Registration</td>
-                        <td>@driver.Address</td>
-                        <td>@driver.DriverLicense</td>
-                        <td>@driver.ParkingAddress</td>
-                        <td>@driver.Contacts</td>
-                        <td>@driver.Note</td>
-                        <td>
-                            @if (driver.Photos != null)
-                            {
-                                foreach (var photo in driver.Photos)
-                                {
-                                    <a href="/photo/@photo.Id">
-                                        <img src="/@photo.FileId@(photo.FileExtension)" style="max-width: 100px; height: auto;" alt="">
-                                    </a>
-                                }
-                            }
-                        </td>
-                        <td>
-                            <div class="buttons">
-                                <button class="button is-warning" onclick="editDriver('@(driver.Id)')">Редактировать</button>
-                                <button class="button is-danger" onclick="deleteDriver('@(driver.Id)')">Удалить</button>
-                            </div>
-                        </td>
+                        <th>ФИО</th>
+                        <th>Баланс</th>
+                        <th>Паспорт</th>
+                        <th>Прописка</th>
+                        <th>Адрес проживания</th>
+                        <th>ВУ</th>
+                        <th>Адрес парковки</th>
+                        <th>Контакты</th>
+                        <th>Примечание</th>
+                        <th>Tg ID</th>
+                        <th>Фотографии</th>
+                        <th>Действия</th>
                     </tr>
-                }
-            </tbody>
-        </table>
+                </thead>
+                <tbody>
+                    @foreach (var driver in Model)
+                    {
+                        <tr>
+                            <td>@driver.Fio</td>
+                            <td>@driver.Balance</td>
+                            <td>@driver.Passport</td>
+                            <td>@driver.Registration</td>
+                            <td>@driver.Address</td>
+                            <td>@driver.DriverLicense</td>
+                            <td>@driver.ParkingAddress</td>
+                            <td>@driver.Contacts</td>
+                            <td>@driver.Note</td>
+                            <td>@driver.TelegramChatId</td>
+                            <td>
+                                @if (driver.Photos != null)
+                                {
+                                    foreach (var photo in driver.Photos)
+                                    {
+                                        <a href="/photo/@photo.Id">
+                                            <img src="/@photo.FileId@(photo.FileExtension)" style="max-width: 100px; height: auto;" alt="">
+                                        </a>
+                                    }
+                                }
+                            </td>
+                            <td>
+                                <div class="buttons">
+                                    <button class="button is-warning" onclick="editDriver('@(driver.Id)')">Редактировать</button>
+                                    <button class="button is-danger" onclick="deleteDriver('@(driver.Id)')">Удалить</button>
+                                    <button class="button is-info" onclick="createUrl('@(driver.Id)')">Скопировать ссылку-приглашение в TG</button>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
     </div>
 </section>
 
