@@ -13,6 +13,7 @@ public class HistoryController : Controller
 {
     private readonly LunaDbContext _dbContext;
     private readonly IMapper _mapper;
+    private const int ItemsPerPage = 15;
 
     public HistoryController(LunaDbContext dbContext, IMapper mapper)
     {
@@ -20,14 +21,29 @@ public class HistoryController : Controller
         _mapper = mapper;
     }
 
-    public IActionResult Index()
+    [ResponseCache(Duration = 5, Location = ResponseCacheLocation.Any)]
+    public async Task<IActionResult> Index(int page = 1)
     {
-        var logs = _dbContext
+        var logs = await _dbContext
             .Set<BaseLog>()
             .AsNoTracking()
             .OrderByDescending(log => log.Created)
-            .ToArray();
+            .Skip(ItemsPerPage * (page - 1))
+            .Take(ItemsPerPage)
+            .ToArrayAsync();
 
-        return View(_mapper.Map<IEnumerable<HistoryDto>>(logs).GroupBy(dto => dto.ChangeId));
+        var count = await _dbContext
+            .Set<BaseLog>()
+            .CountAsync();
+
+        var dto = new ViewHistoryDto
+        {
+            ItemsPerPage = ItemsPerPage,
+            CurrentPage = page,
+            ItemsCount = count,
+            Items = _mapper.Map<IEnumerable<HistoryDto>>(logs).GroupBy(dto => dto.ChangeId)
+        };
+
+        return View(dto);
     }
 }

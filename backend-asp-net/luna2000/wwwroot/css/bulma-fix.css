@@ -6,6 +6,11 @@
         overflow-x: hidden;
     }
 
-input{
+input {
     min-width: 95px !important;
+}
+
+
+.pagination {
+    --bulma-pagination-margin: 0 !important;
 }
