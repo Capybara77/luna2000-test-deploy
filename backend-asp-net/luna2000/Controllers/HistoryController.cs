@@ -13,7 +13,7 @@ public class HistoryController : Controller
 {
     private readonly LunaDbContext _dbContext;
     private readonly IMapper _mapper;
-    private const int ItemsPerPage = 500;
+    private const int ItemsPerPage = 100;
 
     public HistoryController(LunaDbContext dbContext, IMapper mapper)
     {
