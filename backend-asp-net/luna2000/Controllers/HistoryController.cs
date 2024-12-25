@@ -22,10 +22,11 @@ public class HistoryController : Controller
     }
 
     [ResponseCache(Duration = 5, Location = ResponseCacheLocation.Any)]
-    public async Task<IActionResult> Index(int page = 1)
+    public async Task<IActionResult> Index(int page = 1, Guid objFilter = default)
     {
         var logs = await _dbContext
             .Set<BaseLog>()
+            .Where(log => objFilter == Guid.Empty || log.EntryId == objFilter)
             .AsNoTracking()
             .OrderByDescending(log => log.Created)
             .Skip(ItemsPerPage * (page - 1))

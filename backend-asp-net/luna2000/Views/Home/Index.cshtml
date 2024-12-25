@@ -28,8 +28,8 @@
                         }
 
                     <tr>
-                        <td>@rental.Driver.Fio</td>
-                        <td>@rental.Car.BrandModel (@rental.Car.PlateNumber)</td>
+                        <td><a href="/history?page=1&objFilter=@(rental.Driver.Id)">@rental.Driver.Fio</a></td>
+                        <td><a href="/history?page=1&objFilter=@(rental.Car.Id)">@rental.Car.BrandModel (@rental.Car.PlateNumber)</a></td>
                         <td>
                             <input type="number" class="input balance is-medium" value="@rental.Driver.Balance.ToString(CultureInfo.InvariantCulture).Replace(',', '.')" readonly>
                         </td>
