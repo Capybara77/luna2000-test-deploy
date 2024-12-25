@@ -35,6 +35,7 @@ public class HistoryController : Controller
 
         var count = await _dbContext
             .Set<BaseLog>()
+            .Where(log => objFilter == Guid.Empty || log.EntryId == objFilter)
             .CountAsync();
 
         var dto = new ViewHistoryDto
@@ -42,7 +43,8 @@ public class HistoryController : Controller
             ItemsPerPage = ItemsPerPage,
             CurrentPage = page,
             ItemsCount = count,
-            Items = _mapper.Map<IEnumerable<HistoryDto>>(logs).GroupBy(dto => dto.ChangeId)
+            Items = _mapper.Map<IEnumerable<HistoryDto>>(logs).GroupBy(dto => dto.ChangeId),
+            ObjFilterId = objFilter
         };
 
         return View(dto);
