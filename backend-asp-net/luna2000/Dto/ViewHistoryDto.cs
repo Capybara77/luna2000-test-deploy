@@ -9,4 +9,6 @@ public class ViewHistoryDto
     public int CurrentPage { get; set; }
 
     public int ItemsCount { get; set; }
+
+    public Guid? ObjFilterId { get; set; }
 }
