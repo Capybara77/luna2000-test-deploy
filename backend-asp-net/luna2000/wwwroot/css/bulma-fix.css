@@ -14,3 +14,21 @@ input {
 .pagination {
     --bulma-pagination-margin: 0 !important;
 }
+
+
+/*Index Car*/
+
+.car-photos {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    justify-content: center !important; /* Центрируем фото */
+}
+
+    .car-photos img {
+        margin: 5px !important;
+    }
+
+.card-content {
+    display: grid !important;
+    grid-template-rows: 1fr auto !important; /* Важная часть */
+}

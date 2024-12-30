@@ -47,4 +47,12 @@
     </None>
   </ItemGroup>
 
+  <ItemGroup>
+    <UpToDateCheckInput Remove="Views\Elements\StatsView.cshtml" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <_ContentIncludedByDefault Remove="Views\Elements\StatsView.cshtml" />
+  </ItemGroup>
+
 </Project>

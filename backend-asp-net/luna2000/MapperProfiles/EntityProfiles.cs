@@ -8,6 +8,7 @@ public class EntityProfiles : Profile
 {
     public EntityProfiles()
     {
+        CreateMap<CarEntity, ViewCarDto>();
         CreateMap<AddCarRequest, CarEntity>()
             .ForMember(entity => entity.Photos, expression => expression.Ignore())
             .ForMember(entity => entity.Id, expression => expression.Ignore())

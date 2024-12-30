@@ -36,7 +36,7 @@ public class Program
         builder.Services.AddScoped<IJobServerService, JobServerService>();
         builder.Services.AddScoped<IDeductRentService, DeductRentService>();
         builder.Services.AddSingleton<ITelegramClient, TelegramClient>();
-        builder.Services.AddAutoMapper(expression => expression.AddProfiles(new []
+        builder.Services.AddAutoMapper(expression => expression.AddProfiles(new[]
         {
             new EntityProfiles()
         }));
@@ -67,12 +67,8 @@ public class Program
 
         app.UseMiddleware<IpRestrictionMiddleware>();
 
-        app.UseStaticFiles(new StaticFileOptions
-        {
-            FileProvider = new PhysicalFileProvider(
-                Path.Combine(Directory.GetCurrentDirectory(), "files")),
-            RequestPath = ""
-        });
+
+        WithStaticFiles(app);
 
         app.UseStaticFiles();
 
@@ -86,6 +82,23 @@ public class Program
             pattern: "{controller=Home}/{action=Index}/{id?}");
 
         app.Run();
+    }
+
+    private static void WithStaticFiles(WebApplication app)
+    {
+        var filesPath = "files";
+
+        if (!Directory.Exists(filesPath))
+        {
+            Directory.CreateDirectory(filesPath);
+        }
+
+        app.UseStaticFiles(new StaticFileOptions
+        {
+            FileProvider = new PhysicalFileProvider(
+                Path.Combine(Directory.GetCurrentDirectory(), filesPath)),
+            RequestPath = ""
+        });
     }
 
     private static void ConfigureCulture()
@@ -108,11 +121,13 @@ public class Program
     {
         builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme).AddCookie(options =>
         {
-            options.Events.OnRedirectToLogin += context => {
+            options.Events.OnRedirectToLogin += context =>
+            {
                 context.HttpContext.Response.Redirect("/login");
                 return Task.CompletedTask;
             };
-            options.Events.OnRedirectToAccessDenied += context => {
+            options.Events.OnRedirectToAccessDenied += context =>
+            {
                 context.HttpContext.Response.Redirect("/login");
                 return Task.CompletedTask;
             };

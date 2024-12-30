@@ -2,9 +2,10 @@
 @model luna2000.Dto.MainViewDto
 
 <section class="section">
+    @(await Html.PartialAsync("/Views/Elements/StatsView.cshtml", Model.StatsDto))
+
     <div class="container table-container">
         <h1 class="title">Таблица данных</h1>
-
         <table class="table is-hoverable is-striped is-fullwidth table-container" id="mainTable">
             <div class="is-clipped">
             <thead>
@@ -130,4 +131,9 @@
 @section Scripts
     {
     <script src="js/index.js"></script>
-}
+
+    @Html.Raw("<link rel=\"stylesheet\" href=\"https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.2.1/css/fontawesome.min.css\" integrity=\"sha384-QYIZto+st3yW+o8+5OHfT6S482Zsvz2WfOzpFSXMF9zqeLcFV0/wlZpMtyFcZALm\" crossorigin=\"anonymous\">")
+
+    <script src="https://kit.fontawesome.com/e5e3c0c905.js" crossorigin="anonymous"></script>
+
+    }

@@ -30,19 +30,36 @@ public class HomeController : Controller
 
     public async Task<IActionResult> Index()
     {
+        var cars = await _dbContext.Set<CarEntity>()
+            .AsNoTracking()
+            .ToArrayAsync();
+
+        var carRental = await _dbContext.Set<CarRentalEntity>()
+            .Include(entity => entity.Car)
+            .Include(entity => entity.Driver)
+            .AsNoTracking()
+            .ToArrayAsync();
+
         var mainDto = new MainViewDto
         {
-            Cars = await _dbContext.Set<CarEntity>()
-                .AsNoTracking()
-                .ToArrayAsync(),
+            Cars = cars,
             Drivers = await _dbContext.Set<DriverEntity>()
                 .AsNoTracking()
                 .ToArrayAsync(),
-            Rentals = await _dbContext.Set<CarRentalEntity>()
-                .Include(entity => entity.Car)
-                .Include(entity => entity.Driver)
-                .AsNoTracking()
-                .ToArrayAsync()
+            Rentals = carRental,
+            StatsDto = new()
+            {
+                ActiveDrivers = carRental
+                    .Select(entity => entity.DriverId)
+                    .Distinct()
+                    .Count(),
+                CarsInRent = carRental
+                    .Select(entity => entity.CarId)
+                    .Distinct()
+                    .Count(),
+                CarsCount = cars.Length,
+                MonthProfit = Math.Round(carRental.Select(entity => entity.Rent).Sum(), 1)
+            }
         };
 
         try
