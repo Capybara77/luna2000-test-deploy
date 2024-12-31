@@ -24,8 +24,10 @@
             {
                 <div class="column is-one-quarter">
                     <div class="card">
-                        <div class="card-content is-flex is-flex-direction-column">  @* Flexbox для колонки *@
-                            <div class="content"> @* Контент карточки *@
+                        <div class="card-content is-flex is-flex-direction-column">
+                            @* Flexbox для колонки *@
+                            <div class="content">
+                                @* Контент карточки *@
                                 <div class="is-flex is-justify-content-space-between is-align-items-center mb-2">
                                     <span class="icon is-medium"><i class="fas fa-car fa-2x" aria-hidden="true"></i></span>
                                     <span class="tag @(car.IsInRent ? "is-warning" : "is-primary")">@(car.IsInRent ? "В аренде" : "Доступен")</span>
@@ -35,21 +37,21 @@
                                 <p class="mb-1"><strong>Год:</strong> @car.Year</p>
                                 <p class="mb-1"><strong>Госномер:</strong> @car.PlateNumber</p>
 
-                               @* <div class="car-photos mb-2 has-text-centered">
-                                    @if (car.Photos != null)
-                                    {
-                                        foreach (var photo in car.Photos)
-                                        {
-                                            <a href="/photo/@photo.Id">
-                                                <img src="/@photo.FileId@(photo.FileExtension)" class="image is-128x128" alt="" style="margin: 5px;">
-                                            </a>
-                                        }
-                                    }
-                                </div>*@
+                                @* <div class="car-photos mb-2 has-text-centered">
+                            @if (car.Photos != null)
+                            {
+                            foreach (var photo in car.Photos)
+                            {
+                            <a href="/photo/@photo.Id">
+                            <img src="/@photo.FileId@(photo.FileExtension)" class="image is-128x128" alt="" style="margin: 5px;">
+                            </a>
+                            }
+                            }
+                            </div>*@
                             </div>
 
-                            <button class="button is-info is-fullwidth is-small mt-auto m-3" onclick="editCar('@car.Id')">Редактировать</button> @* Кнопка внизу *@
-                            <button class="button is-danger is-fullwidth is-small mt-auto m-3" onclick="deleteCar('@car.Id')">Удалить</button> @* Кнопка внизу *@
+                            <button class="button is-info is-fullwidth is-small mt-auto m-3 is-align-self-center" onclick="editCar('@car.Id')">Редактировать</button> @* Кнопка внизу *@
+                            <button class="button is-danger is-fullwidth is-small mt-auto m-3 is-align-self-center" onclick="deleteCar('@car.Id')">Удалить</button> @* Кнопка внизу *@
                         </div>
                     </div>
                 </div>
