@@ -13,4 +13,6 @@ public class MainViewDto
     public bool IsJobEnable { get; set; }
 
     public bool IsJobServerDown { get; set; }
+
+    public StatsDto StatsDto { get; set; }
 }

@@ -2,58 +2,77 @@
 @model luna2000.Dto.MainViewDto
 
 <section class="section">
-    <div class="container table-container">
+    @(await Html.PartialAsync("/Views/Elements/StatsView.cshtml", Model.StatsDto))
+
+    <div class="container">
         <h1 class="title">Таблица данных</h1>
+        <div class="columns is-multiline">
+            @foreach (var rental in Model.Rentals)
+            {
+                @if (rental.Driver == null || rental.Car == null)
+                {
+                    <div class="column is-full has-text-centered">Bad Data</div>
+                    continue;
+                }
 
-        <table class="table is-hoverable is-striped is-fullwidth table-container" id="mainTable">
-            <div class="is-clipped">
-            <thead>
-                <tr>
-                    <th>Водитель</th>
-                    <th>Авто</th>
-                    <th>Баланс</th>
-                    <th>Аренда</th>
-                    <th>Действия</th>
-                </tr>
-            </thead>
-            <tbody>
-                    @foreach (var rental in Model.Rentals)
-                    {
-                        @if (rental.Driver == null || rental.Car == null)
-                        {
-                        <tr>
-                            <td colspan="5" class="has-text-centered">Bad Data</td>
-                        </tr>
-                            continue;
-                        }
+                <div class="column is-one-quarter">
+                    <div class="box">
+                        <div class="is-flex is-align-items-center mb-2">
+                            <span class="icon is-large mr-2"><i class="fas fa-user fa-2x"></i></span>
+                            <a href="/history?page=1&objFilter=@(rental.Driver.Id)" class="title is-5">@rental.Driver.Fio</a>
+                        </div>
+                        <div class="is-flex is-align-items-center mb-2">
+                            <span class="icon is-large mr-2"><i class="fas fa-car fa-2x"></i></span>
+                            <a href="/history?page=1&objFilter=@(rental.Car.Id)" class="title is-5">@rental.Car.BrandModel (@rental.Car.PlateNumber)</a>
+                        </div>
+                        <div class="field is-horizontal mb-1">
+                            <div class="field-label is-normal">
+                                <label class="label">Баланс:</label>
+                            </div>
+                            <div class="field-body">
+                                <div class="field">
+                                    <p class="control">
+                                        <input type="number" class="input is-small" value="@rental.Driver.Balance.ToString(CultureInfo.InvariantCulture).Replace(',', '.')" readonly>
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="field is-horizontal mb-3">
+                            <div class="field-label is-normal">
+                                <label class="label">Аренда:</label>
+                            </div>
+                            <div class="field-body">
+                                <div class="field">
+                                    <p class="control">
+                                        <input type="number" step=".01" class="input is-small" value="@rental.Rent.ToString(CultureInfo.InvariantCulture).Replace(',', '.')" readonly>
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
 
-                    <tr>
-                        <td><a href="/history?page=1&objFilter=@(rental.Driver.Id)">@rental.Driver.Fio</a></td>
-                        <td><a href="/history?page=1&objFilter=@(rental.Car.Id)">@rental.Car.BrandModel (@rental.Car.PlateNumber)</a></td>
-                        <td>
-                            <input type="number" class="input balance is-medium" value="@rental.Driver.Balance.ToString(CultureInfo.InvariantCulture).Replace(',', '.')" readonly>
-                        </td>
-                        <td>
-                            <input type="number" step=".01" class="input rent is-medium" value="@rental.Rent.ToString(CultureInfo.InvariantCulture).Replace(',', '.')" readonly>
-                        </td>
-                        <td>
-                            <a class="button is-info" href="/driver/addbalance?driverId=@rental.DriverId">
-                                Внести депозит
+
+                        <div class="buttons is-fullwidth">
+                            <a class="button is-info is-fullwidth" href="/driver/addbalance?driverId=@rental.DriverId">
+                                <span class="icon"><i class="fas fa-plus"></i></span>
+                                <span>Депозит</span>
                             </a>
-                            <button class="button is-warning edit-button"
+                            <button class="button is-warning is-fullwidth edit-button"
                                 data-driver="@rental.DriverId"
                                 data-car="@rental.CarId"
                                 data-rent="@rental.Rent.ToString(CultureInfo.InvariantCulture).Replace(',', '.')"
                                 data-id="@rental.Id">
-                                Редактировать
+                                <span class="icon"><i class="fas fa-edit"></i></span>
+                                <span>Редактировать</span>
                             </button>
-                            <button class="button is-danger delete-button" data-id="@rental.Id">Удалить</button>
-                        </td>
-                    </tr>
-                    }
-            </tbody>
-    </div>
-    </table>
+                            <button class="button is-danger is-fullwidth delete-button" data-id="@rental.Id">
+                                <span class="icon"><i class="fas fa-trash"></i></span>
+                                <span>Удалить</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
     </div>
 
     <h1 class="title">Добавить или редактировать пару</h1>
@@ -130,4 +149,9 @@
 @section Scripts
     {
     <script src="js/index.js"></script>
-}
+
+    @Html.Raw("<link rel=\"stylesheet\" href=\"https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.2.1/css/fontawesome.min.css\" integrity=\"sha384-QYIZto+st3yW+o8+5OHfT6S482Zsvz2WfOzpFSXMF9zqeLcFV0/wlZpMtyFcZALm\" crossorigin=\"anonymous\">")
+
+    <script src="https://kit.fontawesome.com/e5e3c0c905.js" crossorigin="anonymous"></script>
+
+    }

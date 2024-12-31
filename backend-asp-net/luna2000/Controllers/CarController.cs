@@ -25,14 +25,29 @@ public class CarController : Controller
     }
 
     [Route("")]
-    public IActionResult Index()
+    public async Task<IActionResult> Index()
     {
         var cars = _dbContext.Set<CarEntity>()
             .Include(entity => entity.Photos)
             .AsNoTracking()
             .ToArray();
 
-        return View(cars);
+        var carInUse = await _dbContext.Set<CarRentalEntity>()
+            .Select(entity => entity.CarId)
+            .Distinct()
+            .ToArrayAsync();
+
+        var carsDto = _mapper.Map<ViewCarDto[]>(cars);
+
+        foreach (var car in carsDto)
+        {
+            if (carInUse.Contains(car.Id))
+            {
+                car.IsInRent = true;
+            }
+        }
+
+        return View(carsDto);
     }
 
     [HttpGet]

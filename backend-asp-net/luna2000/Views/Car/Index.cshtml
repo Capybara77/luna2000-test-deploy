@@ -1,4 +1,4 @@
-﻿@model CarEntity[]
+﻿@model luna2000.Dto.ViewCarDto[]
 
 <section class="section">
     <div class="container">
@@ -19,70 +19,84 @@
             </p>
         </div>
 
-        <div class="table-container">
-            <table class="table is-hoverable is-striped is-fullwidth" id="carsTable">
-                <thead>
-                    <tr>
-                        <th>Фото</th>
-                        <th>Марка/Модель</th>
-                        <th>ПТС</th>
-                        <th>СТС</th>
-                        <th>VIN-Код</th>
-                        <th>Год выпуска</th>
-                        <th>Дата постановки на учет</th>
-                        <th>Госномер</th>
-                        <th>ОСАГО</th>
-                        <th>КАСКО</th>
-                        <th>Техосмотр</th>
-                        <th>Лицензия такси</th>
-                        <th>Выкуп или аренда</th>
-                        <th>В лизинге</th>
-                        <th>Действия</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach (var car in Model)
-                    {
-                        <tr>
-                            <td>
-                                @if (car.Photos != null)
-                                {
-                                    foreach (var photo in car.Photos)
-                                    {
-                                        <a href="/photo/@photo.Id">
-                                            <img src="/@photo.FileId@(photo.FileExtension)" style="max-width: 100px; height: auto;" alt="">
-                                        </a>
-                                    }
-                                }
-                            </td>
-                            <td>@car.BrandModel</td>
-                            <td>@car.Pts</td>
-                            <td>@car.Sts</td>
-                            <td>@car.Vin</td>
-                            <td>@car.Year</td>
-                            <td>@car.RegistrationDate?.ToString("dd.MM.yyyy")</td>
-                            <td>@car.PlateNumber</td>
-                            <td>@car.Osago</td>
-                            <td>@car.Kasko</td>
-                            <td>@car.TechInspection</td>
-                            <td>@(car.TaxiLicense.HasValue && car.TaxiLicense.Value ? "Да" : "Нет")</td>
-                            <td>@car.PurchaseOrRent</td>
-                            <td>@(car.Leasing.HasValue && car.Leasing.Value ? "Да" : "Нет")</td>
-                            <td>
-                                <div class="buttons">
-                                    <button class="button is-warning" onclick="editCar('@(car.Id)')">Редактировать</button>
-                                    <button class="button is-danger" onclick="deleteCar('@(car.Id)')">Удалить</button>
+        <div class="columns is-multiline">
+            @foreach (var car in Model)
+            {
+                <div class="column is-one-quarter">
+                    <div class="card">
+                        <div class="card-content is-flex is-flex-direction-column">
+                            @* Flexbox для колонки *@
+                            <div class="content">
+                                @* Контент карточки *@
+                                <div class="is-flex is-justify-content-space-between is-align-items-center mb-2">
+                                    <span class="icon is-medium"><i class="fas fa-car fa-2x" aria-hidden="true"></i></span>
+                                    <span class="tag @(car.IsInRent ? "is-warning" : "is-primary")">@(car.IsInRent ? "В аренде" : "Доступен")</span>
                                 </div>
-                            </td>
-                        </tr>
-                    }
-                </tbody>
-            </table>
+                                <p class="title is-4 mb-1">@car.BrandModel</p>
+                                <p class="mb-1"><strong>VIN:</strong> @car.Vin</p>
+                                <p class="mb-1"><strong>Год:</strong> @car.Year</p>
+                                <p class="mb-1"><strong>Госномер:</strong> @car.PlateNumber</p>
+
+                                @* <div class="car-photos mb-2 has-text-centered">
+                            @if (car.Photos != null)
+                            {
+                            foreach (var photo in car.Photos)
+                            {
+                            <a href="/photo/@photo.Id">
+                            <img src="/@photo.FileId@(photo.FileExtension)" class="image is-128x128" alt="" style="margin: 5px;">
+                            </a>
+                            }
+                            }
+                            </div>*@
+                            </div>
+
+                            <button class="button is-info is-fullwidth is-small mt-auto m-3 is-align-self-center" onclick="editCar('@car.Id')">Редактировать</button> @* Кнопка внизу *@
+                            <button class="button is-danger is-fullwidth is-small mt-auto m-3 is-align-self-center" onclick="deleteCar('@car.Id')">Удалить</button> @* Кнопка внизу *@
+                        </div>
+                    </div>
+                </div>
+            }
         </div>
+
+        @*<div class="columns is-multiline">
+        @foreach (var car in Model)
+        {
+        <div class="column is-one-quarter">
+        <div class="card">
+        <div class="card-content">
+        <div class="content">
+        <div class="is-flex is-justify-content-space-between is-align-items-flex-start">
+        <span> <i class="fa-solid fa-car fa-xl"></i> </span>
+        <p class="title is-5">@car.BrandModel</p>
+        <span class="tag is-@(@car.IsInRent ? "danger" : "success")">
+        @(@car.IsInRent ? "В аренде" : "Доступен")
+        </span>
+
+        </div>
+
+        <div>
+        <p>Год: @car.Year</p>
+        <p>Номер: @car.PlateNumber</p>
+        <p>Стоимость в день: ₽500</p>
+        </div>
+        <div class="mt-4">
+        <button class="button is-primary is-fullwidth" onclick="editCar('@(car.Id)')">Редактировать</button>
+        </div>
+        </div>
+        </div>
+        </div>
+        </div>
+        }
+        </div>*@
+
     </div>
 </section>
 
 @section Scripts
     {
     <script src="/js/view-cars.js"></script>
-}
+
+    @Html.Raw("<link rel=\"stylesheet\" href=\"https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.2.1/css/fontawesome.min.css\" integrity=\"sha384-QYIZto+st3yW+o8+5OHfT6S482Zsvz2WfOzpFSXMF9zqeLcFV0/wlZpMtyFcZALm\" crossorigin=\"anonymous\">")
+
+    <script src="https://kit.fontawesome.com/e5e3c0c905.js" crossorigin="anonymous"></script>
+    }
