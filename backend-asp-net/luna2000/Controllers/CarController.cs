@@ -47,7 +47,7 @@ public class CarController : Controller
             }
         }
 
-        return View(carsDto);
+        return View(carsDto.OrderBy(dto => dto.IsInRent).ThenBy(dto => dto.BrandModel).ToArray());
     }
 
     [HttpGet]
