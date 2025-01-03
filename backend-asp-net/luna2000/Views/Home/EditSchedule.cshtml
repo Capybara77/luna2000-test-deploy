@@ -1,0 +1,84 @@
+﻿@using Microsoft.AspNetCore.Mvc.TagHelpers
+@model luna2000.Dto.RentalScheduleView
+
+<section class="section">
+    <div class="container">
+
+        <h2>Редактирование расписания списания</h2>
+
+        <form method="post" asp-action="SaveSchedule">
+            <input type="hidden" asp-for="Id" />
+
+            <div class="field">
+                <label class="label">ФИО:</label>
+                <div class="control">
+                    <span>@Model.FullName</span>
+                </div>
+            </div>
+
+            <div class="field">
+                <label class="label">Название авто:</label>
+                <div class="control">
+                    <span>@Model.CarName</span>
+                </div>
+            </div>
+
+            <div class="field">
+                <label class="label">Дни недели:</label>
+                <div class="buttons has-addons">
+                    @for (var i = 0; i < 7; i++)
+                    {
+                        var day = (DayOfWeek)i;
+                        var status = Model.WeekdayStatuses.Find(s => s.DayOfWeek == day);
+                        var isActive = status is { IsActive: true };
+                        var activeClass = isActive ? "is-info is-active" : "";
+
+                        var dayName = day switch
+                        {
+                            DayOfWeek.Sunday => "Вс",
+                            DayOfWeek.Monday => "Пн",
+                            DayOfWeek.Tuesday => "Вт",
+                            DayOfWeek.Wednesday => "Ср",
+                            DayOfWeek.Thursday => "Чт",
+                            DayOfWeek.Friday => "Пт",
+                            DayOfWeek.Saturday => "Сб",
+                            _ => string.Empty
+                        };
+
+                        <button type="button"
+                            class="button @activeClass"
+                            onclick="toggleDay('@day', this)">
+                            @dayName
+                        </button>
+                        <input type="hidden" name="WeekdayStatuses[@i].DayOfWeek" value="@day" />
+                        <input type="hidden" name="WeekdayStatuses[@i].IsActive" id="IsActive_@day" value="@(isActive ? "true" : "false")" />
+                    }
+                </div>
+            </div>
+
+            <div class="field">
+                <div class="control">
+                    <button class="button is-primary" type="submit">Сохранить</button>
+                </div>
+            </div>
+        </form>
+    </div>
+</section>
+
+<script>
+    function toggleDay(day, button) {
+        var isActiveInput = document.getElementById("IsActive_" + day);
+        var isActive = isActiveInput.value === "true";
+        isActive = !isActive;
+
+        isActiveInput.value = isActive;
+
+        if (isActive) {
+            button.classList.add("is-info");
+            button.classList.add("is-active");
+        } else {
+            button.classList.remove("is-info");
+            button.classList.remove("is-active");
+        }
+    }
+</script>

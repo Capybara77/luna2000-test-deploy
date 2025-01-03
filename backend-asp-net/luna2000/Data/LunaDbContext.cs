@@ -21,6 +21,8 @@ public class LunaDbContext : DbContext
 
     public DbSet<BaseLog> BaseLogs { get; set; }
 
+    public DbSet<RentScheduleEntity> RentSchedules { get; set; }
+
     public LunaDbContext(IServiceProvider serviceProvider)
     {
         _serviceProvider = serviceProvider;

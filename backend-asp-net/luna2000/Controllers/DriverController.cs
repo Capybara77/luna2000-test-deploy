@@ -68,7 +68,10 @@ public class DriverController : Controller
         var aliases = GetAliases(request, driver);
 
         await _dbContext.AddAsync(driver);
-        await _dbContext.AddRangeAsync(aliases);
+        if (aliases != null)
+        {
+            await _dbContext.AddRangeAsync(aliases);
+        }
         await _dbContext.SaveChangesAsync();
 
         return Ok(new { success = true });
@@ -81,10 +84,10 @@ public class DriverController : Controller
             .Where(s => !string.IsNullOrWhiteSpace(s))
             .Select(s => s.Replace("\r", string.Empty))
             .Select(s => new AliasEntity
-        {
-            Alias = s,
-            Driver = driver
-        });
+            {
+                Alias = s,
+                Driver = driver
+            });
 
         return aliases;
     }
