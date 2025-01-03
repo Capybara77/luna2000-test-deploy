@@ -19,4 +19,6 @@ public class CarRentalEntity
 
     [ForeignKey(nameof(CarId))]
     public virtual CarEntity? Car { get; set; }
+
+    public virtual ICollection<RentScheduleEntity>? Schedules { get; set; } = new List<RentScheduleEntity>();
 }

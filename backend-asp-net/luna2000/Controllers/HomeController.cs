@@ -17,14 +17,17 @@ public class HomeController : Controller
     private readonly LunaDbContext _dbContext;
     private readonly IDeductRentService _deductRentService;
     private readonly IJobServerService _jobServerService;
+    private readonly CommonDataConfiguration _commonOptions;
     private readonly JobServerConfiguration _jobServerConfiguration;
 
     public HomeController(LunaDbContext dbContext, IDeductRentService deductRentService,
-        IJobServerService jobServerService, IOptions<JobServerConfiguration> jobServerConfiguration)
+        IJobServerService jobServerService, IOptions<JobServerConfiguration> jobServerConfiguration,
+        IOptions<CommonDataConfiguration> commonOptions)
     {
         _dbContext = dbContext;
         _deductRentService = deductRentService;
         _jobServerService = jobServerService;
+        _commonOptions = commonOptions.Value;
         _jobServerConfiguration = jobServerConfiguration.Value;
     }
 
@@ -37,8 +40,11 @@ public class HomeController : Controller
         var carRental = await _dbContext.Set<CarRentalEntity>()
             .Include(entity => entity.Car)
             .Include(entity => entity.Driver)
+            .Include(entity => entity.Schedules)
             .AsNoTracking()
             .ToArrayAsync();
+
+        var monthProfit = GetMonthProfit(carRental);
 
         var mainDto = new MainViewDto
         {
@@ -58,7 +64,7 @@ public class HomeController : Controller
                     .Distinct()
                     .Count(),
                 CarsCount = cars.Length,
-                MonthProfit = Math.Round(carRental.Select(entity => entity.Rent).Sum(), 1)
+                MonthProfit = Math.Round(monthProfit, 1)
             }
         };
 
@@ -95,13 +101,23 @@ public class HomeController : Controller
     [HttpPost]
     public IActionResult AddRent([FromBody] AddRentRequest addRentRequest)
     {
+        var rentId = Guid.NewGuid();
+
         _dbContext.Set<CarRentalEntity>()
             .Add(new CarRentalEntity()
             {
+                Id = rentId,
                 DriverId = addRentRequest.DriverId,
                 CarId = addRentRequest.CarId,
                 Rent = addRentRequest.Rent
             });
+
+        _dbContext.Set<RentScheduleEntity>()
+            .AddRangeAsync(Enum.GetValues<DayOfWeek>().Select(dayOfWeek => new RentScheduleEntity
+            {
+                RentId = rentId,
+                DayOfWeek = dayOfWeek
+            }));
 
         _dbContext.SaveChanges();
 
@@ -151,5 +167,91 @@ public class HomeController : Controller
     public IActionResult Error()
     {
         return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> EditSchedule(Guid rentId)
+    {
+        var rental = await _dbContext.Set<CarRentalEntity>()
+            .Include(entity => entity.Driver)
+            .Include(entity => entity.Car)
+            .Include(entity => entity.Schedules)
+            .AsNoTracking()
+            .FirstOrDefaultAsync(entity => entity.Id == rentId);
+
+        if (rental == null)
+        {
+            return NotFound();
+        }
+
+        return View(new RentalScheduleView
+        {
+            Id = rentId,
+            CarName = $"{rental.Car!.BrandModel} ({rental.Car.PlateNumber})",
+            FullName = rental.Driver!.Fio,
+            WeekdayStatuses = rental.Schedules.Select(entity => new DayOfWeekStatus
+            {
+                DayOfWeek = entity.DayOfWeek,
+                IsActive = true
+            }).ToList()
+        });
+    }
+
+    [HttpPost]
+    public async Task<IActionResult> SaveSchedule(RentalScheduleDto model)
+    {
+        model.WeekdayStatuses = model.WeekdayStatuses.DistinctBy(status => status.DayOfWeek).ToList();
+
+        var rent = await _dbContext.Set<CarRentalEntity>()
+            .Include(entity => entity.Schedules)
+            .FirstOrDefaultAsync(entity => entity.Id == model.Id);
+
+        if (rent == null)
+        {
+            return NotFound();
+        }
+
+        var scheduleDays = model.WeekdayStatuses
+            .Distinct()
+            .Where(status => status.IsActive)
+            .Select(status => new RentScheduleEntity
+            {
+                Id = Guid.NewGuid(),
+                RentId = rent.Id,
+                DayOfWeek = status.DayOfWeek
+            }).ToList();
+
+        _dbContext.RemoveRange(rent.Schedules!);
+        await _dbContext.AddRangeAsync(scheduleDays);
+        await _dbContext.SaveChangesAsync();
+
+        return RedirectToAction("Index");
+    }
+
+    private decimal GetMonthProfit(CarRentalEntity[] carRental)
+    {
+        var currentDate = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow,
+            TimeZoneInfo.FindSystemTimeZoneById(_commonOptions.TimeZone));
+        var daysInMonth = DateTime.DaysInMonth(currentDate.Year, currentDate.Month);
+
+        decimal monthProfit = 0;
+
+        foreach (var rental in carRental)
+        {
+            decimal rentalProfit = 0;
+            for (var day = 1; day <= daysInMonth; day++)
+            {
+                var currentDay = new DateTime(currentDate.Year, currentDate.Month, day);
+                var isScheduled = rental.Schedules!.Any(s => s.DayOfWeek == currentDay.DayOfWeek);
+
+                if (isScheduled)
+                {
+                    rentalProfit += rental.Rent;
+                }
+            }
+            monthProfit += rentalProfit;
+        }
+
+        return monthProfit;
     }
 }
