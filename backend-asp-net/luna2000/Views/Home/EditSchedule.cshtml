@@ -46,14 +46,22 @@
                         };
 
                         <button type="button"
-                            class="button @activeClass"
-                            onclick="toggleDay('@day', this)">
+                                class="button @activeClass"
+                                onclick="toggleDay('@day', this)">
                             @dayName
                         </button>
-                        <input type="hidden" name="WeekdayStatuses[@i].DayOfWeek" value="@day" />
-                        <input type="hidden" name="WeekdayStatuses[@i].IsActive" id="IsActive_@day" value="@(isActive ? "true" : "false")" />
                     }
                 </div>
+                
+                @for (var i = 0; i < 7; i++)
+                {
+                    var day = (DayOfWeek)i;
+                    var status = Model.WeekdayStatuses.Find(s => s.DayOfWeek == day);
+                    var isActive = status is { IsActive: true };
+
+                    <input type="hidden" name="WeekdayStatuses[@i].DayOfWeek" value="@day" />
+                    <input type="hidden" name="WeekdayStatuses[@i].IsActive" id="IsActive_@day" value="@(isActive ? "true" : "false")" />
+                }
             </div>
 
             <div class="field">
