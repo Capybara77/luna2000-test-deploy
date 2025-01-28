@@ -28,23 +28,36 @@
             </div>
 
             <div id="navbarBasicExample" class="navbar-menu">
-                <div class="navbar-start">
-                    <a class="navbar-item" asp-area="" asp-controller="Car" asp-action="Index">
-                        Авто
-                    </a>
+                @if (User.Identity is { IsAuthenticated: true })
+                {
+                    <!-- Для авторизованных пользователей -->
+                    <div class="navbar-start">
+                        <a class="navbar-item" asp-area="" asp-controller="Car" asp-action="Index">
+                            Авто
+                        </a>
 
-                    <a class="navbar-item" asp-area="" asp-controller="Driver" asp-action="Index">
-                        Водители
-                    </a>
+                        <a class="navbar-item" asp-area="" asp-controller="Driver" asp-action="Index">
+                            Водители
+                        </a>
 
-                    <a class="navbar-item" asp-area="" asp-controller="DocEditor" asp-action="Index">
-                        Редактор
-                    </a>
+                        <a class="navbar-item" asp-area="" asp-controller="DocEditor" asp-action="Index">
+                            Редактор
+                        </a>
 
-                    <a class="navbar-item" asp-area="" asp-controller="History" asp-action="Index">
-                        История
-                    </a>
-                </div>
+                        <a class="navbar-item" asp-area="" asp-controller="History" asp-action="Index">
+                            История
+                        </a>
+                    </div>
+                }
+                else
+                {
+                    <!-- Для гостей -->
+                    <div class="navbar-start">
+                        <a class="navbar-item" asp-area="" asp-controller="Feedback" asp-action="Index">
+                            Обратная связь
+                        </a>
+                    </div>
+                }
             </div>
         </div>
     </nav>
