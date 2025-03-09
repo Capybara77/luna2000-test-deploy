@@ -3,6 +3,11 @@ version: '3.8'
 services:
   luna2000:
     image: luna2000
+    deploy:
+      restart_policy:
+        condition: on-failure
+        max_attempts: 5
+        delay: 5s
     container_name: luna2000
     ports:
       - "80:5270"
