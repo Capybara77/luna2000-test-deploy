@@ -1,54 +1,56 @@
 ﻿@model luna2000.Dto.StatsDto
 
-<div class="columns is-multiline">
-    <div class="column is-one-quarter">
-        <div class="box">
-            <div class="is-flex is-align-items-center">
-                <span class="icon is-large has-text-info">
-                    <i class="fas fa-car"></i>
-                </span>
-                <div class="ml-3">
-                    <p class="is-size-7">Всего автомобилей</p>
-                    <p class="title is-4">@Model.CarsCount</p>
+<div class="container is-fluid px-0">
+    <div class="columns is-multiline">
+        <div class="column is-one-quarter">
+            <div class="box">
+                <div class="is-flex is-align-items-center">
+                    <span class="icon is-large has-text-info">
+                        <i class="fas fa-car"></i>
+                    </span>
+                    <div class="ml-3">
+                        <p class="is-size-7">Всего автомобилей</p>
+                        <p class="title is-4">@Model.CarsCount</p>
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
-    <div class="column is-one-quarter">
-        <div class="box">
-            <div class="is-flex is-align-items-center">
-                <span class="icon is-large has-text-info">
-                    <i class="fas fa-user"></i> 
-                </span>
-                <div class="ml-3">
-                    <p class="is-size-7">Активные водители</p>
-                    <p class="title is-4">@Model.ActiveDrivers</p>
+        <div class="column is-one-quarter">
+            <div class="box">
+                <div class="is-flex is-align-items-center">
+                    <span class="icon is-large has-text-info">
+                        <i class="fas fa-user"></i>
+                    </span>
+                    <div class="ml-3">
+                        <p class="is-size-7">Активные водители</p>
+                        <p class="title is-4">@Model.ActiveDrivers</p>
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
-    <div class="column is-one-quarter">
-        <div class="box">
-            <div class="is-flex is-align-items-center">
-                <span class="icon is-large has-text-info">
-                    <i class="fas fa-calendar"></i>
-                </span>
-                <div class="ml-3">
-                    <p class="is-size-7">Автомобилей в аренде</p>
-                    <p class="title is-4">@Model.CarsInRent</p>
+        <div class="column is-one-quarter">
+            <div class="box">
+                <div class="is-flex is-align-items-center">
+                    <span class="icon is-large has-text-info">
+                        <i class="fas fa-calendar"></i>
+                    </span>
+                    <div class="ml-3">
+                        <p class="is-size-7">Автомобилей в аренде</p>
+                        <p class="title is-4">@Model.CarsInRent</p>
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
-    <div class="column is-one-quarter">
-        <div class="box">
-            <div class="is-flex is-align-items-center">
-                <span class="icon is-large has-text-info">
-                    <i class="fas fa-dollar-sign"></i>
-                </span>
-                <div class="ml-3">
-                    <p class="is-size-7">Планируемый доход за месяц</p>
-                    <p class="title is-4">₽ @Model.MonthProfit</p>
+        <div class="column is-one-quarter">
+            <div class="box">
+                <div class="is-flex is-align-items-center">
+                    <span class="icon is-large has-text-info">
+                        <i class="fas fa-dollar-sign"></i>
+                    </span>
+                    <div class="ml-3">
+                        <p class="is-size-7">Планируемый доход за месяц</p>
+                        <p class="title is-4">₽ @Model.MonthProfit</p>
+                    </div>
                 </div>
             </div>
         </div>
