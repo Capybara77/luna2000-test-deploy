@@ -11,7 +11,7 @@ RUN dotnet publish "luna2000.csproj" -c Release -o /app/publish
 # Устанавливаем базовый образ с .NET SDK
 FROM mcr.microsoft.com/dotnet/aspnet:6.0 AS base
 WORKDIR /app
-EXPOSE 5270
+EXPOSE 8080
 RUN mkdir files
 COPY --from=build /app/publish .
 ENTRYPOINT ["dotnet", "luna2000.dll"]
