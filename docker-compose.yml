@@ -10,7 +10,7 @@ services:
         delay: 5s
     container_name: luna2000
     expose:
-      - 5270
+      - 8080
     volumes:
       - /home/luna-data/files:/app/files
       - /home/luna-data/db:/app/DB
@@ -19,6 +19,7 @@ services:
       - luna2000_network
     environment:
       - telegram
+      - ASPNETCORE_URLS=http://+:8080
       - VIRTUAL_HOST=t196driveboss.ru
       - VIRTUAL_PORT=5270
       - LETSENCRYPT_HOST=t196driveboss.ru
