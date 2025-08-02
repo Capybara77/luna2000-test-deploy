@@ -20,6 +20,7 @@ services:
     environment:
       - telegram
       - VIRTUAL_HOST=t196driveboss.ru
+      - VIRTUAL_PORT=5270
       - LETSENCRYPT_HOST=t196driveboss.ru
       - LETSENCRYPT_EMAIL=dimka0512@yandex.ru
 
