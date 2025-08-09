@@ -47,29 +47,111 @@
             }
         </tbody>
     </table>
-    
+
     @{
         var filterUrlParam = Model.ObjFilterId != Guid.Empty ? $"&objFilter={Model.ObjFilterId}" : string.Empty;
+        var totalPages = (int)Math.Ceiling((double)Model.ItemsCount / Model.ItemsPerPage);
+        var currentPage = Model.CurrentPage;
+        // Количество отображаемых страниц с каждой стороны от текущей
+        var visiblePages = 2;
     }
 
     <nav class="pagination is-centered" role="navigation" aria-label="pagination">
-        @if (Model.CurrentPage > 1)
+        @if (currentPage > 1)
         {
-            <a class="pagination-previous" href="/history?page=@(Model.CurrentPage - 1)@filterUrlParam">Предыдущая страница</a>
+            <a class="pagination-previous" href="/history?page=@(currentPage - 1)@filterUrlParam">Предыдущая</a>
         }
-        @if (Model.CurrentPage < (Model.ItemsCount / Model.ItemsPerPage) + 1)
+
+        @if (currentPage < totalPages)
         {
-            <a class="pagination-next" href="/history?page=@(Model.CurrentPage + 1)@filterUrlParam">Следующая страница</a>
+            <a class="pagination-next" href="/history?page=@(currentPage + 1)@filterUrlParam">Следующая</a>
         }
+
         <ul class="pagination-list">
-            @for (var i = 0; i < (Model.ItemsCount / Model.ItemsPerPage) + 1; i++)
+            @* Ссылка на первую страницу *@
+            <li>
+                <a class="pagination-link @(1 == currentPage ? "is-current" : "")" href="/history?page=1@filterUrlParam" aria-label="Goto page 1">1</a>
+            </li>
+
+            @* Левое многоточие *@
+            @if (currentPage > visiblePages + 2)
+            {
+                <li><span class="pagination-ellipsis">&hellip;</span></li>
+            }
+
+            @* Основной диапазон страниц *@
+            @for (var i = Math.Max(2, currentPage - visiblePages); i <= Math.Min(totalPages - 1, currentPage + visiblePages); i++)
             {
                 <li>
-                    <a class="pagination-link @(i + 1 == Model.CurrentPage ? "is-current" : "")"
-                   aria-label="Goto page @(i + 1)"
-                   href="/history?page=@(i + 1)@filterUrlParam">@(i + 1)</a>
+                    <a class="pagination-link @(i == currentPage ? "is-current" : "")" href="/history?page=@i@filterUrlParam" aria-label="Goto page @i">@i</a>
+                </li>
+            }
+
+            @* Правое многоточие *@
+            @if (currentPage < totalPages - (visiblePages + 1))
+            {
+                <li><span class="pagination-ellipsis">&hellip;</span></li>
+            }
+
+            @* Ссылка на последнюю страницу *@
+            @if (totalPages > 1)
+            {
+                <li>
+                    <a class="pagination-link @(totalPages == currentPage ? "is-current" : "")" href="/history?page=@totalPages@filterUrlParam" aria-label="Goto page @totalPages">@totalPages</a>
                 </li>
             }
         </ul>
     </nav>
+
+    @* Форма для перехода на конкретную страницу *@
+    @if (totalPages > (visiblePages * 2) + 3)
+    {
+        <div class="field has-addons is-justify-content-center mt-4">
+            <div class="control">
+                <input id="page-input" class="input" type="number" min="1" max="@totalPages" placeholder="№ страницы" style="width: 120px;">
+            </div>
+            <div class="control">
+                <button id="page-go-btn" class="button is-info">
+                    Перейти
+                </button>
+            </div>
+        </div>
+    }
 </div>
+
+<script>
+    (function() {
+        const goButton = document.getElementById('page-go-btn');
+        const pageInput = document.getElementById('page-input');
+
+        if (!goButton || !pageInput) {
+            return;
+        }
+
+        const maxPage = parseInt(pageInput.getAttribute('max'), 10);
+        const filterParam = '@Html.Raw(filterUrlParam)';
+
+        function navigateToPage() {
+            let pageNumber = parseInt(pageInput.value, 10);
+            if (!isNaN(pageNumber) && pageNumber > 0 && pageNumber <= maxPage) {
+                window.location.href = `/history?page=${pageNumber}${filterParam}`;
+            } else {
+                // Можно добавить обработку ошибки, например, подсветку поля
+                pageInput.classList.add('is-danger');
+            }
+        }
+
+        goButton.addEventListener('click', navigateToPage);
+
+        pageInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                navigateToPage();
+            }
+        });
+
+        pageInput.addEventListener('input', function() {
+            pageInput.classList.remove('is-danger');
+        });
+    })();
+</script>

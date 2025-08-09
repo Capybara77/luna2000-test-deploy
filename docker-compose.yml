@@ -20,6 +20,7 @@ services:
     environment:
       - telegram
       - ASPNETCORE_URLS=http://+:8080
+      - VIRTUAL_PORT=8080
       - VIRTUAL_HOST=t196driveboss.ru
       - LETSENCRYPT_HOST=t196driveboss.ru
       - LETSENCRYPT_EMAIL=dimka0512@yandex.ru
