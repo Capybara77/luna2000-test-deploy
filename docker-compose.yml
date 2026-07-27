@@ -3,11 +3,7 @@ version: '3.8'
 services:
   luna2000:
     image: luna2000
-    deploy:
-      restart_policy:
-        condition: on-failure
-        max_attempts: 5
-        delay: 5s
+    restart: unless-stopped
     container_name: luna2000
     expose:
       - 8080
@@ -27,6 +23,7 @@ services:
 
   job-server:
     image: job-server
+    restart: unless-stopped
     container_name: job-server
     depends_on:
       - luna2000
@@ -39,6 +36,7 @@ services:
 
   storage:
     image: silverwind/droppy
+    restart: unless-stopped
     container_name: luna-storage
     ports:
       - "8899:8989"
