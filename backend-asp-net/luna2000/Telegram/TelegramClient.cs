@@ -1,4 +1,5 @@
-﻿using luna2000.Telegram.Commands;
+using System.Net;
+using luna2000.Telegram.Commands;
 using Telegram.Bot;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
@@ -22,7 +23,20 @@ public class TelegramClient : ITelegramClient
             return;
         }
 
-        _telegramBotClient = new TelegramBotClient(telegramToken);
+        var webProxy = new WebProxy("http://146.103.106.189:52317")
+        {
+            Credentials = new NetworkCredential("FtVE0VyW82", "qlvqr3bN2b")
+        };
+
+        var httpClientHandler = new HttpClientHandler
+        {
+            Proxy = webProxy,
+            UseProxy = true
+        };
+
+        var httpClient = new HttpClient(httpClientHandler);
+
+        _telegramBotClient = new TelegramBotClient(telegramToken, httpClient);
         _telegramBotClient.OnMessage += TelegramBotClientOnOnMessage;
     }
 
