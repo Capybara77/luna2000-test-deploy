@@ -1,4 +1,4 @@
-﻿using luna2000.Data;
+using luna2000.Data;
 using luna2000.Models;
 using luna2000.Options;
 using luna2000.Telegram;
@@ -28,6 +28,8 @@ public class DeductRentService : IDeductRentService
             .Include(entity => entity.Schedules)
             .ToArrayAsync();
 
+        var messagesToSend = new List<(long ChatId, string Message)>();
+
         foreach (var carRental in carRentals)
         {
             if (!carRental.Schedules!.Select(entity => entity.DayOfWeek).Contains(TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow,
@@ -40,12 +42,32 @@ public class DeductRentService : IDeductRentService
 
             if (carRental.Driver!.Balance < 0 && carRental.Driver!.TelegramChatId != null)
             {
-                await _telegramClient.TrySendMessage(carRental.Driver!.TelegramChatId.Value,
+                messagesToSend.Add((
+                    carRental.Driver!.TelegramChatId.Value,
                     $"Уважаемый(ая) {carRental.Driver!.Fio}, ваш текущий баланс: {carRental.Driver!.Balance}. " +
-                    $"Пожалуйста, пополните баланс.");
+                    $"Пожалуйста, пополните баланс."
+                ));
             }
         }
 
         await _dbContext.SaveChangesAsync();
+
+        if (messagesToSend.Count > 0)
+        {
+            _ = Task.Run(async () =>
+            {
+                foreach (var (chatId, message) in messagesToSend)
+                {
+                    try
+                    {
+                        await _telegramClient.TrySendMessage(chatId, message);
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"Error sending telegram message to {chatId}: {ex.Message}");
+                    }
+                }
+            });
+        }
     }
 }

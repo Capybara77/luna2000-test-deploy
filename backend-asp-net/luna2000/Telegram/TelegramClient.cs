@@ -49,7 +49,10 @@ public class TelegramClient : ITelegramClient
     {
         try
         {
-            await _telegramBotClient?.SendMessage(chatId, message);
+            if (_telegramBotClient != null)
+            {
+                await _telegramBotClient.SendMessage(chatId, message);
+            }
         }
         catch
         {
