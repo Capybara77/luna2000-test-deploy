@@ -1,4 +1,4 @@
-﻿@model DriverEntity[]
+@model DriverEntity[]
 
 <section class="section">
     <div class="container is-fluid px-0">
@@ -66,7 +66,8 @@
                                 <div class="buttons">
                                     <button class="button is-warning" onclick="editDriver('@(driver.Id)')">Редактировать</button>
                                     <button class="button is-danger" onclick="deleteDriver('@(driver.Id)')">Удалить</button>
-                                    <button class="button is-info" onclick="createUrl('@(driver.Id)')">Скопировать ссылку-приглашение в TG</button>
+                                    <button class="button is-info" onclick="createUrl('@(driver.Id)')">TG-ссылка</button>
+                                    <button class="button is-success" onclick="generateAccess('@(driver.Id)', '@(driver.Fio)')">🔑 Доступ</button>
                                 </div>
                             </td>
                         </tr>

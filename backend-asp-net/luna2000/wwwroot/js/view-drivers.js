@@ -31,3 +31,21 @@ function createUrl(id) {
         })
         .catch((error) => console.error("Ошибка:", error));
 }
+
+async function generateAccess(id, fio) {
+    if (!confirm(`Сгенерировать доступ для "${fio}"?\nБудет создан (или обновлён) логин и пароль.`)) return;
+    try {
+        const res = await fetch(`/driver/generate-credentials/${id}`, { method: 'POST' });
+        const data = await res.json();
+        if (data.success) {
+            const text = `✅ Доступ для ${fio}\n\nЛогин: ${data.login}\nПароль: ${data.password}\n\nСайт: ${location.origin}/login`;
+            navigator.clipboard.writeText(text);
+            alert(text + '\n\n(скопировано в буфер)');
+        } else {
+            alert('Ошибка генерации доступа');
+        }
+    } catch (e) {
+        console.error(e);
+        alert('Ошибка: ' + e.message);
+    }
+}

@@ -1,4 +1,4 @@
-﻿using luna2000.Data;
+using luna2000.Data;
 using luna2000.Dto;
 using luna2000.Models;
 using luna2000.SmsServices;
@@ -24,15 +24,33 @@ public class SmsController : ControllerBase
     [HttpGet]
     public async Task<IActionResult> Receive(SmsReceiveRequest smsReceiveRequest)
     {
-        var message = $"Сообщение от: {smsReceiveRequest.Sender}\r\nТекст сообщения: {smsReceiveRequest.Message}";
-        CreateSmsLog(message);
-
         var amount = _smsParserService.GetAmountByMessageText(smsReceiveRequest.Message);
         var driverId = _smsParserService.GetDriverIdByMessageText(smsReceiveRequest.Message);
 
-        AddDriverBalance(amount, driverId);
-        await SendTelegramMessage(driverId, amount);
+        // Лог самого SMS-сообщения (сырой)
+        var rawMessage = $"Сообщение от: {smsReceiveRequest.Sender}\r\nТекст сообщения: {smsReceiveRequest.Message}";
+        CreateSmsLog(rawMessage, driverId);
 
+        // Если успешно распознали — пополняем баланс и пишем отдельный лог
+        decimal? newBalance = AddDriverBalance(amount, driverId);
+        if (amount != null && driverId != null && newBalance != null)
+        {
+            var driver = _dbContext.Set<DriverEntity>().FirstOrDefault(e => e.Id == driverId);
+            if (driver != null)
+            {
+                _dbContext.Set<BaseLog>().Add(new BaseLog
+                {
+                    ChangeId = Guid.NewGuid(),
+                    Created = DateTime.UtcNow,
+                    EventType = EventType.Event,
+                    EntryId = driverId,
+                    ObjectName = "SmsBalance",
+                    Note = $"Пополнение баланса: {driver.Fio} — +{amount:0.##} руб. | Новый баланс: {newBalance:0.##} руб."
+                });
+            }
+        }
+
+        await SendTelegramMessage(driverId, amount);
         await _dbContext.SaveChangesAsync();
         return Ok();
     }
@@ -49,17 +67,20 @@ public class SmsController : ControllerBase
         }
     }
 
-    private void AddDriverBalance(decimal? amount, Guid? driverId)
+    private decimal? AddDriverBalance(decimal? amount, Guid? driverId)
     {
-        if (amount == null || driverId == null) return;
+        if (amount == null || driverId == null) return null;
 
         var driver = _dbContext.Set<DriverEntity>()
             .FirstOrDefault(entity => entity.Id == driverId);
 
-        driver!.Balance += amount.Value;
+        if (driver == null) return null;
+
+        driver.Balance += amount.Value;
+        return driver.Balance;
     }
 
-    private void CreateSmsLog(string message)
+    private void CreateSmsLog(string message, Guid? driverId = null)
     {
         _dbContext.Set<BaseLog>()
             .Add(new BaseLog
@@ -67,6 +88,8 @@ public class SmsController : ControllerBase
                 ChangeId = Guid.NewGuid(),
                 Created = DateTime.UtcNow,
                 EventType = EventType.Add,
+                EntryId = driverId,
+                ObjectName = "SmsReceived",
                 Note = message
             });
     }

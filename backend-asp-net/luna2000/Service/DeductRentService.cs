@@ -29,16 +29,26 @@ public class DeductRentService : IDeductRentService
             .ToArrayAsync();
 
         var messagesToSend = new List<(long ChatId, string Message)>();
+        var deductedDrivers = new List<(Guid DriverId, string Fio, decimal Amount, decimal NewBalance)>();
+
+        var localNow = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow,
+            TimeZoneInfo.FindSystemTimeZoneById(_commonOptions.TimeZone));
 
         foreach (var carRental in carRentals)
         {
-            if (!carRental.Schedules!.Select(entity => entity.DayOfWeek).Contains(TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow,
-                    TimeZoneInfo.FindSystemTimeZoneById(_commonOptions.TimeZone)).DayOfWeek))
+            if (!carRental.Schedules!.Select(entity => entity.DayOfWeek).Contains(localNow.DayOfWeek))
             {
                 continue;
             }
 
             carRental.Driver!.Balance -= carRental.Rent;
+
+            deductedDrivers.Add((
+                carRental.Driver.Id,
+                carRental.Driver.Fio,
+                carRental.Rent,
+                carRental.Driver.Balance
+            ));
 
             if (carRental.Driver!.Balance < 0 && carRental.Driver!.TelegramChatId != null)
             {
@@ -49,6 +59,20 @@ public class DeductRentService : IDeductRentService
                 ));
             }
         }
+
+        // Подробные логи списания (записываются вместе с изменением Balance)
+        var deductionLogs = deductedDrivers.Select(d => new BaseLog
+        {
+            ChangeId = Guid.NewGuid(),
+            Created = DateTime.UtcNow,
+            EventType = EventType.Event,
+            EntryId = d.DriverId,
+            ObjectName = "DeductRent",
+            Note = $"Списание аренды: {d.Fio} — {d.Amount:0.##} руб. | Новый баланс: {d.NewBalance:0.##} руб."
+        }).ToList();
+
+        if (deductionLogs.Count > 0)
+            _dbContext.Set<BaseLog>().AddRange(deductionLogs);
 
         await _dbContext.SaveChangesAsync();
 

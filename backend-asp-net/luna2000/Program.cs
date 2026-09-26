@@ -1,17 +1,22 @@
 using luna2000.Converters;
 using luna2000.Data;
+using luna2000.Hubs;
 using luna2000.Logs;
 using luna2000.Logs.Impl;
 using luna2000.MapperProfiles;
 using luna2000.Middlewares;
+using luna2000.Models;
 using luna2000.Options;
 using luna2000.Service;
 using luna2000.SmsServices;
 using luna2000.Telegram;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.FileProviders;
+using Microsoft.IdentityModel.Tokens;
 using System.Globalization;
+using System.Text;
 using luna2000.Telegram.IoC;
 
 namespace luna2000;
@@ -27,6 +32,16 @@ public class Program
                 {
                     options.JsonSerializerOptions.Converters.Add(new DateOnlyJsonConverter());
                 });
+
+        // SignalR
+        builder.Services.AddSignalR();
+
+        // CORS — для мобильного приложения
+        builder.Services.AddCors(options =>
+        {
+            options.AddPolicy("MobilePolicy", policy =>
+                policy.AllowAnyOrigin().AllowAnyHeader().AllowAnyMethod());
+        });
 
         AddLogs(builder);
 
@@ -45,8 +60,6 @@ public class Program
 
         ConfigureCulture();
 
-        ConfigureCulture();
-
         builder.Configuration.AddJsonFile("Configs/job-server.json");
         builder.Configuration.AddJsonFile("Configs/common-data.json");
         builder.Services.Configure<JobServerConfiguration>(builder.Configuration.GetSection("JobServerConfiguration"));
@@ -55,6 +68,30 @@ public class Program
         AddAuthentication(builder);
 
         var app = builder.Build();
+
+        // Создаём/обновляем таблицы (без EF миграций)
+        using (var scope = app.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<LunaDbContext>();
+
+            // Таблица чата
+            db.Database.ExecuteSqlRaw(@"
+                CREATE TABLE IF NOT EXISTS ChatMessages (
+                    Id TEXT PRIMARY KEY,
+                    DriverId TEXT NOT NULL,
+                    Channel INTEGER NOT NULL DEFAULT 0,
+                    Text TEXT NOT NULL DEFAULT '',
+                    CreatedAt TEXT NOT NULL
+                );
+            ");
+
+            // Добавляем колонки Role и DriverId в Users (игнорируем ошибку если уже есть)
+            try { db.Database.ExecuteSqlRaw("ALTER TABLE Users ADD COLUMN Role INTEGER NOT NULL DEFAULT 1;"); } catch { }
+            try { db.Database.ExecuteSqlRaw("ALTER TABLE Users ADD COLUMN DriverId TEXT;"); } catch { }
+
+            // Применяем SQL-скрипт миграции (если есть)
+            db.ExecuteMigrationScript();
+        }
 
         using (var scope = app.Services.CreateScope())
         {
@@ -69,12 +106,11 @@ public class Program
 
         app.UseMiddleware<IpRestrictionMiddleware>();
 
-
         WithStaticFiles(app);
-
         app.UseStaticFiles();
-
         app.UseRouting();
+
+        app.UseCors("MobilePolicy");
 
         app.UseAuthentication();
         app.UseAuthorization();
@@ -82,6 +118,9 @@ public class Program
         app.MapControllerRoute(
             name: "default",
             pattern: "{controller=Home}/{action=Index}/{id?}");
+
+        // SignalR Chat Hub
+        app.MapHub<ChatHub>("/mobile/chathub");
 
         app.Run();
     }
@@ -121,21 +160,54 @@ public class Program
 
     private static void AddAuthentication(WebApplicationBuilder builder)
     {
-        builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme).AddCookie(options =>
-        {
-            options.Events.OnRedirectToLogin += context =>
-            {
-                context.HttpContext.Response.Redirect("/login");
-                return Task.CompletedTask;
-            };
-            options.Events.OnRedirectToAccessDenied += context =>
-            {
-                context.HttpContext.Response.Redirect("/login");
-                return Task.CompletedTask;
-            };
+        var jwtSecret = builder.Configuration["Mobile:JwtSecret"] ?? "luna2000-default-secret-key-32ch!";
+        var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSecret));
 
-            options.LoginPath = new PathString("/login");
-            options.ReturnUrlParameter = "link";
-        });
+        builder.Services
+            .AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
+            .AddCookie(options =>
+            {
+                options.Events.OnRedirectToLogin += context =>
+                {
+                    context.HttpContext.Response.Redirect("/login");
+                    return Task.CompletedTask;
+                };
+                options.Events.OnRedirectToAccessDenied += context =>
+                {
+                    context.HttpContext.Response.Redirect("/login");
+                    return Task.CompletedTask;
+                };
+
+                options.LoginPath = new PathString("/login");
+                options.ReturnUrlParameter = "link";
+            })
+            .AddJwtBearer("MobileJwt", options =>
+            {
+                options.TokenValidationParameters = new TokenValidationParameters
+                {
+                    ValidateIssuer = true,
+                    ValidIssuer = "luna2000",
+                    ValidateAudience = true,
+                    ValidAudience = "luna2000-mobile",
+                    ValidateIssuerSigningKey = true,
+                    IssuerSigningKey = key,
+                    ValidateLifetime = true
+                };
+
+                // Поддержка JWT в SignalR (токен в query string)
+                options.Events = new JwtBearerEvents
+                {
+                    OnMessageReceived = context =>
+                    {
+                        var accessToken = context.Request.Query["access_token"];
+                        var path = context.HttpContext.Request.Path;
+                        if (!string.IsNullOrEmpty(accessToken) && path.StartsWithSegments("/mobile/chathub"))
+                        {
+                            context.Token = accessToken;
+                        }
+                        return Task.CompletedTask;
+                    }
+                };
+            });
     }
-}
+}

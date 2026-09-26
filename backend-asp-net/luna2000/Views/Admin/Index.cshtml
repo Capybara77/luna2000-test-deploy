@@ -1,0 +1,191 @@
+@model List<luna2000.Models.UserEntity>
+
+@{
+    ViewData["Title"] = "Администрирование";
+}
+
+<section class="section">
+  <div class="container is-fluid px-0">
+    <div class="is-flex is-justify-content-space-between is-align-items-center mb-4">
+      <h1 class="title mb-0">👥 Пользователи</h1>
+      <a href="/admin/create" class="button is-primary">
+        <span class="icon"><i class="fas fa-plus"></i></span>
+        <span>Новый пользователь</span>
+      </a>
+    </div>
+
+    @if (TempData["Error"] != null)
+    {
+      <div class="notification is-danger is-light">@TempData["Error"]</div>
+    }
+    @if (TempData["Success"] != null)
+    {
+      <div class="notification is-success is-light">@TempData["Success"]</div>
+    }
+
+    <div class="table-container">
+      <table class="table is-hoverable is-striped is-fullwidth">
+        <thead>
+          <tr>
+            <th>Имя / ФИО</th>
+            <th>Логин</th>
+            <th>Пароль</th>
+            <th>Роль</th>
+            <th>Водитель</th>
+            <th>Действия</th>
+          </tr>
+        </thead>
+        <tbody>
+          @foreach (var user in Model)
+          {
+            var roleClass = user.Role switch {
+              luna2000.Models.UserRole.Admin  => "is-danger",
+              luna2000.Models.UserRole.Editor => "is-warning",
+              luna2000.Models.UserRole.Driver => "is-info",
+              _ => "is-light"
+            };
+            <tr id="row-@user.Id">
+              <td>
+                <span class="edit-name" data-id="@user.Id">@user.Name</span>
+              </td>
+              <td>
+                <span class="edit-login" data-id="@user.Id">@user.Login</span>
+              </td>
+              <td>
+                <span class="password-display" id="pwd-@user.Id" style="font-family:monospace">••••••••••</span>
+                <button class="button is-small is-ghost ml-1" onclick="showPassword('@user.Id', '@user.Password')" title="Показать пароль">
+                  <i class="fas fa-eye"></i>
+                </button>
+              </td>
+              <td>
+                <span class="tag @roleClass">@user.Role</span>
+              </td>
+              <td>
+                @if (user.Driver != null)
+                {
+                  <span class="is-size-7">@user.Driver.Fio</span>
+                }
+                else
+                {
+                  <span class="has-text-grey">—</span>
+                }
+              </td>
+              <td>
+                <div class="buttons">
+                  <button class="button is-small is-warning"
+                          onclick="openEdit('@user.Id', '@user.Name', '@user.Login', '@((int)user.Role)')">
+                    <i class="fas fa-edit"></i>
+                  </button>
+                  <button class="button is-small is-info"
+                          onclick="generatePassword('@user.Id')"
+                          title="Генерировать новый пароль">
+                    <i class="fas fa-key"></i>
+                  </button>
+                  <form method="post" action="/admin/delete/@user.Id" style="display:inline"
+                        onsubmit="return confirm('Удалить пользователя @user.Login?')">
+                    <button type="submit" class="button is-small is-danger">
+                      <i class="fas fa-trash"></i>
+                    </button>
+                  </form>
+                </div>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- Модальное окно редактирования -->
+<div id="editModal" class="modal">
+  <div class="modal-background" onclick="closeEdit()"></div>
+  <div class="modal-card">
+    <header class="modal-card-head">
+      <p class="modal-card-title">Редактировать пользователя</p>
+      <button class="delete" onclick="closeEdit()"></button>
+    </header>
+    <section class="modal-card-body">
+      <input type="hidden" id="editId">
+      <div class="field">
+        <label class="label">Имя</label>
+        <input class="input" type="text" id="editName">
+      </div>
+      <div class="field">
+        <label class="label">Логин</label>
+        <input class="input" type="text" id="editLogin">
+      </div>
+      <div class="field">
+        <label class="label">Новый пароль (оставьте пустым чтобы не менять)</label>
+        <input class="input" type="text" id="editPassword" placeholder="Новый пароль...">
+      </div>
+      <div class="field">
+        <label class="label">Роль</label>
+        <div class="select is-fullwidth">
+          <select id="editRole">
+            <option value="0">Admin</option>
+            <option value="1">Editor</option>
+            <option value="2">Driver</option>
+          </select>
+        </div>
+      </div>
+    </section>
+    <footer class="modal-card-foot">
+      <button class="button is-primary" onclick="saveEdit()">Сохранить</button>
+      <button class="button" onclick="closeEdit()">Отмена</button>
+    </footer>
+  </div>
+</div>
+
+@section Scripts {
+  <script src="https://kit.fontawesome.com/e5e3c0c905.js" crossorigin="anonymous"></script>
+  <script>
+    function openEdit(id, name, login, role) {
+      document.getElementById('editId').value = id;
+      document.getElementById('editName').value = name;
+      document.getElementById('editLogin').value = login;
+      document.getElementById('editRole').value = role;
+      document.getElementById('editPassword').value = '';
+      document.getElementById('editModal').classList.add('is-active');
+    }
+    function closeEdit() {
+      document.getElementById('editModal').classList.remove('is-active');
+    }
+    async function saveEdit() {
+      const id = document.getElementById('editId').value;
+      const body = {
+        id,
+        name: document.getElementById('editName').value,
+        login: document.getElementById('editLogin').value,
+        password: document.getElementById('editPassword').value || null,
+        role: parseInt(document.getElementById('editRole').value)
+      };
+      const res = await fetch('/admin/edit', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body)
+      });
+      if (res.ok) { location.reload(); }
+      else { const d = await res.json(); alert(d.error || 'Ошибка'); }
+    }
+    async function generatePassword(id) {
+      if (!confirm('Сгенерировать новый пароль для этого пользователя?')) return;
+      const res = await fetch(`/admin/generate-password/${id}`, { method: 'POST' });
+      if (res.ok) {
+        const d = await res.json();
+        document.getElementById('pwd-' + id).textContent = d.password;
+        // показываем 10 сек потом скрываем
+        setTimeout(() => { document.getElementById('pwd-' + id).textContent = '••••••••••'; }, 10000);
+      }
+    }
+    function showPassword(id, pwd) {
+      const el = document.getElementById('pwd-' + id);
+      if (el.textContent === '••••••••••') {
+        el.textContent = pwd;
+        setTimeout(() => el.textContent = '••••••••••', 8000);
+      } else {
+        el.textContent = '••••••••••';
+      }
+    }
+  </script>
+}

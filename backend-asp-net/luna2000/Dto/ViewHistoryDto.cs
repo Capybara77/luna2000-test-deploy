@@ -1,4 +1,4 @@
-﻿namespace luna2000.Dto;
+namespace luna2000.Dto;
 
 public class ViewHistoryDto
 {
@@ -11,4 +11,7 @@ public class ViewHistoryDto
     public int ItemsCount { get; set; }
 
     public Guid? ObjFilterId { get; set; }
+
+    /// <summary>Driver ID → ФИО, для отображения имени водителя в строках истории</summary>
+    public Dictionary<Guid, string> DriversMap { get; set; } = new();
 }

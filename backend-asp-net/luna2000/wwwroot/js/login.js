@@ -1,24 +1,27 @@
-﻿document.getElementById("loginForm").addEventListener("submit", function (e) {
+document.getElementById("loginForm").addEventListener("submit", function (e) {
     e.preventDefault();
 
     const username = document.getElementById("username").value;
     const password = document.getElementById("password").value;
 
-    // Отправка данных на сервер для проверки
     fetch("/login", {
         method: "POST",
-        headers: {
-            "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ username, password }),
     })
-        .then((response) => response.json())
+        .then((response) => {
+            if (response.status === 404) {
+                document.getElementById("error").style.display = "block";
+                return null;
+            }
+            return response.json();
+        })
         .then((data) => {
+            if (!data) return;
             if (data.success) {
-                // Если успешная авторизация, перенаправляем
-                window.location.replace("/home");
+                // Редирект по роли (сервер возвращает redirect)
+                window.location.replace(data.redirect || "/");
             } else {
-                // Показать сообщение об ошибке
                 document.getElementById("error").style.display = "block";
             }
         })

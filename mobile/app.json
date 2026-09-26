@@ -1,0 +1,24 @@
+{
+  "expo": {
+    "name": "Luna2000",
+    "slug": "luna2000-driver",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "light",
+    "scheme": "luna2000",
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "com.luna2000.driver"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "backgroundColor": "#3273dc"
+      },
+      "package": "com.luna2000.driver"
+    },
+    "plugins": ["expo-router"],
+    "experiments": {
+      "typedRoutes": true
+    }
+  }
+}

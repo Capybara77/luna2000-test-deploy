@@ -360,3 +360,17 @@ MigrationBackup/
 
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
+
+# Mobile & APK build artifacts
+*.apk
+*.aab
+/luna2000-driver.apk
+/backend-asp-net/luna2000/wwwroot/apk/
+gradle_build.log
+/mobile/node_modules/
+/mobile/.expo/
+/mobile/dist/
+/mobile/android/.gradle/
+/mobile/android/app/build/
+/mobile/android/.cxx/
+/mobile/android/app/.cxx/

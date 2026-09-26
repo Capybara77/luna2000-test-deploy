@@ -1,4 +1,4 @@
-﻿using AutoMapper;
+using AutoMapper;
 using luna2000.Data;
 using luna2000.Dto;
 using luna2000.Models;
@@ -207,6 +207,52 @@ public class DriverController : Controller
         var url = _telegramClient.CreateUrlInvite(id);
 
         return Json(new { success = true, url });
+    }
+
+    /// <summary>
+    /// Генерирует (или обновляет) логин и пароль для учётной записи водителя.
+    /// Логин строится из ФИО (транслитерация).
+    /// </summary>
+    [HttpPost]
+    [Route("/driver/generate-credentials/{id:guid}")]
+    public async Task<IActionResult> GenerateCredentials(Guid id)
+    {
+        var driver = await _dbContext.Drivers.FindAsync(id);
+        if (driver == null) return NotFound();
+
+        var baseLogin = luna2000.Utils.UserHelper.GenerateLogin(driver.Fio);
+        var password  = luna2000.Utils.UserHelper.GeneratePassword();
+
+        // Найти или создать UserEntity для этого водителя
+        var user = await _dbContext.Set<luna2000.Models.UserEntity>()
+            .FirstOrDefaultAsync(u => u.DriverId == id);
+
+        if (user == null)
+        {
+            // Обеспечить уникальность логина
+            var login = baseLogin;
+            var suffix = 2;
+            while (await _dbContext.Set<luna2000.Models.UserEntity>().AnyAsync(u => u.Login == login))
+                login = $"{baseLogin}{suffix++}";
+
+            user = new luna2000.Models.UserEntity
+            {
+                Id       = Guid.NewGuid(),
+                Name     = driver.Fio,
+                Login    = login,
+                Password = password,
+                Role     = luna2000.Models.UserRole.Driver,
+                DriverId = id
+            };
+            _dbContext.Set<luna2000.Models.UserEntity>().Add(user);
+        }
+        else
+        {
+            user.Password = password;
+        }
+
+        await _dbContext.SaveChangesAsync();
+        return Json(new { success = true, login = user.Login, password });
     }
 
     private void DeleteDriverPhotos(ICollection<PhotoEntity>? photos)

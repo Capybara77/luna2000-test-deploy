@@ -1,157 +1,234 @@
-﻿@using luna2000.Extensions
+@using luna2000.Extensions
 @using luna2000.Options
 @using Microsoft.Extensions.Options
 @model luna2000.Dto.ViewHistoryDto
 @inject IOptions<CommonDataConfiguration> Configuration
 
-<div class="container table-container">
-    <table class="table is-hoverable is-striped is-fullwidth">
-        <thead>
-            <tr>
-                <th>Событие</th>
-                <th>Текстовое описание</th>
-                <th>Объект события</th>
-                <th>Старое значение</th>
-                <th>Новое значение</th>
-                <th>Время</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach (var logGroup in Model.Items)
-            {
-                var firstLog = logGroup.First();
+@{
+    var tz = TimeZoneInfo.FindSystemTimeZoneById(Configuration.Value.TimeZone);
+    var filterUrlParam = Model.ObjFilterId.HasValue && Model.ObjFilterId != Guid.Empty
+        ? $"&objFilter={Model.ObjFilterId}" : string.Empty;
+    var totalPages = (int)Math.Ceiling((double)Model.ItemsCount / Model.ItemsPerPage);
+    var currentPage = Model.CurrentPage;
+    var visiblePages = 2;
 
-                <tr>
-                    <td>@firstLog.EventType.GetDescription()</td>
-                    <td>@firstLog.Note</td>
-                    <td>
-                        @foreach (var objName in logGroup.Select(dto => dto.ObjectName))
-                        {
-                            <p>@objName</p>
-                        }
-                    </td>
-                    <td>
-                        @foreach (var old in logGroup.Select(dto => dto.OldValue))
-                        {
-                            <p>@old</p>
-                        }
-                    </td>
-                    <td>
-                        @foreach (var newValue in logGroup.Select(dto => dto.NewValue))
-                        {
-                            <p>@newValue</p>
-                        }
-                    </td>
-                    <td>@TimeZoneInfo.ConvertTimeFromUtc(firstLog.Created, TimeZoneInfo.FindSystemTimeZoneById(Configuration.Value.TimeZone)).ToString("HH:mm dd.MM.yyyy")</td>
-                </tr>
-            }
-        </tbody>
-    </table>
+    string RowClass(string? objectName, luna2000.Models.EventType eventType) => objectName switch
+    {
+        "DeductRent" => "has-background-danger-light",
+        "SmsBalance" => "has-background-success-light",
+        _ => eventType switch
+        {
+            luna2000.Models.EventType.Delete => "has-background-danger-light",
+            luna2000.Models.EventType.Add => "has-background-success-light",
+            luna2000.Models.EventType.Edit => "has-background-warning-light",
+            _ => ""
+        }
+    };
 
-    @{
-        var filterUrlParam = Model.ObjFilterId != Guid.Empty ? $"&objFilter={Model.ObjFilterId}" : string.Empty;
-        var totalPages = (int)Math.Ceiling((double)Model.ItemsCount / Model.ItemsPerPage);
-        var currentPage = Model.CurrentPage;
-        // Количество отображаемых страниц с каждой стороны от текущей
-        var visiblePages = 2;
+    string EventIcon(string? objectName, luna2000.Models.EventType eventType) => objectName switch
+    {
+        "DeductRent" => "<i class='fas fa-arrow-down has-text-danger'></i>",
+        "SmsBalance" => "<i class='fas fa-arrow-up has-text-success'></i>",
+        "SmsReceived" => "<i class='fas fa-sms has-text-grey'></i>",
+        _ => eventType switch
+        {
+            luna2000.Models.EventType.Add => "<i class='fas fa-plus-circle has-text-success'></i>",
+            luna2000.Models.EventType.Delete => "<i class='fas fa-trash has-text-danger'></i>",
+            luna2000.Models.EventType.Edit => "<i class='fas fa-pen has-text-warning'></i>",
+            luna2000.Models.EventType.Event => "<i class='fas fa-bolt has-text-info'></i>",
+            _ => "<i class='fas fa-circle'></i>"
+        }
+    };
+}
+
+<style>
+    .history-note { white-space: pre-wrap; max-width: 400px; font-size: 0.85rem; }
+    .diff-old { text-decoration: line-through; color: #cc3333; margin-right: 4px; }
+    .diff-new { color: #167e16; font-weight: 600; }
+    .diff-row td { font-size: 0.82rem; padding: 2px 8px !important; background: transparent !important; }
+    .event-icon { width: 28px; text-align: center; }
+    .driver-link { font-weight: 600; color: #363636; }
+    .filter-active { background: #f0f7ff; border: 1px solid #3273dc; border-radius: 4px; padding: 4px 10px; }
+</style>
+
+<div class="container is-fluid px-0">
+
+    @if (Model.ObjFilterId.HasValue && Model.ObjFilterId != Guid.Empty)
+    {
+        var driverName = Model.DriversMap.TryGetValue(Model.ObjFilterId.Value, out var n) ? n : Model.ObjFilterId.Value.ToString();
+        <div class="mb-3 is-flex is-align-items-center" style="gap:10px">
+            <span class="filter-active">
+                <i class="fas fa-filter has-text-link mr-1"></i>
+                Фильтр: <strong>@driverName</strong>
+            </span>
+            <a href="/History?page=1" class="button is-small is-light">
+                <span class="icon is-small"><i class="fas fa-times"></i></span>
+                <span>Сбросить</span>
+            </a>
+        </div>
     }
 
-    <nav class="pagination is-centered" role="navigation" aria-label="pagination">
+    <div class="table-container">
+        <table class="table is-fullwidth is-hoverable" style="font-size: 0.88rem;">
+            <thead>
+                <tr>
+                    <th style="width:40px"></th>
+                    <th>Событие</th>
+                    <th>Водитель / Объект</th>
+                    <th>Описание / Изменения</th>
+                    <th style="white-space:nowrap">Время</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var logGroup in Model.Items)
+                {
+                    var first = logGroup.First();
+                    var rowClass = RowClass(first.ObjectName, first.EventType);
+                    var icon = EventIcon(first.ObjectName, first.EventType);
+
+                    <tr class="@rowClass">
+                        <td class="event-icon is-vcentered">@Html.Raw(icon)</td>
+                        <td class="is-vcentered" style="white-space:nowrap">
+                            @{
+                                string eventLabel = first.ObjectName switch
+                                {
+                                    "DeductRent" => "Списание аренды",
+                                    "SmsBalance" => "Пополнение (SMS)",
+                                    "SmsReceived" => "SMS входящий",
+                                    _ => first.EventType.GetDescription()
+                                };
+                            }
+                            <span>@eventLabel</span>
+                        </td>
+                        <td class="is-vcentered">
+                            @if (first.EntryId.HasValue && Model.DriversMap.TryGetValue(first.EntryId.Value, out var fio))
+                            {
+                                <a href="/History?page=1&objFilter=@first.EntryId" class="driver-link">
+                                    <i class="fas fa-user fa-xs mr-1 has-text-grey"></i>@fio
+                                </a>
+                            }
+                            else if (!string.IsNullOrEmpty(first.ObjectName) && first.ObjectName != "DeductRent" && first.ObjectName != "SmsBalance" && first.ObjectName != "SmsReceived")
+                            {
+                                <span class="has-text-grey-dark">@first.ObjectName</span>
+                            }
+                        </td>
+                        <td class="is-vcentered">
+                            @if (!string.IsNullOrEmpty(first.Note))
+                            {
+                                <div class="history-note">@first.Note</div>
+                            }
+                            @{
+                                var changes = logGroup
+                                    .Where(d => !string.IsNullOrEmpty(d.PropertyName) && d.PropertyName != "Balance")
+                                    .ToList();
+                                var balanceChange = logGroup.FirstOrDefault(d => d.PropertyName == "Balance");
+                            }
+                            @if (balanceChange != null && string.IsNullOrEmpty(first.Note))
+                            {
+                                <div class="mt-1">
+                                    <span class="is-size-7 has-text-grey">Баланс: </span>
+                                    <span class="diff-old">@balanceChange.OldValue</span>
+                                    <i class="fas fa-arrow-right has-text-grey mx-1" style="font-size:0.7rem"></i>
+                                    <span class="diff-new">@balanceChange.NewValue</span>
+                                </div>
+                            }
+                            @foreach (var change in changes)
+                            {
+                                <div class="is-size-7 mt-1">
+                                    <strong>@change.PropertyName:</strong>
+                                    @if (!string.IsNullOrEmpty(change.OldValue))
+                                    {
+                                        <span class="diff-old">@change.OldValue</span>
+                                        <i class="fas fa-arrow-right has-text-grey mx-1" style="font-size:0.7rem"></i>
+                                    }
+                                    <span class="diff-new">@(change.NewValue ?? "—")</span>
+                                </div>
+                            }
+                        </td>
+                        <td class="is-vcentered has-text-grey is-size-7" style="white-space:nowrap">
+                            @TimeZoneInfo.ConvertTimeFromUtc(first.Created, tz).ToString("HH:mm\ndd.MM.yyyy")
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+
+    @* Пагинация *@
+    <nav class="pagination is-centered mt-4" role="navigation" aria-label="pagination">
         @if (currentPage > 1)
         {
-            <a class="pagination-previous" href="/history?page=@(currentPage - 1)@filterUrlParam">Предыдущая</a>
+            <a class="pagination-previous" href="/History?page=@(currentPage - 1)@filterUrlParam">
+                <i class="fas fa-chevron-left mr-1"></i>Предыдущая
+            </a>
         }
-
         @if (currentPage < totalPages)
         {
-            <a class="pagination-next" href="/history?page=@(currentPage + 1)@filterUrlParam">Следующая</a>
+            <a class="pagination-next" href="/History?page=@(currentPage + 1)@filterUrlParam">
+                Следующая<i class="fas fa-chevron-right ml-1"></i>
+            </a>
         }
 
         <ul class="pagination-list">
-            @* Ссылка на первую страницу *@
             <li>
-                <a class="pagination-link @(1 == currentPage ? "is-current" : "")" href="/history?page=1@filterUrlParam" aria-label="Goto page 1">1</a>
+                <a class="pagination-link @(1 == currentPage ? "is-current" : "")" href="/History?page=1@filterUrlParam">1</a>
             </li>
-
-            @* Левое многоточие *@
             @if (currentPage > visiblePages + 2)
             {
                 <li><span class="pagination-ellipsis">&hellip;</span></li>
             }
-
-            @* Основной диапазон страниц *@
             @for (var i = Math.Max(2, currentPage - visiblePages); i <= Math.Min(totalPages - 1, currentPage + visiblePages); i++)
             {
                 <li>
-                    <a class="pagination-link @(i == currentPage ? "is-current" : "")" href="/history?page=@i@filterUrlParam" aria-label="Goto page @i">@i</a>
+                    <a class="pagination-link @(i == currentPage ? "is-current" : "")" href="/History?page=@i@filterUrlParam">@i</a>
                 </li>
             }
-
-            @* Правое многоточие *@
             @if (currentPage < totalPages - (visiblePages + 1))
             {
                 <li><span class="pagination-ellipsis">&hellip;</span></li>
             }
-
-            @* Ссылка на последнюю страницу *@
             @if (totalPages > 1)
             {
                 <li>
-                    <a class="pagination-link @(totalPages == currentPage ? "is-current" : "")" href="/history?page=@totalPages@filterUrlParam" aria-label="Goto page @totalPages">@totalPages</a>
+                    <a class="pagination-link @(totalPages == currentPage ? "is-current" : "")" href="/History?page=@totalPages@filterUrlParam">@totalPages</a>
                 </li>
             }
         </ul>
     </nav>
 
-    @* Форма для перехода на конкретную страницу *@
     @if (totalPages > (visiblePages * 2) + 3)
     {
-        <div class="field has-addons is-justify-content-center mt-4">
+        <div class="field has-addons is-justify-content-center mt-3">
             <div class="control">
-                <input id="page-input" class="input" type="number" min="1" max="@totalPages" placeholder="№ страницы" style="width: 120px;">
+                <input id="page-input" class="input" type="number" min="1" max="@totalPages" placeholder="№ страницы" style="width:120px">
             </div>
             <div class="control">
-                <button id="page-go-btn" class="button is-info">
-                    Перейти
-                </button>
+                <button id="page-go-btn" class="button is-info">Перейти</button>
             </div>
         </div>
     }
+
 </div>
 
-<script>
-    (function() {
-        const goButton = document.getElementById('page-go-btn');
-        const pageInput = document.getElementById('page-input');
-
-        if (!goButton || !pageInput) {
-            return;
-        }
-
-        const maxPage = parseInt(pageInput.getAttribute('max'), 10);
-        const filterParam = '@Html.Raw(filterUrlParam)';
-
-        function navigateToPage() {
-            let pageNumber = parseInt(pageInput.value, 10);
-            if (!isNaN(pageNumber) && pageNumber > 0 && pageNumber <= maxPage) {
-                window.location.href = `/history?page=${pageNumber}${filterParam}`;
-            } else {
-                // Можно добавить обработку ошибки, например, подсветку поля
-                pageInput.classList.add('is-danger');
+@section Scripts {
+    <script src="https://kit.fontawesome.com/e5e3c0c905.js" crossorigin="anonymous"></script>
+    <script>
+        (function () {
+            const goButton = document.getElementById('page-go-btn');
+            const pageInput = document.getElementById('page-input');
+            if (!goButton || !pageInput) return;
+            const maxPage = parseInt(pageInput.getAttribute('max'), 10);
+            const filterParam = '@Html.Raw(filterUrlParam)';
+            function go() {
+                let n = parseInt(pageInput.value, 10);
+                if (!isNaN(n) && n > 0 && n <= maxPage)
+                    window.location.href = `/History?page=${n}${filterParam}`;
+                else
+                    pageInput.classList.add('is-danger');
             }
-        }
-
-        goButton.addEventListener('click', navigateToPage);
-
-        pageInput.addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') {
-                e.preventDefault();
-                navigateToPage();
-            }
-        });
-
-        pageInput.addEventListener('input', function() {
-            pageInput.classList.remove('is-danger');
-        });
-    })();
-</script>
+            goButton.addEventListener('click', go);
+            pageInput.addEventListener('keypress', e => { if (e.key === 'Enter') { e.preventDefault(); go(); } });
+            pageInput.addEventListener('input', () => pageInput.classList.remove('is-danger'));
+        })();
+    </script>
+}

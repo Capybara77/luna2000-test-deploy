@@ -1,4 +1,4 @@
-﻿using luna2000.Logs;
+using luna2000.Logs;
 using luna2000.Markers;
 using luna2000.Models;
 using Microsoft.EntityFrameworkCore;
@@ -22,6 +22,8 @@ public class LunaDbContext : DbContext
     public DbSet<BaseLog> BaseLogs { get; set; }
 
     public DbSet<RentScheduleEntity> RentSchedules { get; set; }
+
+    public DbSet<ChatMessage> ChatMessages { get; set; }
 
     public LunaDbContext(IServiceProvider serviceProvider)
     {
@@ -61,6 +63,13 @@ public class LunaDbContext : DbContext
             .WithMany(d => d.Photos)
             .HasForeignKey(p => p.CarId)
             .IsRequired(false);
+
+        modelBuilder.Entity<UserEntity>()
+            .HasOne(u => u.Driver)
+            .WithMany()
+            .HasForeignKey(u => u.DriverId)
+            .IsRequired(false)
+            .OnDelete(DeleteBehavior.SetNull);
     }
 
     public override int SaveChanges()

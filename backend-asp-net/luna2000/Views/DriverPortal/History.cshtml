@@ -1,0 +1,65 @@
+@{
+    ViewData["Title"] = "Моя история";
+    var logs = ViewBag.Logs as List<luna2000.Models.BaseLog> ?? new();
+    var tz = ViewBag.TimeZone as TimeZoneInfo ?? TimeZoneInfo.Utc;
+    int page = ViewBag.Page ?? 1;
+    int totalPages = ViewBag.TotalPages ?? 1;
+}
+
+<section class="section">
+  <div class="container is-fluid px-0">
+    <div class="is-flex is-align-items-center mb-4" style="gap:12px">
+      <a href="/driver-portal" class="button is-light is-small">
+        <i class="fas fa-arrow-left"></i>
+      </a>
+      <h1 class="title mb-0">История операций</h1>
+    </div>
+
+    <div class="table-container">
+      <table class="table is-hoverable is-striped is-fullwidth" style="font-size:0.88rem">
+        <thead>
+          <tr>
+            <th style="width:36px"></th>
+            <th>Описание</th>
+            <th style="white-space:nowrap">Время</th>
+          </tr>
+        </thead>
+        <tbody>
+          @foreach (var log in logs)
+          {
+            var isDeposit = log.ObjectName == "SmsBalance";
+            var isDeduct  = log.ObjectName == "DeductRent";
+            var rowClass  = isDeposit ? "has-background-success-light" : isDeduct ? "has-background-danger-light" : "";
+            var icon      = isDeposit ? "fa-arrow-up has-text-success" : isDeduct ? "fa-arrow-down has-text-danger" : "fa-circle has-text-grey";
+            var localTime = TimeZoneInfo.ConvertTimeFromUtc(log.Created, tz);
+            <tr class="@rowClass">
+              <td class="is-vcentered has-text-centered">
+                <i class="fas @icon"></i>
+              </td>
+              <td class="is-vcentered" style="white-space:pre-wrap">@log.Note</td>
+              <td class="is-vcentered has-text-grey is-size-7" style="white-space:nowrap">
+                @localTime.ToString("HH:mm\ndd.MM.yy")
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+
+    @if (totalPages > 1)
+    {
+      <nav class="pagination is-centered mt-3">
+        @if (page > 1) {
+          <a class="pagination-previous" href="/driver-portal/history?page=@(page-1)">← Назад</a>
+        }
+        @if (page < totalPages) {
+          <a class="pagination-next" href="/driver-portal/history?page=@(page+1)">Вперёд →</a>
+        }
+      </nav>
+    }
+  </div>
+</section>
+
+@section Scripts {
+  <script src="https://kit.fontawesome.com/e5e3c0c905.js" crossorigin="anonymous"></script>
+}

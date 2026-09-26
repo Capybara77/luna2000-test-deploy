@@ -1,0 +1,100 @@
+@using luna2000.Models
+@{
+    ViewData["Title"] = "Мой баланс";
+    var driver = ViewBag.Driver as DriverEntity;
+    var logs = ViewBag.Logs as List<luna2000.Models.BaseLog> ?? new();
+    var tz = ViewBag.TimeZone as TimeZoneInfo ?? TimeZoneInfo.Utc;
+    var balance = driver?.Balance ?? 0m;
+    var balanceClass = balance > 0 ? "has-text-success" : balance < 0 ? "has-text-danger" : "has-text-grey";
+}
+
+<section class="section">
+  <div class="container" style="max-width: 700px">
+
+    <!-- Приветствие -->
+    <div class="box has-text-centered mb-5">
+      <p class="is-size-6 has-text-grey mb-2">Добро пожаловать,</p>
+      <p class="title is-4">@driver?.Fio</p>
+      <p class="is-size-7 has-text-grey">Водитель</p>
+    </div>
+
+    <!-- Баланс -->
+    <div class="box has-text-centered mb-5" style="border-top: 4px solid @(balance >= 0 ? "#48c774" : "#f14668")">
+      <p class="is-size-7 has-text-grey mb-1">Текущий баланс</p>
+      <p class="title is-1 @balanceClass">₽ @balance.ToString("N2")</p>
+      <p class="is-size-7 has-text-grey mt-2">
+        @if (balance < 0)
+        {
+          <span class="has-text-danger">⚠ Баланс отрицательный. Пожалуйста, пополните.</span>
+        }
+        else if (balance < 1500)
+        {
+          <span class="has-text-warning">⚠ Баланс низкий.</span>
+        }
+        else
+        {
+          <span class="has-text-success">✓ Баланс в норме</span>
+        }
+      </p>
+    </div>
+
+    <!-- Последние операции -->
+    <div class="box">
+      <div class="is-flex is-justify-content-space-between is-align-items-center mb-3">
+        <p class="subtitle mb-0">Последние операции</p>
+        <a href="/driver-portal/history" class="button is-small is-light">Вся история</a>
+      </div>
+
+      @if (!logs.Any())
+      {
+        <p class="has-text-grey has-text-centered py-4">Операций пока нет</p>
+      }
+      else
+      {
+        @foreach (var log in logs)
+        {
+          var isDeposit = log.ObjectName == "SmsBalance";
+          var icon = isDeposit ? "fa-arrow-up has-text-success" : "fa-arrow-down has-text-danger";
+          var rowClass = isDeposit ? "has-background-success-light" : "has-background-danger-light";
+          var localTime = TimeZoneInfo.ConvertTimeFromUtc(log.Created, tz);
+          <div class="@rowClass px-3 py-2 mb-2" style="border-radius:6px; display:flex; align-items:center; gap:12px">
+            <span class="icon"><i class="fas @icon"></i></span>
+            <div style="flex:1">
+              <p class="is-size-7">@log.Note</p>
+            </div>
+            <span class="is-size-7 has-text-grey" style="white-space:nowrap">@localTime.ToString("HH:mm dd.MM")</span>
+          </div>
+        }
+      }
+    </div>
+
+    <!-- Навигация -->
+    <div class="columns mt-3">
+      <div class="column">
+        <a href="/driver-portal/chat" class="button is-info is-fullwidth">
+          <span class="icon"><i class="fas fa-comments"></i></span>
+          <span>Общий чат</span>
+        </a>
+      </div>
+      <div class="column">
+        <a href="/driver-portal/history" class="button is-light is-fullwidth">
+          <span class="icon"><i class="fas fa-history"></i></span>
+          <span>История</span>
+        </a>
+      </div>
+      <div class="column">
+        <form method="post" action="/login/logout" style="margin:0">
+          <button class="button is-danger is-light is-fullwidth" type="submit">
+            <span class="icon"><i class="fas fa-sign-out-alt"></i></span>
+            <span>Выход</span>
+          </button>
+        </form>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+@section Scripts {
+  <script src="https://kit.fontawesome.com/e5e3c0c905.js" crossorigin="anonymous"></script>
+}

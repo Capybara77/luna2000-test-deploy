@@ -1,0 +1,81 @@
+@{
+    ViewData["Title"] = "Новый пользователь";
+    var drivers = ViewBag.Drivers as List<luna2000.Models.DriverEntity> ?? new();
+}
+
+<section class="section">
+  <div class="container" style="max-width:600px">
+    <nav class="breadcrumb"><ul>
+      <li><a href="/admin">Пользователи</a></li>
+      <li class="is-active"><a>Новый</a></li>
+    </ul></nav>
+
+    <h1 class="title">Создать пользователя</h1>
+
+    @if (TempData["Error"] != null)
+    {
+      <div class="notification is-danger is-light">@TempData["Error"]</div>
+    }
+
+    <form method="post" action="/admin/create">
+      <div class="field">
+        <label class="label">Имя / описание</label>
+        <input class="input" type="text" name="Name" placeholder="Например: Администратор">
+      </div>
+      <div class="field">
+        <label class="label">Логин <span class="has-text-danger">*</span></label>
+        <input class="input" type="text" name="Login" required placeholder="ivanov.ivan">
+      </div>
+      <div class="field">
+        <label class="label">Пароль <span class="has-text-danger">*</span></label>
+        <div class="field has-addons">
+          <div class="control is-expanded">
+            <input class="input" type="text" name="Password" id="pwdInput" required>
+          </div>
+          <div class="control">
+            <button type="button" class="button is-info" onclick="generatePwd()">
+              <i class="fas fa-random"></i>&nbsp;Генерировать
+            </button>
+          </div>
+        </div>
+      </div>
+      <div class="field">
+        <label class="label">Роль</label>
+        <div class="select is-fullwidth">
+          <select name="Role">
+            <option value="0">Admin</option>
+            <option value="1" selected>Editor</option>
+            <option value="2">Driver</option>
+          </select>
+        </div>
+      </div>
+      <div class="field">
+        <label class="label">Привязать к водителю (для роли Driver)</label>
+        <div class="select is-fullwidth">
+          <select name="DriverId">
+            <option value="">— не привязывать —</option>
+            @foreach (var d in drivers)
+            {
+              <option value="@d.Id">@d.Fio</option>
+            }
+          </select>
+        </div>
+      </div>
+      <div class="field">
+        <button class="button is-primary is-fullwidth" type="submit">Создать</button>
+      </div>
+    </form>
+  </div>
+</section>
+
+@section Scripts {
+  <script src="https://kit.fontawesome.com/e5e3c0c905.js" crossorigin="anonymous"></script>
+  <script>
+    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789';
+    function generatePwd() {
+      let pwd = '';
+      for (let i = 0; i < 10; i++) pwd += chars[Math.floor(Math.random() * chars.length)];
+      document.getElementById('pwdInput').value = pwd;
+    }
+  </script>
+}
