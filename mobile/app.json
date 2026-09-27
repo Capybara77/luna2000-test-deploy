@@ -14,7 +14,8 @@
       "adaptiveIcon": {
         "backgroundColor": "#3273dc"
       },
-      "package": "com.luna2000.driver"
+      "package": "com.luna2000.driver",
+      "usesCleartextTraffic": true
     },
     "plugins": ["expo-router"],
     "experiments": {
