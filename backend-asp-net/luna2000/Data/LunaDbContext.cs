@@ -25,6 +25,8 @@ public class LunaDbContext : DbContext
 
     public DbSet<ChatMessage> ChatMessages { get; set; }
 
+    public DbSet<RepairRequest> RepairRequests { get; set; }
+
     public LunaDbContext(IServiceProvider serviceProvider)
     {
         _serviceProvider = serviceProvider;

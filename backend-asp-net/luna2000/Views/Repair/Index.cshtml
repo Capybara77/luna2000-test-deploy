@@ -1,0 +1,700 @@
+@using luna2000.Models
+@model List<RepairRequest>
+@{
+    ViewData["Title"] = "Заявки на ремонт";
+    var currentStatus = ViewBag.CurrentStatus as int?;
+    var tz = ViewBag.TimeZone as TimeZoneInfo ?? TimeZoneInfo.Utc;
+    var allRequests = ViewBag.AllRequests as List<RepairRequest> ?? Model;
+
+    int countAll = ViewBag.CountAll ?? allRequests.Count;
+    int countNew = ViewBag.CountNew ?? allRequests.Count(r => r.Status == RepairStatus.New);
+    int countInProgress = ViewBag.CountInProgress ?? allRequests.Count(r => r.Status == RepairStatus.InProgress);
+    int countDone = ViewBag.CountDone ?? allRequests.Count(r => r.Status == RepairStatus.Done);
+    int countRejected = ViewBag.CountRejected ?? allRequests.Count(r => r.Status == RepairStatus.Rejected);
+}
+
+<div class="repairs-page">
+    <div class="level mb-4">
+        <div class="level-left">
+            <div>
+                <h1 class="title is-4 mb-1">🛠️ Заявки на ремонт</h1>
+                <p class="subtitle is-6 has-text-grey">Перетаскивайте карточки между колонками или меняйте статус в один клик</p>
+            </div>
+        </div>
+        <div class="level-right">
+            <div class="buttons has-addons">
+                <button class="button is-small is-primary is-selected" id="btnViewKanban" onclick="setViewMode('kanban')">
+                    <span class="icon is-small"><i class="fas fa-columns"></i></span>
+                    <span>Канбан-доска</span>
+                </button>
+                <button class="button is-small" id="btnViewTable" onclick="setViewMode('table')">
+                    <span class="icon is-small"><i class="fas fa-list"></i></span>
+                    <span>Таблица</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Уведомление об успешном перемещении -->
+    <div id="toastSuccess" class="toast-notification" style="display:none;">
+        <span class="icon mr-1"><i class="fas fa-check-circle"></i></span>
+        <span id="toastText">Статус заявки обновлен</span>
+    </div>
+
+    <!-- КАНБАН-ДОСКА (По умолчанию) -->
+    <div id="kanbanView" class="kanban-board">
+        <!-- Колонка: Новые -->
+        <div class="kanban-col col-new" data-status="0" ondragover="allowDrop(event)" ondrop="handleDrop(event, 0)">
+            <div class="kanban-col-header">
+                <span class="kanban-title"><span class="status-dot dot-new"></span> Новые</span>
+                <span class="tag is-info is-rounded" id="badge-count-0">@countNew</span>
+            </div>
+            <div class="kanban-cards" id="cards-col-0">
+                @foreach (var r in allRequests.Where(x => x.Status == RepairStatus.New))
+                {
+                    @await Html.PartialAsync("_RepairCard", (r, tz))
+                }
+            </div>
+        </div>
+
+        <!-- Колонка: В работе -->
+        <div class="kanban-col col-inprogress" data-status="1" ondragover="allowDrop(event)" ondrop="handleDrop(event, 1)">
+            <div class="kanban-col-header">
+                <span class="kanban-title"><span class="status-dot dot-inprogress"></span> В работе</span>
+                <span class="tag is-warning is-rounded" id="badge-count-1">@countInProgress</span>
+            </div>
+            <div class="kanban-cards" id="cards-col-1">
+                @foreach (var r in allRequests.Where(x => x.Status == RepairStatus.InProgress))
+                {
+                    @await Html.PartialAsync("_RepairCard", (r, tz))
+                }
+            </div>
+        </div>
+
+        <!-- Колонка: Выполненные -->
+        <div class="kanban-col col-done" data-status="2" ondragover="allowDrop(event)" ondrop="handleDrop(event, 2)">
+            <div class="kanban-col-header">
+                <span class="kanban-title"><span class="status-dot dot-done"></span> Выполненные</span>
+                <span class="tag is-success is-rounded" id="badge-count-2">@countDone</span>
+            </div>
+            <div class="kanban-cards" id="cards-col-2">
+                @foreach (var r in allRequests.Where(x => x.Status == RepairStatus.Done))
+                {
+                    @await Html.PartialAsync("_RepairCard", (r, tz))
+                }
+            </div>
+        </div>
+
+        <!-- Колонка: Отклоненные -->
+        <div class="kanban-col col-rejected" data-status="3" ondragover="allowDrop(event)" ondrop="handleDrop(event, 3)">
+            <div class="kanban-col-header">
+                <span class="kanban-title"><span class="status-dot dot-rejected"></span> Отклоненные</span>
+                <span class="tag is-danger is-rounded" id="badge-count-3">@countRejected</span>
+            </div>
+            <div class="kanban-cards" id="cards-col-3">
+                @foreach (var r in allRequests.Where(x => x.Status == RepairStatus.Rejected))
+                {
+                    @await Html.PartialAsync("_RepairCard", (r, tz))
+                }
+            </div>
+        </div>
+    </div>
+
+    <!-- ТАБЛИЧНЫЙ ВИД -->
+    <div id="tableView" style="display:none;">
+        <div class="table-container">
+            <table class="table is-fullwidth is-hoverable is-striped custom-table">
+                <thead>
+                    <tr>
+                        <th style="width: 150px;">Статус</th>
+                        <th style="width: 140px;">Дата</th>
+                        <th>Водитель</th>
+                        <th>Автомобиль</th>
+                        <th>Описание проблемы</th>
+                        <th>Ответ / Комментарий</th>
+                        <th style="width: 170px;">Действие</th>
+                    </tr>
+                </thead>
+                <tbody id="tableBody">
+                    @foreach (var r in allRequests)
+                    {
+                        var localTime = TimeZoneInfo.ConvertTimeFromUtc(r.CreatedAt, tz);
+                        var statusTag = r.Status switch
+                        {
+                            RepairStatus.New => "is-info",
+                            RepairStatus.InProgress => "is-warning",
+                            RepairStatus.Done => "is-success",
+                            RepairStatus.Rejected => "is-danger",
+                            _ => "is-light"
+                        };
+                        var statusLabel = r.Status switch
+                        {
+                            RepairStatus.New => "Новая",
+                            RepairStatus.InProgress => "В работе",
+                            RepairStatus.Done => "Выполнена",
+                            RepairStatus.Rejected => "Отклонена",
+                            _ => "Новая"
+                        };
+
+                        <tr id="tablerow-@r.Id">
+                            <td class="is-vcentered">
+                                <span class="tag @statusTag is-light font-weight-bold" id="table-tag-@r.Id">@statusLabel</span>
+                            </td>
+                            <td class="is-vcentered has-text-grey is-size-7">
+                                @localTime.ToString("dd.MM.yyyy HH:mm")
+                            </td>
+                            <td class="is-vcentered font-weight-bold">
+                                @(r.Driver?.Fio ?? "Неизвестный водитель")
+                                @if (!string.IsNullOrEmpty(r.Driver?.Contacts))
+                                {
+                                    <div class="is-size-7 has-text-grey font-weight-normal">📞 @r.Driver.Contacts</div>
+                                }
+                            </td>
+                            <td class="is-vcentered">
+                                @if (r.Car != null)
+                                {
+                                    <div>🚗 <strong>@r.Car.BrandModel</strong></div>
+                                    <div class="tag is-small is-light mt-1">@r.Car.PlateNumber</div>
+                                }
+                                else
+                                {
+                                    <span class="has-text-grey-light">—</span>
+                                }
+                            </td>
+                            <td class="is-vcentered" style="max-width: 320px; white-space: pre-wrap;">
+                                @r.Text
+                            </td>
+                            <td class="is-vcentered" style="max-width: 250px;">
+                                <div id="table-comment-@r.Id">
+                                    @if (!string.IsNullOrWhiteSpace(r.AdminComment))
+                                    {
+                                        <div class="notification is-success is-light p-2 is-size-7">
+                                            💬 <strong>Ответ:</strong> @r.AdminComment
+                                        </div>
+                                    }
+                                    else
+                                    {
+                                        <span class="has-text-grey-light is-size-7">Ответа нет</span>
+                                    }
+                                </div>
+                            </td>
+                            <td class="is-vcentered">
+                                <div class="buttons are-small">
+                                    <button class="button is-info is-light" onclick="openEditModal('@r.Id', '@((int)r.Status)', '@Html.Raw(JavaScriptEscape(r.AdminComment ?? ""))', '@Html.Raw(JavaScriptEscape(r.Driver?.Fio ?? ""))')">
+                                        <span class="icon is-small"><i class="fas fa-reply"></i></span>
+                                        <span>Ответить</span>
+                                    </button>
+                                    <button class="button is-danger is-light" title="Удалить заявку" onclick="deleteRepairDirect('@r.Id')">
+                                        <span class="icon is-small"><i class="fas fa-trash-alt"></i></span>
+                                        <span>Удалить</span>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Модальное окно ответа/изменения статуса -->
+<div class="modal" id="editRepairModal">
+    <div class="modal-background" onclick="closeEditModal()"></div>
+    <div class="modal-card">
+        <header class="modal-card-head">
+            <p class="modal-card-title is-size-6 font-weight-bold">🛠️ Заявка на ремонт: <span id="modalDriverName"></span></p>
+            <button class="delete" aria-label="close" onclick="closeEditModal()"></button>
+        </header>
+        <section class="modal-card-body">
+            <input type="hidden" id="modalRepairId" />
+            
+            <div class="field">
+                <label class="label is-size-7">Статус заявки</label>
+                <div class="control">
+                    <div class="select is-fullwidth">
+                        <select id="modalStatusSelect">
+                            <option value="0">🔵 Новая</option>
+                            <option value="1">🟡 В работе</option>
+                            <option value="2">🟢 Выполнена</option>
+                            <option value="3">🔴 Отклонена</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <div class="field">
+                <label class="label is-size-7">Ответ водителю (отобразится у него в приложении на телефоне)</label>
+                <div class="control">
+                    <textarea class="textarea" id="modalCommentInput" rows="3" placeholder="Например: Автомобиль записан на диагностику к 14:00, бокс №3..."></textarea>
+                </div>
+            </div>
+        </section>
+        <footer class="modal-card-foot is-justify-content-space-between">
+            <div>
+                <button type="button" class="button is-primary is-small" id="modalSaveBtn" onclick="saveModalEdit()">
+                    <span class="icon is-small"><i class="fas fa-check"></i></span>
+                    <span>Сохранить</span>
+                </button>
+                <button type="button" class="button is-light is-small" onclick="closeEditModal()">Отмена</button>
+            </div>
+            <button type="button" class="button is-danger is-light is-small" onclick="deleteRepairFromModal()" title="Удалить заявку">
+                <span class="icon is-small"><i class="fas fa-trash-alt"></i></span>
+                <span>Удалить</span>
+            </button>
+        </footer>
+    </div>
+</div>
+
+@functions {
+    public static string JavaScriptEscape(string s)
+    {
+        return s.Replace("\\", "\\\\").Replace("'", "\\'").Replace("\"", "\\\"").Replace("\r", "").Replace("\n", "\\n");
+    }
+}
+
+<style>
+.kanban-board {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+    align-items: start;
+    min-height: 500px;
+}
+@@media (max-width: 1024px) {
+    .kanban-board {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+@@media (max-width: 640px) {
+    .kanban-board {
+        grid-template-columns: 1fr;
+    }
+}
+
+.kanban-col {
+    background: var(--kanban-col-bg, #eef2f6) !important;
+    border: 1px solid var(--border-color, #cbd5e1) !important;
+    border-radius: 12px;
+    padding: 12px;
+    min-height: 480px;
+    transition: background 0.2s, border-color 0.2s;
+}
+.kanban-col.drag-over {
+    background: var(--kanban-drag-bg, #e2e8f0) !important;
+    border: 2px dashed #2563eb !important;
+}
+.kanban-col-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-bottom: 10px;
+    margin-bottom: 12px;
+    border-bottom: 2px solid var(--border-color, #cbd5e1);
+}
+.kanban-title {
+    font-weight: 800;
+    font-size: 1rem;
+    color: var(--text-primary, #0f172a);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.status-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    display: inline-block;
+}
+.dot-new { background-color: #2563eb; }
+.dot-inprogress { background-color: #f59e0b; }
+.dot-done { background-color: #10b981; }
+.dot-rejected { background-color: #ef4444; }
+
+.kanban-cards {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    min-height: 380px;
+}
+
+.repair-card {
+    background: var(--kanban-card-bg, #ffffff) !important;
+    border: 1.5px solid var(--border-color, #cbd5e1) !important;
+    border-radius: 12px;
+    padding: 14px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06) !important;
+    cursor: grab;
+    transition: transform 0.15s, box-shadow 0.15s, opacity 0.15s;
+    user-select: none;
+}
+.repair-card:active {
+    cursor: grabbing;
+}
+.repair-card.dragging {
+    opacity: 0.4;
+    transform: scale(0.98);
+}
+.repair-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+}
+.card-driver-fio {
+    font-weight: 800 !important;
+    font-size: 0.98rem !important;
+    color: var(--card-text-driver, #0f172a) !important;
+    letter-spacing: -0.2px;
+}
+.card-car-badge {
+    font-size: 0.82rem !important;
+    color: var(--card-text-car, #1e293b) !important;
+    margin-bottom: 8px;
+    font-weight: 600 !important;
+}
+.card-car-badge strong {
+    color: var(--card-text-car, #1e293b) !important;
+}
+.card-car-badge .tag {
+    font-weight: 700 !important;
+    font-size: 0.75rem !important;
+    border: 1px solid var(--border-color, #cbd5e1);
+}
+.card-text {
+    font-size: 0.92rem !important;
+    color: var(--card-text-body, #0f172a) !important;
+    margin-bottom: 10px;
+    line-height: 1.45;
+    white-space: pre-wrap;
+    font-weight: 500 !important;
+}
+.card-comment {
+    background: var(--card-comment-bg, #dcfce7) !important;
+    border-left: 4px solid var(--card-comment-border, #16a34a) !important;
+    color: var(--card-comment-text, #14532d) !important;
+    padding: 8px 10px !important;
+    border-radius: 6px;
+    font-size: 0.85rem !important;
+    margin-bottom: 10px;
+    font-weight: 600 !important;
+}
+.card-comment strong {
+    color: var(--card-comment-text, #14532d) !important;
+}
+.card-footer-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-top: 1px solid var(--border-color, #f1f5f9);
+    padding-top: 8px;
+    margin-top: 4px;
+}
+.card-time {
+    font-size: 0.78rem !important;
+    color: var(--card-text-time, #475569) !important;
+    font-weight: 600 !important;
+}
+.card-footer-row .button.is-ghost {
+    color: var(--primary-color, #2563eb) !important;
+    font-weight: 700 !important;
+    font-size: 0.82rem !important;
+}
+.quick-status-btn {
+    border: 1px solid var(--border-color, #cbd5e1);
+    background: var(--bg-card-subtle, #f1f5f9);
+    cursor: pointer;
+    font-size: 0.85rem;
+    padding: 3px 8px;
+    border-radius: 6px;
+    transition: background 0.15s;
+    color: var(--text-primary, #0f172a);
+}
+.quick-status-btn:hover {
+    background: var(--border-color, #cbd5e1);
+}
+
+.toast-notification {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    background: #10b981;
+    color: #fff;
+    padding: 10px 18px;
+    border-radius: 8px;
+    box-shadow: 0 6px 20px rgba(0,0,0,0.18);
+    font-weight: 600;
+    font-size: 0.9rem;
+    display: flex;
+    align-items: center;
+    z-index: 9999;
+    animation: fadeIn 0.2s ease-out;
+}
+@@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+</style>
+
+<script>
+    let draggedCardId = null;
+
+    function setViewMode(mode) {
+        const kanban = document.getElementById('kanbanView');
+        const table = document.getElementById('tableView');
+        const btnK = document.getElementById('btnViewKanban');
+        const btnT = document.getElementById('btnViewTable');
+
+        if (mode === 'kanban') {
+            kanban.style.display = 'grid';
+            table.style.display = 'none';
+            btnK.classList.add('is-primary', 'is-selected');
+            btnT.classList.remove('is-primary', 'is-selected');
+        } else {
+            kanban.style.display = 'none';
+            table.style.display = 'block';
+            btnT.classList.add('is-primary', 'is-selected');
+            btnK.classList.remove('is-primary', 'is-selected');
+        }
+        localStorage.setItem('repairs_view_mode', mode);
+    }
+
+    // Восстанавливаем выбранный режим
+    document.addEventListener('DOMContentLoaded', () => {
+        const saved = localStorage.getItem('repairs_view_mode');
+        if (saved === 'table') setViewMode('table');
+    });
+
+    // Drag and Drop события
+    function handleDragStart(e, id) {
+        draggedCardId = id;
+        e.dataTransfer.setData('text/plain', id);
+        e.dataTransfer.effectAllowed = 'move';
+        const el = document.getElementById('card-' + id);
+        if (el) el.classList.add('dragging');
+    }
+
+    function handleDragEnd(e, id) {
+        const el = document.getElementById('card-' + id);
+        if (el) el.classList.remove('dragging');
+        document.querySelectorAll('.kanban-col').forEach(c => c.classList.remove('drag-over'));
+    }
+
+    function allowDrop(e) {
+        e.preventDefault();
+        e.dataTransfer.dropEffect = 'move';
+        const col = e.currentTarget;
+        if (!col.classList.contains('drag-over')) {
+            col.classList.add('drag-over');
+        }
+    }
+
+    function handleDrop(e, targetStatus) {
+        e.preventDefault();
+        const col = e.currentTarget;
+        col.classList.remove('drag-over');
+
+        const cardId = e.dataTransfer.getData('text/plain') || draggedCardId;
+        if (!cardId) return;
+
+        moveCardToStatus(cardId, targetStatus);
+    }
+
+    // Перемещение заявки на новый статус
+    async function moveCardToStatus(cardId, newStatus) {
+        const cardEl = document.getElementById('card-' + cardId);
+        const targetContainer = document.getElementById('cards-col-' + newStatus);
+        if (!cardEl || !targetContainer) return;
+
+        const oldParent = cardEl.parentElement;
+        if (oldParent === targetContainer) return;
+
+        // Оптимистично переносим карточку в новую колонку
+        targetContainer.prepend(cardEl);
+        updateColumnCounts();
+
+        try {
+            const resp = await fetch('/repairs/update-status', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                },
+                body: JSON.stringify({ id: cardId, status: newStatus })
+            });
+
+            if (resp.ok) {
+                showToast('Заявка перемещена в ' + getStatusName(newStatus));
+                updateTableRowStatus(cardId, newStatus);
+            } else {
+                throw new Error('Ошибка сервера: ' + resp.status);
+            }
+        } catch (err) {
+            console.error('Ошибка переноса карточки:', err);
+            // Возвращаем обратно
+            oldParent.prepend(cardEl);
+            updateColumnCounts();
+            alert('Не удалось изменить статус заявки. Попробуйте еще раз.');
+        }
+    }
+
+    function updateColumnCounts() {
+        [0, 1, 2, 3].forEach(st => {
+            const container = document.getElementById('cards-col-' + st);
+            const badge = document.getElementById('badge-count-' + st);
+            if (container && badge) {
+                badge.textContent = container.children.length;
+            }
+        });
+    }
+
+    function getStatusName(st) {
+        switch (Number(st)) {
+            case 0: return '«Новые»';
+            case 1: return '«В работе»';
+            case 2: return '«Выполненные»';
+            case 3: return '«Отклоненные»';
+            default: return '';
+        }
+    }
+
+    function showToast(text) {
+        const t = document.getElementById('toastSuccess');
+        const txt = document.getElementById('toastText');
+        if (!t || !txt) return;
+        txt.textContent = text;
+        t.style.display = 'flex';
+        clearTimeout(t._timer);
+        t._timer = setTimeout(() => { t.style.display = 'none'; }, 2500);
+    }
+
+    function updateTableRowStatus(cardId, newStatus) {
+        const tag = document.getElementById('table-tag-' + cardId);
+        if (!tag) return;
+        tag.className = 'tag is-light font-weight-bold';
+        switch (Number(newStatus)) {
+            case 0: tag.classList.add('is-info'); tag.textContent = 'Новая'; break;
+            case 1: tag.classList.add('is-warning'); tag.textContent = 'В работе'; break;
+            case 2: tag.classList.add('is-success'); tag.textContent = 'Выполнена'; break;
+            case 3: tag.classList.add('is-danger'); tag.textContent = 'Отклонена'; break;
+        }
+    }
+
+    // Модальное окно редактирования / ответа
+    function openEditModal(id, status, comment, driverName) {
+        document.getElementById('modalRepairId').value = id;
+        document.getElementById('modalStatusSelect').value = status;
+        document.getElementById('modalCommentInput').value = comment || '';
+        document.getElementById('modalDriverName').innerText = driverName || 'Водитель';
+        document.getElementById('editRepairModal').classList.add('is-active');
+    }
+
+    function closeEditModal() {
+        document.getElementById('editRepairModal').classList.remove('is-active');
+    }
+
+    async function saveModalEdit() {
+        const id = document.getElementById('modalRepairId').value;
+        const status = parseInt(document.getElementById('modalStatusSelect').value, 10);
+        const comment = document.getElementById('modalCommentInput').value.trim();
+
+        const btn = document.getElementById('modalSaveBtn');
+        btn.classList.add('is-loading');
+
+        try {
+            const resp = await fetch('/repairs/update-status', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                },
+                body: JSON.stringify({ id, status, comment })
+            });
+
+            if (resp.ok) {
+                closeEditModal();
+                showToast('Заявка обновлена');
+
+                // Перемещаем карточку в колонку
+                const cardEl = document.getElementById('card-' + id);
+                const targetCol = document.getElementById('cards-col-' + status);
+                if (cardEl && targetCol && cardEl.parentElement !== targetCol) {
+                    targetCol.prepend(cardEl);
+                    updateColumnCounts();
+                }
+
+                // Обновляем комментарий в карточке
+                const commentBox = document.getElementById('card-comment-' + id);
+                if (commentBox) {
+                    if (comment) {
+                        commentBox.innerHTML = '💬 <strong>Ответ:</strong> ' + comment;
+                        commentBox.style.display = 'block';
+                    } else {
+                        commentBox.style.display = 'none';
+                    }
+                }
+
+                // Обновляем в таблице
+                updateTableRowStatus(id, status);
+                const tableComment = document.getElementById('table-comment-' + id);
+                if (tableComment) {
+                    tableComment.innerHTML = comment
+                        ? '<div class="notification is-success is-light p-2 is-size-7">💬 <strong>Ответ:</strong> ' + comment + '</div>'
+                        : '<span class="has-text-grey-light is-size-7">Ответа нет</span>';
+                }
+            } else {
+                alert('Ошибка сохранения: ' + resp.status);
+            }
+        } catch (e) {
+            console.error('saveModalEdit error:', e);
+            alert('Ошибка связи с сервером');
+        } finally {
+            btn.classList.remove('is-loading');
+        }
+    }
+
+    async function deleteRepairDirect(id) {
+        if (!confirm('Вы уверены, что хотите удалить эту заявку на ремонт?')) return;
+
+        try {
+            const formData = new FormData();
+            formData.append('id', id);
+            const resp = await fetch('/repairs/delete', {
+                method: 'POST',
+                body: formData,
+                headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            });
+
+            if (resp.ok) {
+                const card = document.getElementById('card-' + id);
+                if (card) {
+                    card.style.transition = 'opacity 0.2s, transform 0.2s';
+                    card.style.opacity = '0';
+                    card.style.transform = 'scale(0.9)';
+                    setTimeout(() => {
+                        card.remove();
+                        updateColumnCounts();
+                    }, 200);
+                }
+                const row = document.getElementById('tablerow-' + id);
+                if (row) {
+                    row.remove();
+                    updateColumnCounts();
+                }
+                showToast('Заявка успешно удалена');
+            } else {
+                alert('Ошибка при удалении заявки: ' + resp.status);
+            }
+        } catch (e) {
+            console.error('deleteRepairDirect error:', e);
+            alert('Ошибка связи с сервером при удалении');
+        }
+    }
+
+    async function deleteRepairFromModal() {
+        const id = document.getElementById('modalRepairId').value;
+        if (!id) return;
+        closeEditModal();
+        await deleteRepairDirect(id);
+    }
+</script>

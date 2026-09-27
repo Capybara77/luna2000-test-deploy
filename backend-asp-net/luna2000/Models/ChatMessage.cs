@@ -6,9 +6,13 @@ namespace luna2000.Models;
 public class ChatMessage : IDoNotLog
 {
     public Guid Id { get; set; }
-    public Guid DriverId { get; set; }
+    public Guid? DriverId { get; set; }
+    public string? SenderName { get; set; }
     public ChatChannel Channel { get; set; }
     public string Text { get; set; } = string.Empty;
+    public Guid? ReplyToId { get; set; }
+    public string? ReplyToSender { get; set; }
+    public string? ReplyToText { get; set; }
     public DateTime CreatedAt { get; set; }
 
     public virtual DriverEntity? Driver { get; set; }

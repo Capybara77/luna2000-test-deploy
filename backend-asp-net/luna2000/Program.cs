@@ -12,6 +12,7 @@ using luna2000.SmsServices;
 using luna2000.Telegram;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.StaticFiles;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.IdentityModel.Tokens;
@@ -34,7 +35,10 @@ public class Program
                 });
 
         // SignalR
-        builder.Services.AddSignalR();
+        builder.Services.AddSignalR(options =>
+        {
+            options.EnableDetailedErrors = true;
+        });
 
         // CORS — для мобильного приложения
         builder.Services.AddCors(options =>
@@ -74,14 +78,87 @@ public class Program
         {
             var db = scope.ServiceProvider.GetRequiredService<LunaDbContext>();
 
-            // Таблица чата
+            // Таблица чата (проверяем и мигрируем схему, чтобы DriverId допускал NULL для диспетчера)
+            try
+            {
+                db.Database.ExecuteSqlRaw(@"
+                    CREATE TABLE IF NOT EXISTS ChatMessages (
+                        Id TEXT PRIMARY KEY,
+                        DriverId TEXT,
+                        SenderName TEXT,
+                        Channel INTEGER NOT NULL DEFAULT 0,
+                        Text TEXT NOT NULL DEFAULT '',
+                        ReplyToId TEXT,
+                        ReplyToSender TEXT,
+                        ReplyToText TEXT,
+                        CreatedAt TEXT NOT NULL
+                    );
+                ");
+                try { db.Database.ExecuteSqlRaw("ALTER TABLE ChatMessages ADD COLUMN SenderName TEXT;"); } catch { }
+                try { db.Database.ExecuteSqlRaw("ALTER TABLE ChatMessages ADD COLUMN ReplyToId TEXT;"); } catch { }
+                try { db.Database.ExecuteSqlRaw("ALTER TABLE ChatMessages ADD COLUMN ReplyToSender TEXT;"); } catch { }
+                try { db.Database.ExecuteSqlRaw("ALTER TABLE ChatMessages ADD COLUMN ReplyToText TEXT;"); } catch { }
+
+                var conn = db.Database.GetDbConnection();
+                conn.Open();
+                using (var cmd = conn.CreateCommand())
+                {
+                    cmd.CommandText = "PRAGMA table_info(ChatMessages);";
+                    using var reader = cmd.ExecuteReader();
+                    bool needsMigration = false;
+                    while (reader.Read())
+                    {
+                        var colName = reader["name"]?.ToString();
+                        var notNull = reader["notnull"]?.ToString();
+                        if (colName == "DriverId" && notNull == "1")
+                        {
+                            needsMigration = true;
+                            break;
+                        }
+                    }
+                    reader.Close();
+
+                    if (needsMigration)
+                    {
+                        using var migCmd = conn.CreateCommand();
+                        migCmd.CommandText = @"
+                            PRAGMA foreign_keys = OFF;
+                            CREATE TABLE IF NOT EXISTS ChatMessages_new (
+                                Id TEXT PRIMARY KEY,
+                                DriverId TEXT,
+                                SenderName TEXT,
+                                Channel INTEGER NOT NULL DEFAULT 0,
+                                Text TEXT NOT NULL DEFAULT '',
+                                CreatedAt TEXT NOT NULL
+                            );
+                            INSERT OR IGNORE INTO ChatMessages_new (Id, DriverId, SenderName, Channel, Text, CreatedAt)
+                            SELECT Id, DriverId, SenderName, Channel, Text, CreatedAt FROM ChatMessages;
+                            DROP TABLE ChatMessages;
+                            ALTER TABLE ChatMessages_new RENAME TO ChatMessages;
+                            PRAGMA foreign_keys = ON;
+                        ";
+                        migCmd.ExecuteNonQuery();
+                        Console.WriteLine("[Migration] ChatMessages table updated: DriverId is now nullable.");
+                    }
+                }
+                conn.Close();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[ChatMessages migration error]: {ex.Message}");
+            }
+
+            // Таблица заявок на ремонт
             db.Database.ExecuteSqlRaw(@"
-                CREATE TABLE IF NOT EXISTS ChatMessages (
+                CREATE TABLE IF NOT EXISTS RepairRequests (
                     Id TEXT PRIMARY KEY,
                     DriverId TEXT NOT NULL,
-                    Channel INTEGER NOT NULL DEFAULT 0,
+                    CarId TEXT,
                     Text TEXT NOT NULL DEFAULT '',
-                    CreatedAt TEXT NOT NULL
+                    Status INTEGER NOT NULL DEFAULT 0,
+                    AdminComment TEXT,
+                    CreatedAt TEXT NOT NULL,
+                    UpdatedAt TEXT
                 );
             ");
 
@@ -106,8 +183,14 @@ public class Program
 
         app.UseMiddleware<IpRestrictionMiddleware>();
 
-        WithStaticFiles(app);
-        app.UseStaticFiles();
+        var contentTypeProvider = new FileExtensionContentTypeProvider();
+        contentTypeProvider.Mappings[".apk"] = "application/vnd.android.package-archive";
+
+        WithStaticFiles(app, contentTypeProvider);
+        app.UseStaticFiles(new StaticFileOptions
+        {
+            ContentTypeProvider = contentTypeProvider
+        });
         app.UseRouting();
 
         app.UseCors("MobilePolicy");
@@ -125,7 +208,7 @@ public class Program
         app.Run();
     }
 
-    private static void WithStaticFiles(WebApplication app)
+    private static void WithStaticFiles(WebApplication app, FileExtensionContentTypeProvider? contentTypeProvider = null)
     {
         var filesPath = "files";
 
@@ -138,7 +221,8 @@ public class Program
         {
             FileProvider = new PhysicalFileProvider(
                 Path.Combine(Directory.GetCurrentDirectory(), filesPath)),
-            RequestPath = ""
+            RequestPath = "",
+            ContentTypeProvider = contentTypeProvider
         });
     }
 
@@ -164,9 +248,27 @@ public class Program
         var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSecret));
 
         builder.Services
-            .AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
-            .AddCookie(options =>
+            .AddAuthentication(options =>
             {
+                options.DefaultScheme = CookieAuthenticationDefaults.AuthenticationScheme;
+            })
+            .AddCookie(CookieAuthenticationDefaults.AuthenticationScheme, options =>
+            {
+                options.ForwardDefaultSelector = context =>
+                {
+                    var authHeader = context.Request.Headers["Authorization"].FirstOrDefault();
+                    if (authHeader?.StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase) == true
+                        || context.Request.Query.ContainsKey("access_token"))
+                    {
+                        return "MobileJwt";
+                    }
+                    if (context.Request.Path.StartsWithSegments("/mobile")
+                        && !context.Request.Cookies.Any(c => c.Key.StartsWith(".AspNetCore.Cookies")))
+                    {
+                        return "MobileJwt";
+                    }
+                    return CookieAuthenticationDefaults.AuthenticationScheme;
+                };
                 options.Events.OnRedirectToLogin += context =>
                 {
                     context.HttpContext.Response.Redirect("/login");
@@ -194,14 +296,13 @@ public class Program
                     ValidateLifetime = true
                 };
 
-                // Поддержка JWT в SignalR (токен в query string)
+                // Поддержка JWT в SignalR (токен в query string или headers)
                 options.Events = new JwtBearerEvents
                 {
                     OnMessageReceived = context =>
                     {
                         var accessToken = context.Request.Query["access_token"];
-                        var path = context.HttpContext.Request.Path;
-                        if (!string.IsNullOrEmpty(accessToken) && path.StartsWithSegments("/mobile/chathub"))
+                        if (!string.IsNullOrEmpty(accessToken))
                         {
                             context.Token = accessToken;
                         }

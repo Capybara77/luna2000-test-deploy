@@ -92,9 +92,9 @@ public class DriverPortalController : Controller
         return View();
     }
 
-    // GET /driver-portal/chat — общий чат
+    // GET /driver-portal/chat — чат (каналы: 0 - Общий, 1 - Где стоят, 2 - Барахолка)
     [HttpGet("chat")]
-    public async Task<IActionResult> Chat()
+    public async Task<IActionResult> Chat([FromQuery] int channel = 0)
     {
         var driverId = GetDriverId();
         DriverEntity? driver = null;
@@ -112,10 +112,10 @@ public class DriverPortalController : Controller
             };
         }
 
-        // Последние 50 сообщений общего чата
+        // Последние 50 сообщений выбранного канала
         var messages = await _db.ChatMessages
             .Include(m => m.Driver)
-            .Where(m => m.Channel == ChatChannel.General)
+            .Where(m => m.Channel == (ChatChannel)channel)
             .OrderByDescending(m => m.CreatedAt)
             .Take(50)
             .AsNoTracking()
@@ -126,7 +126,41 @@ public class DriverPortalController : Controller
         ViewBag.Driver = driver;
         ViewBag.Messages = messages.OrderBy(m => m.CreatedAt).ToList();
         ViewBag.TimeZone = tz;
+        ViewBag.Channel = channel;
 
         return View();
+    }
+
+    // GET /driver-portal/chat/messages?channel=1 — сообщения канала для AJAX переключения
+    [HttpGet("chat/messages")]
+    public async Task<IActionResult> GetMessages([FromQuery] int channel = 0)
+    {
+        var messages = await _db.ChatMessages
+            .Include(m => m.Driver)
+            .Where(m => m.Channel == (ChatChannel)channel)
+            .OrderByDescending(m => m.CreatedAt)
+            .Take(50)
+            .AsNoTracking()
+            .ToListAsync();
+
+        var tz = TimeZoneInfo.FindSystemTimeZoneById(_commonOptions.TimeZone);
+
+        var result = messages.OrderBy(m => m.CreatedAt).Select(m => new
+        {
+            id = m.Id.ToString(),
+            driverId = m.DriverId?.ToString() ?? string.Empty,
+            driverName = !string.IsNullOrWhiteSpace(m.SenderName)
+                ? m.SenderName
+                : (m.Driver?.Fio ?? (m.DriverId == null || m.DriverId == Guid.Empty ? "Диспетчер" : "Водитель")),
+            channel = (int)m.Channel,
+            text = m.Text,
+            replyToId = m.ReplyToId?.ToString() ?? string.Empty,
+            replyToSender = m.ReplyToSender ?? string.Empty,
+            replyToText = m.ReplyToText ?? string.Empty,
+            createdAt = m.CreatedAt.ToString("o"),
+            timeFormatted = TimeZoneInfo.ConvertTimeFromUtc(m.CreatedAt, tz).ToString("HH:mm dd.MM")
+        });
+
+        return Ok(result);
     }
 }

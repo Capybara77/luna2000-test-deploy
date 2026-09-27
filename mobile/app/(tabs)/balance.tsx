@@ -9,7 +9,29 @@ interface Operation {
   isDebit: boolean;
 }
 
+function formatDateTime(dateStr: string): string {
+  if (!dateStr) return '';
+  try {
+    const s = dateStr.endsWith('Z') || dateStr.includes('+') ? dateStr : dateStr + 'Z';
+    const d = new Date(s);
+    if (isNaN(d.getTime())) return '';
+    const pad = (n: number) => (n < 10 ? '0' + n : '' + n);
+    const day = pad(d.getDate());
+    const month = pad(d.getMonth() + 1);
+    const hours = pad(d.getHours());
+    const minutes = pad(d.getMinutes());
+    return `${day}.${month}.${d.getFullYear()} ${hours}:${minutes}`;
+  } catch {
+    return '';
+  }
+}
+
+import { checkBalanceChange } from '../../services/notificationService';
+import { useFocusEffect } from 'expo-router';
+import { useAppTheme } from '../../services/themeContext';
+
 export default function BalanceScreen() {
+  const { theme, isDark } = useAppTheme();
   const [driver, setDriver] = useState<any>(null);
   const [balance, setBalance] = useState<number | null>(null);
   const [operations, setOperations] = useState<Operation[]>([]);
@@ -26,12 +48,21 @@ export default function BalanceScreen() {
       const data = await fetchBalance(saved.token);
       setBalance(data.balance);
       setOperations(data.operations || []);
+      if (typeof data.balance === 'number') {
+        checkBalanceChange(data.balance);
+      }
     } catch (e: any) {
       setError(e.message);
     }
   }, []);
 
   useEffect(() => { load().finally(() => setLoading(false)); }, []);
+
+  useFocusEffect(
+    useCallback(() => {
+      load();
+    }, [load])
+  );
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
@@ -49,18 +80,18 @@ export default function BalanceScreen() {
 
   return (
     <ScrollView
-      style={styles.container}
-      refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#3273dc" />}
+      style={[styles.container, { backgroundColor: theme.background }]}
+      refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={theme.primary} />}
     >
       {/* Приветствие */}
-      <View style={styles.header}>
+      <View style={[styles.header, { backgroundColor: theme.headerBg }]}>
         <Text style={styles.greeting}>👋 Добро пожаловать,</Text>
         <Text style={styles.name}>{driver?.fio}</Text>
       </View>
 
       {/* Баланс */}
-      <View style={[styles.balanceCard, { borderTopColor: balanceColor }]}>
-        <Text style={styles.balanceLabel}>Текущий баланс</Text>
+      <View style={[styles.balanceCard, { backgroundColor: theme.card, borderColor: theme.border, borderWidth: 1, borderTopColor: balanceColor, borderTopWidth: 4 }]}>
+        <Text style={[styles.balanceLabel, { color: theme.textMuted }]}>Текущий баланс</Text>
         <Text style={[styles.balanceValue, { color: balanceColor }]}>
           ₽ {balance?.toLocaleString('ru', { minimumFractionDigits: 2 })}
         </Text>
@@ -68,25 +99,26 @@ export default function BalanceScreen() {
       </View>
 
       {error && (
-        <View style={styles.errorBox}>
+        <View style={[styles.errorBox, { backgroundColor: isDark ? '#3b1c24' : '#fff5f7' }]}>
           <Text style={styles.errorText}>⚠ {error}</Text>
-          <TouchableOpacity onPress={load}><Text style={styles.retryText}>Повторить</Text></TouchableOpacity>
+          <TouchableOpacity onPress={load}><Text style={[styles.retryText, { color: theme.primary }]}>Повторить</Text></TouchableOpacity>
         </View>
       )}
 
-      {/* Последние операции */}
+      {/* История операций */}
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Операции (30 дней)</Text>
+        <Text style={[styles.sectionTitle, { color: theme.text }]}>История операций</Text>
         {operations.length === 0
-          ? <Text style={styles.empty}>Операций нет</Text>
+          ? <Text style={[styles.empty, { color: theme.textMuted }]}>Операций нет</Text>
           : operations.map((op, i) => (
-            <View key={i} style={[styles.opRow, { backgroundColor: op.isDebit ? '#fff5f7' : '#f0fff4' }]}>
+            <View key={i} style={[styles.opRow, { backgroundColor: isDark ? (op.isDebit ? '#2a151d' : '#102d1d') : (op.isDebit ? '#fff5f7' : '#f0fff4'), borderColor: theme.border, borderWidth: 1 }]}>
               <Text style={styles.opIcon}>{op.isDebit ? '🔻' : '🟢'}</Text>
               <View style={{ flex: 1 }}>
-                <Text style={styles.opNote} numberOfLines={3}>{op.note}</Text>
-                <Text style={styles.opTime}>
-                  {new Date(op.createdAt + 'Z').toLocaleString('ru', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })}
-                </Text>
+                <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 3 }}>
+                  <Text style={[styles.opTitle, { color: op.isDebit ? '#f87171' : '#4ade80' }]}>{op.type}</Text>
+                  <Text style={[styles.opTime, { color: theme.textMuted }]}>{formatDateTime(op.createdAt)}</Text>
+                </View>
+                <Text style={[styles.opNote, { color: theme.text }]}>{op.note}</Text>
               </View>
             </View>
           ))
@@ -110,8 +142,9 @@ const styles = StyleSheet.create({
   sectionTitle: { fontSize: 16, fontWeight: '700', color: '#363636', marginBottom: 10 },
   opRow: { flexDirection: 'row', gap: 10, padding: 12, borderRadius: 8, marginBottom: 6, alignItems: 'flex-start' },
   opIcon: { fontSize: 18, marginTop: 1 },
-  opNote: { fontSize: 13, color: '#363636', lineHeight: 18 },
-  opTime: { fontSize: 11, color: '#aaa', marginTop: 3 },
+  opTitle: { fontSize: 13, fontWeight: '700' },
+  opNote: { fontSize: 12, color: '#4a4a4a', lineHeight: 17, marginTop: 2 },
+  opTime: { fontSize: 11, color: '#888' },
   empty: { color: '#999', textAlign: 'center', padding: 20 },
   errorBox: { margin: 16, backgroundColor: '#fff5f7', padding: 14, borderRadius: 8, alignItems: 'center' },
   errorText: { color: '#f14668', marginBottom: 6 },

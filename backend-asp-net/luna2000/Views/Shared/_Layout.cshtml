@@ -1,16 +1,19 @@
 <!DOCTYPE html>
-<html lang="en">
-<head data-theme="light" prefers-color-sheme="light">
+<html lang="ru" data-theme="dark">
+<head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1 maximum-scale=1.0, user-scalable=no">
-    <title>luna2000</title>
-    @*<link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />*@
-    @*    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
-    <link rel="stylesheet" href="~/css/NewStyle.css" asp-append-version="true" />
-    *@
-    <link rel="stylesheet" href="~/css/bulma-fix.css" asp-append-version="true" />
+    <title>LUNA 2000</title>
+    <script>
+        (function() {
+            var theme = localStorage.getItem('luna_theme') || 'dark';
+            document.documentElement.setAttribute('data-theme', theme);
+        })();
+    </script>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@1.0.2/css/bulma.min.css">
-    <meta name="color-scheme" content="light">
+    <link rel="stylesheet" href="~/css/bulma-fix.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/modern-theme.css" asp-append-version="true" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
     <nav class="navbar" role="navigation" aria-label="main navigation">
@@ -36,10 +39,14 @@
                         <div class="navbar-start">
                             <a class="navbar-item" href="/driver-portal">💰 Мой баланс</a>
                             <a class="navbar-item" href="/driver-portal/history">📋 История</a>
-                            <a class="navbar-item" href="/driver-portal/chat">💬 Чат</a>
+                            <a class="navbar-item" href="/driver-portal/chat">💬 Чат <span class="nav-chat-badge tag is-danger is-rounded is-small ml-1" style="display:none; font-size:0.65rem; height:1.4em; padding:0 5px;" id="navChatBadgeDriver"></span></a>
+                            <a class="navbar-item" href="/download-apk" title="Скачать Android-приложение">📱 Скачать приложение</a>
                         </div>
                         <div class="navbar-end">
                             <div class="navbar-item">
+                                <button type="button" class="theme-toggle-btn mr-2" id="themeToggleBtn" onclick="toggleTheme()" title="Переключить тему">
+                                    <span id="themeIcon">🌙</span> <span id="themeLabel">Тема</span>
+                                </button>
                                 <form method="post" action="/login/logout">
                                     <button class="button is-light is-small" type="submit">Выйти</button>
                                 </form>
@@ -54,7 +61,9 @@
                             <a class="navbar-item" asp-area="" asp-controller="Driver" asp-action="Index">Водители</a>
                             <a class="navbar-item" asp-area="" asp-controller="DocEditor" asp-action="Index">Редактор</a>
                             <a class="navbar-item" asp-area="" asp-controller="History" asp-action="Index">История</a>
-                            <a class="navbar-item" href="/driver-portal/chat">💬 Чат</a>
+                            <a class="navbar-item" href="/repairs">🛠️ Ремонт</a>
+                            <a class="navbar-item" href="/driver-portal/chat">💬 Чат <span class="nav-chat-badge tag is-danger is-rounded is-small ml-1" style="display:none; font-size:0.65rem; height:1.4em; padding:0 5px;" id="navChatBadgeStaff"></span></a>
+                            <a class="navbar-item" href="/download-apk" title="Скачать Android APK для водителей">📱 Скачать APK</a>
                             @if (User.IsInRole("Admin"))
                             {
                                 <a class="navbar-item has-text-danger" href="/admin">⚙ Админка</a>
@@ -62,7 +71,10 @@
                         </div>
                         <div class="navbar-end">
                             <div class="navbar-item">
-                                <span class="tag is-light mr-2">@User.FindFirst("userName")?.Value</span>
+                                <button type="button" class="theme-toggle-btn mr-3" id="themeToggleBtn" onclick="toggleTheme()" title="Переключить тему">
+                                    <span id="themeIcon">🌙</span> <span id="themeLabel">Тема</span>
+                                </button>
+                                <span class="tag is-info is-light mr-2 font-weight-bold">👤 @User.FindFirst("userName")?.Value</span>
                                 <form method="post" action="/login/logout">
                                     <button class="button is-light is-small" type="submit">Выйти</button>
                                 </form>
@@ -76,35 +88,55 @@
                     <div class="navbar-start">
                         <a class="navbar-item" asp-area="" asp-controller="Feedback" asp-action="Index">Обратная связь</a>
                     </div>
+                    <div class="navbar-end">
+                        <div class="navbar-item">
+                            <button type="button" class="theme-toggle-btn" id="themeToggleBtn" onclick="toggleTheme()" title="Переключить тему">
+                                <span id="themeIcon">🌙</span> <span id="themeLabel">Тема</span>
+                            </button>
+                        </div>
+                    </div>
                 }
             </div>
         </div>
     </nav>
 
     <script>
+        function updateThemeUI(theme) {
+            document.querySelectorAll('.theme-toggle-btn').forEach(btn => {
+                const icon = btn.querySelector('#themeIcon');
+                const label = btn.querySelector('#themeLabel');
+                if (icon) icon.textContent = theme === 'dark' ? '☀️' : '🌙';
+                if (label) label.textContent = theme === 'dark' ? 'Светлая' : 'Темная';
+            });
+        }
+
+        function toggleTheme() {
+            const current = document.documentElement.getAttribute('data-theme') || 'dark';
+            const next = current === 'dark' ? 'light' : 'dark';
+            document.documentElement.setAttribute('data-theme', next);
+            localStorage.setItem('luna_theme', next);
+            updateThemeUI(next);
+        }
+
         document.addEventListener('DOMContentLoaded', () => {
+            const theme = localStorage.getItem('luna_theme') || 'dark';
+            document.documentElement.setAttribute('data-theme', theme);
+            updateThemeUI(theme);
+
             // Get all "navbar-burger" elements
             const $navbarBurgers = Array.prototype.slice.call(document.querySelectorAll('.navbar-burger'), 0);
 
             // Check if there are any navbar burgers
             if ($navbarBurgers.length > 0) {
-
-                // Add a click event on each of them
                 $navbarBurgers.forEach(el => {
                     el.addEventListener('click', () => {
-
-                        // Get the target from the "data-target" attribute
                         const target = el.dataset.target;
                         const $target = document.getElementById(target);
-
-                        // Toggle the "is-active" class on both the "navbar-burger" and the "navbar-menu"
                         el.classList.toggle('is-active');
                         $target.classList.toggle('is-active');
-
                     });
                 });
             }
-
         });
     </script>
     <div style="max-width: 1700px; margin: auto;">
@@ -118,6 +150,33 @@
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
+    @if (User.Identity is { IsAuthenticated: true })
+    {
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/6.0.1/signalr.min.js"></script>
+        <script>
+            (function() {
+                if (window.location.pathname.startsWith('/driver-portal/chat')) return;
+                try {
+                    const navConn = new signalR.HubConnectionBuilder()
+                        .withUrl('/mobile/chathub')
+                        .withAutomaticReconnect()
+                        .build();
+                    let navUnread = 0;
+                    navConn.on('ReceiveMessage', function() {
+                        navUnread++;
+                        ['navChatBadgeDriver', 'navChatBadgeStaff'].forEach(function(id) {
+                            const el = document.getElementById(id);
+                            if (el) {
+                                el.textContent = navUnread;
+                                el.style.display = 'inline-block';
+                            }
+                        });
+                    });
+                    navConn.start().catch(function(){});
+                } catch(e) {}
+            })();
+        </script>
+    }
     @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>

@@ -1,0 +1,88 @@
+@using luna2000.Models
+@model (RepairRequest Request, TimeZoneInfo Tz)
+
+@{
+    var r = Model.Request;
+    var tz = Model.Tz;
+    var localTime = TimeZoneInfo.ConvertTimeFromUtc(r.CreatedAt, tz);
+    var statusInt = (int)r.Status;
+}
+
+<div class="repair-card" id="card-@r.Id" draggable="true"
+     ondragstart="handleDragStart(event, '@r.Id')"
+     ondragend="handleDragEnd(event, '@r.Id')">
+    <div class="repair-card-header">
+        <div class="card-driver-fio">
+            👤 @(r.Driver?.Fio ?? "Водитель")
+        </div>
+        <div class="dropdown is-hoverable is-right">
+            <div class="dropdown-trigger">
+                <button class="quick-status-btn" title="Быстро перенести в...">
+                    <i class="fas fa-exchange-alt has-text-grey"></i>
+                </button>
+            </div>
+            <div class="dropdown-menu" role="menu">
+                <div class="dropdown-content" style="font-size: 0.8rem; padding: 4px;">
+                    <a href="javascript:void(0)" class="dropdown-item" onclick="moveCardToStatus('@r.Id', 0)">
+                        🔵 В «Новые»
+                    </a>
+                    <a href="javascript:void(0)" class="dropdown-item" onclick="moveCardToStatus('@r.Id', 1)">
+                        🟡 В «В работе»
+                    </a>
+                    <a href="javascript:void(0)" class="dropdown-item" onclick="moveCardToStatus('@r.Id', 2)">
+                        🟢 В «Выполненные»
+                    </a>
+                    <a href="javascript:void(0)" class="dropdown-item" onclick="moveCardToStatus('@r.Id', 3)">
+                        🔴 В «Отклоненные»
+                    </a>
+                    <hr class="dropdown-divider" style="margin: 4px 0;" />
+                    <a href="javascript:void(0)" class="dropdown-item has-text-danger font-weight-bold" onclick="deleteRepairDirect('@r.Id')">
+                        🗑️ Удалить
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    @if (r.Car != null)
+    {
+        <div class="card-car-badge">
+            🚗 <strong>@r.Car.BrandModel</strong>
+            <span class="tag is-small is-light ml-1" style="font-size: 0.7rem; padding: 0 4px; height: 1.5em;">@r.Car.PlateNumber</span>
+        </div>
+    }
+
+    <div class="card-text">@r.Text</div>
+
+    <div class="card-comment" id="card-comment-@r.Id" style="@(string.IsNullOrWhiteSpace(r.AdminComment) ? "display:none;" : "")">
+        💬 <strong>Ответ:</strong> @r.AdminComment
+    </div>
+
+    <div class="card-footer-row">
+        <span class="card-time">@localTime.ToString("dd.MM HH:mm")</span>
+        <div class="is-flex" style="gap: 8px; align-items: center;">
+            <button type="button" class="button is-small is-ghost px-1 py-0 has-text-link"
+                    style="height: auto; font-size: 0.78rem; text-decoration: none;"
+                    onclick="openEditModal('@r.Id', '@statusInt', '@Html.Raw(RepairIndexFunctions.JavaScriptEscape(r.AdminComment ?? ""))', '@Html.Raw(RepairIndexFunctions.JavaScriptEscape(r.Driver?.Fio ?? ""))')">
+                <span class="icon is-small"><i class="fas fa-reply"></i></span>
+                <span>Ответить</span>
+            </button>
+            <button type="button" class="button is-small is-ghost px-1 py-0 has-text-danger"
+                    style="height: auto; font-size: 0.78rem; text-decoration: none;"
+                    title="Удалить заявку"
+                    onclick="deleteRepairDirect('@r.Id')">
+                <span class="icon is-small"><i class="fas fa-trash-alt"></i></span>
+            </button>
+        </div>
+    </div>
+</div>
+
+@functions {
+    public static class RepairIndexFunctions
+    {
+        public static string JavaScriptEscape(string s)
+        {
+            return s.Replace("\\", "\\\\").Replace("'", "\\'").Replace("\"", "\\\"").Replace("\r", "").Replace("\n", "\\n");
+        }
+    }
+}

@@ -62,6 +62,43 @@ export async function fetchChatHistory(token: string, channel: number) {
   return res.json();
 }
 
+export interface RepairRequestItem {
+  id: string;
+  carInfo: string;
+  text: string;
+  status: number;
+  statusName: string;
+  adminComment: string;
+  createdAt: string;
+  updatedAt?: string;
+}
+
+/** GET заявки на ремонт водителя */
+export async function fetchRepairs(token: string): Promise<RepairRequestItem[]> {
+  const res = await fetch(`${API_BASE_URL}/mobile/repairs`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  if (!res.ok) throw new Error('Ошибка загрузки заявок на ремонт');
+  return res.json();
+}
+
+/** POST создание заявки на ремонт */
+export async function createRepairRequest(token: string, text: string): Promise<RepairRequestItem> {
+  const res = await fetch(`${API_BASE_URL}/mobile/repairs`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({ text }),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.error || 'Ошибка отправки заявки');
+  }
+  return res.json();
+}
+
 export interface AppUpdateInfo {
   hasUpdate: boolean;
   currentVersion: string;
@@ -70,7 +107,7 @@ export interface AppUpdateInfo {
   downloadUrl: string;
 }
 
-export const CURRENT_APP_VERSION = '1.0.1';
+export const CURRENT_APP_VERSION = '1.0.5';
 
 /** Проверка доступности обновления на сервере */
 export async function checkAppUpdate(): Promise<AppUpdateInfo | null> {

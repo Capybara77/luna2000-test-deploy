@@ -1,0 +1,342 @@
+/* ══════════════════════════════════════════════════════════════════
+   LUNA2000 MODERN THEME & DARK MODE STYLESHEET
+   ══════════════════════════════════════════════════════════════════ */
+
+:root {
+  --bg-app: #f8fafc;
+  --bg-card: #ffffff;
+  --card-bg: #ffffff;
+  --bg-card-subtle: #f1f5f9;
+  --border-color: #cbd5e1;
+  --border-color-subtle: #e2e8f0;
+  --text-primary: #0f172a;
+  --text-secondary: #1e293b;
+  --text-muted: #475569;
+  --navbar-bg: #ffffff;
+  --navbar-border: #e2e8f0;
+  --primary-color: #2563eb;
+  --primary-hover: #1d4ed8;
+  --table-stripe: #f8fafc;
+  --table-hover: #f1f5f9;
+  --input-bg: #ffffff;
+  --input-border: #cbd5e1;
+  --input-text: #0f172a;
+  --msg-other-bg: #ffffff;
+  --msg-other-text: #0f172a;
+  --msg-other-border: #cbd5e1;
+  --msg-own-bg: #2563eb;
+  --msg-own-text: #ffffff;
+  --kanban-col-bg: #eef2f6;
+  --kanban-card-bg: #ffffff;
+  --item-bg: #ffffff;
+  --card-text-driver: #0f172a;
+  --card-text-car: #1e293b;
+  --card-text-body: #0f172a;
+  --card-text-time: #475569;
+  --card-comment-bg: #dcfce7;
+  --card-comment-border: #16a34a;
+  --card-comment-text: #14532d;
+}
+
+[data-theme="dark"] {
+  --bg-app: #0b1120;
+  --bg-card: #151e32;
+  --card-bg: #151e32;
+  --bg-card-subtle: #1e293b;
+  --border-color: #27354f;
+  --border-color-subtle: #1e293b;
+  --text-primary: #f8fafc;
+  --text-secondary: #e2e8f0;
+  --text-muted: #94a3b8;
+  --navbar-bg: #151e32;
+  --navbar-border: #27354f;
+  --primary-color: #3b82f6;
+  --primary-hover: #2563eb;
+  --table-stripe: #111a2c;
+  --table-hover: #1e293b;
+  --input-bg: #0f172a;
+  --input-border: #334155;
+  --input-text: #f8fafc;
+  --msg-other-bg: #1e293b;
+  --msg-other-text: #f8fafc;
+  --msg-other-border: #334155;
+  --msg-own-bg: #2563eb;
+  --msg-own-text: #ffffff;
+  --kanban-col-bg: #111928;
+  --kanban-card-bg: #1a2438;
+  --item-bg: #1a2438;
+  --card-text-driver: #ffffff;
+  --card-text-car: #e2e8f0;
+  --card-text-body: #f8fafc;
+  --card-text-time: #94a3b8;
+  --card-comment-bg: #143825;
+  --card-comment-border: #22c55e;
+  --card-comment-text: #86efac;
+}
+
+/* Base Body */
+body {
+  background-color: var(--bg-app) !important;
+  color: var(--text-primary) !important;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Inter, "Helvetica Neue", Arial, sans-serif !important;
+  transition: background-color 0.25s ease, color 0.25s ease;
+  min-height: 100vh;
+}
+
+/* Navbar */
+.navbar {
+  background-color: var(--navbar-bg) !important;
+  border-bottom: 1px solid var(--navbar-border) !important;
+  box-shadow: 0 1px 6px rgba(0, 0, 0, 0.04) !important;
+  transition: background-color 0.25s, border-color 0.25s;
+}
+
+.navbar-item, .navbar-link {
+  color: var(--text-primary) !important;
+  font-weight: 500;
+  transition: color 0.15s, background-color 0.15s;
+}
+
+.navbar-item:hover, .navbar-link:hover {
+  background-color: var(--bg-card-subtle) !important;
+  color: var(--primary-color) !important;
+}
+
+.navbar-brand .navbar-item {
+  font-weight: 800;
+  font-size: 1.15rem;
+  letter-spacing: 0.5px;
+  color: var(--primary-color) !important;
+}
+
+[data-theme="dark"] .navbar-menu {
+  background-color: var(--navbar-bg) !important;
+}
+
+/* Theme Toggle Button */
+.theme-toggle-btn {
+  background: transparent;
+  border: 1px solid var(--border-color);
+  color: var(--text-primary);
+  border-radius: 20px;
+  padding: 4px 10px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  transition: all 0.2s ease;
+}
+.theme-toggle-btn:hover {
+  background: var(--bg-card-subtle);
+  border-color: var(--primary-color);
+  color: var(--primary-color);
+}
+
+/* Titles */
+.title, .subtitle {
+  color: var(--text-primary) !important;
+}
+.subtitle.has-text-grey {
+  color: var(--text-muted) !important;
+}
+
+/* Cards & Boxes */
+.box, .card {
+  background-color: var(--bg-card) !important;
+  border: 1px solid var(--border-color) !important;
+  color: var(--text-primary) !important;
+  border-radius: 12px !important;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.04) !important;
+  transition: background-color 0.25s, border-color 0.25s;
+}
+
+/* Tables */
+.table {
+  background-color: var(--bg-card) !important;
+  color: var(--text-primary) !important;
+  border-radius: 10px;
+  overflow: hidden;
+  border: 1px solid var(--border-color) !important;
+}
+
+.table thead th {
+  color: var(--text-secondary) !important;
+  background-color: var(--bg-card-subtle) !important;
+  border-color: var(--border-color) !important;
+  font-weight: 600;
+  font-size: 0.82rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.table td, .table th {
+  border-color: var(--border-color) !important;
+  color: var(--text-primary) !important;
+  vertical-align: middle;
+}
+
+.table.is-striped tbody tr:not(.is-selected):nth-child(even) {
+  background-color: var(--table-stripe) !important;
+}
+
+.table.is-hoverable tbody tr:not(.is-selected):hover {
+  background-color: var(--table-hover) !important;
+}
+
+/* Form Controls */
+.input, .textarea, .select select {
+  background-color: var(--input-bg) !important;
+  color: var(--input-text) !important;
+  border: 1px solid var(--input-border) !important;
+  border-radius: 8px !important;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.input:focus, .textarea:focus, .select select:focus {
+  border-color: var(--primary-color) !important;
+  box-shadow: 0 0 0 0.125em rgba(37, 99, 235, 0.25) !important;
+}
+
+.input::placeholder, .textarea::placeholder {
+  color: var(--text-muted) !important;
+}
+
+.label {
+  color: var(--text-secondary) !important;
+}
+
+/* Tabs */
+.tabs ul {
+  border-bottom-color: var(--border-color) !important;
+}
+
+.tabs a {
+  color: var(--text-secondary) !important;
+  border-bottom-color: transparent !important;
+  font-weight: 500;
+  transition: color 0.15s;
+}
+
+.tabs li.is-active a {
+  color: var(--primary-color) !important;
+  border-bottom-color: var(--primary-color) !important;
+  font-weight: 700;
+}
+
+/* Modals */
+.modal-card {
+  background-color: var(--bg-card) !important;
+  border: 1px solid var(--border-color) !important;
+  border-radius: 14px !important;
+  overflow: hidden;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.25) !important;
+}
+
+.modal-card-head {
+  background-color: var(--bg-card-subtle) !important;
+  border-bottom: 1px solid var(--border-color) !important;
+}
+
+.modal-card-title {
+  color: var(--text-primary) !important;
+  font-weight: 700;
+}
+
+.modal-card-body {
+  background-color: var(--bg-card) !important;
+  color: var(--text-primary) !important;
+}
+
+.modal-card-foot {
+  background-color: var(--bg-card-subtle) !important;
+  border-top: 1px solid var(--border-color) !important;
+}
+
+/* Buttons */
+.button.is-primary {
+  background-color: var(--primary-color) !important;
+  border-color: transparent;
+  color: #fff !important;
+  border-radius: 8px;
+  font-weight: 600;
+}
+.button.is-primary:hover {
+  background-color: var(--primary-hover) !important;
+}
+
+/* Notifications */
+.notification.is-light {
+  background-color: var(--bg-card-subtle) !important;
+  color: var(--text-primary) !important;
+  border: 1px solid var(--border-color);
+  border-radius: 10px;
+}
+
+/* Chat Overrides */
+.chat-page-container {
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.04);
+}
+
+.chat-header-bar {
+  background-color: var(--bg-card);
+  border-bottom: 1px solid var(--border-color);
+}
+
+.chat-tabs-bar {
+  background-color: var(--bg-card-subtle);
+  border-bottom: 1px solid var(--border-color);
+}
+
+.chat-messages {
+  background-color: var(--bg-app);
+}
+
+.msg:not(.own) .msg-bubble {
+  background-color: var(--msg-other-bg) !important;
+  color: var(--msg-other-text) !important;
+  border: 1px solid var(--msg-other-border) !important;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.03);
+}
+
+.msg.own .msg-bubble {
+  background-color: var(--msg-own-bg) !important;
+  color: var(--msg-own-text) !important;
+}
+
+.msg:not(.own) .quote-preview {
+  background: rgba(37, 99, 235, 0.08) !important;
+  border-left-color: var(--primary-color) !important;
+  color: var(--text-secondary) !important;
+}
+
+.chat-emoji-row {
+  background-color: var(--bg-card-subtle) !important;
+  border-top: 1px solid var(--border-color) !important;
+}
+
+.chat-input-row {
+  background-color: var(--bg-card) !important;
+  border-top: 1px solid var(--border-color) !important;
+}
+
+/* Scrollbars */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(148, 163, 184, 0.4);
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(148, 163, 184, 0.7);
+}

@@ -52,8 +52,9 @@ public class MobileController : ControllerBase
     }
 
     // ──────────────────────────────────────────────
+    // ──────────────────────────────────────────────
     // GET /mobile/balance
-    // Returns balance + last 30 days operations
+    // Returns balance + full operation history for this driver
     // ──────────────────────────────────────────────
     [HttpGet("balance")]
     [Authorize(AuthenticationSchemes = "MobileJwt")]
@@ -65,23 +66,73 @@ public class MobileController : ControllerBase
         var driver = await _db.Drivers.AsNoTracking().FirstOrDefaultAsync(d => d.Id == driverId);
         if (driver == null) return NotFound();
 
-        // История операций за последние 30 дней (списания + пополнения)
-        var since = DateTime.UtcNow.AddDays(-30);
+        // История операций водителя (до 60 последних операций без обрезания по дате)
         var logs = await _db.BaseLogs
-            .Where(l => l.EntryId == driverId
-                && (l.ObjectName == "DeductRent" || l.ObjectName == "SmsBalance")
-                && l.Created >= since)
+            .Where(l => l.EntryId == driverId)
             .OrderByDescending(l => l.Created)
             .Take(60)
             .AsNoTracking()
             .ToListAsync();
 
-        var operations = logs.Select(l => new
+        var operations = logs.Select(l =>
         {
-            type = l.ObjectName,
-            note = l.Note,
-            createdAt = l.Created,
-            isDebit = l.ObjectName == "DeductRent"
+            bool isDebit = false;
+            string title = l.ObjectName switch
+            {
+                "DeductRent" => "Списание аренды",
+                "SmsBalance" => "Пополнение баланса (SMS)",
+                "SmsReceived" => "SMS входящий",
+                "Balance" => "Корректировка баланса",
+                _ => l.EventType switch
+                {
+                    EventType.Add => "Создание записи",
+                    EventType.Delete => "Удаление",
+                    EventType.Edit => "Изменение данных",
+                    EventType.Event => "Событие",
+                    _ => "Операция"
+                }
+            };
+
+            string noteText = l.Note ?? string.Empty;
+
+            if (l.ObjectName == "DeductRent")
+            {
+                isDebit = true;
+            }
+            else if (l.ObjectName == "SmsBalance")
+            {
+                isDebit = false;
+            }
+            else if (l.PropertyName == "Balance" || l.ObjectName == "Balance")
+            {
+                if (decimal.TryParse(l.OldValue, out var oldVal) && decimal.TryParse(l.NewValue, out var newVal))
+                {
+                    isDebit = newVal < oldVal;
+                    var diff = Math.Abs(newVal - oldVal);
+                    title = isDebit ? "Списание с баланса" : "Пополнение баланса";
+                    noteText = $"{(isDebit ? "-" : "+")}{diff:0.##} ₽  (Было: {oldVal:0.##} ₽ → Стало: {newVal:0.##} ₽)";
+                }
+            }
+            else if (!string.IsNullOrEmpty(noteText) && (noteText.Contains("Списание") || noteText.Contains("списание")))
+            {
+                isDebit = true;
+            }
+
+            if (string.IsNullOrWhiteSpace(noteText))
+            {
+                if (!string.IsNullOrEmpty(l.PropertyName))
+                    noteText = $"{l.PropertyName}: {l.OldValue} → {l.NewValue}";
+                else
+                    noteText = title;
+            }
+
+            return new
+            {
+                type = title,
+                note = noteText,
+                createdAt = l.Created.ToString("o"),
+                isDebit
+            };
         });
 
         return Ok(new
@@ -114,12 +165,15 @@ public class MobileController : ControllerBase
 
         return Ok(messages.Select(m => new
         {
-            id = m.Id,
-            driverId = m.DriverId,
-            driverName = m.Driver?.Fio ?? "Неизвестный",
-            channel = m.Channel,
+            id = m.Id.ToString(),
+            driverId = m.DriverId?.ToString() ?? string.Empty,
+            driverName = m.SenderName ?? m.Driver?.Fio ?? "Водитель",
+            channel = (int)m.Channel,
             text = m.Text,
-            createdAt = m.CreatedAt
+            replyToId = m.ReplyToId?.ToString() ?? string.Empty,
+            replyToSender = m.ReplyToSender ?? string.Empty,
+            replyToText = m.ReplyToText ?? string.Empty,
+            createdAt = m.CreatedAt.ToString("o")
         }).OrderBy(m => m.createdAt));
     }
 
@@ -153,18 +207,123 @@ public class MobileController : ControllerBase
         return new JwtSecurityTokenHandler().WriteToken(token);
     }
 
+    // ──────────────────────────────────────────────
+    // GET /mobile/repairs
+    // Returns driver's repair requests
+    // ──────────────────────────────────────────────
+    [HttpGet("repairs")]
+    [Authorize(AuthenticationSchemes = "MobileJwt")]
+    public async Task<IActionResult> GetRepairs()
+    {
+        var driverId = GetDriverId();
+        if (driverId == null) return Unauthorized();
+
+        var requests = await _db.RepairRequests
+            .Include(r => r.Car)
+            .Where(r => r.DriverId == driverId)
+            .OrderByDescending(r => r.CreatedAt)
+            .Take(50)
+            .AsNoTracking()
+            .ToListAsync();
+
+        return Ok(requests.Select(r => new
+        {
+            id = r.Id.ToString(),
+            carInfo = r.Car != null ? $"{r.Car.BrandModel} ({r.Car.PlateNumber})" : "Не указан",
+            text = r.Text,
+            status = (int)r.Status,
+            statusName = r.Status switch
+            {
+                RepairStatus.New => "Новая",
+                RepairStatus.InProgress => "В работе",
+                RepairStatus.Done => "Выполнена",
+                RepairStatus.Rejected => "Отклонена",
+                _ => "Новая"
+            },
+            adminComment = r.AdminComment ?? string.Empty,
+            createdAt = r.CreatedAt.ToString("o"),
+            updatedAt = r.UpdatedAt?.ToString("o")
+        }));
+    }
+
+    // ──────────────────────────────────────────────
+    // POST /mobile/repairs
+    // Create new repair request
+    // ──────────────────────────────────────────────
+    [HttpPost("repairs")]
+    [Authorize(AuthenticationSchemes = "MobileJwt")]
+    public async Task<IActionResult> CreateRepair([FromBody] CreateRepairRequest request)
+    {
+        var driverId = GetDriverId();
+        if (driverId == null) return Unauthorized();
+
+        if (string.IsNullOrWhiteSpace(request?.Text))
+            return BadRequest(new { error = "Опишите проблему или необходимый ремонт" });
+
+        var driver = await _db.Drivers.AsNoTracking().FirstOrDefaultAsync(d => d.Id == driverId);
+        if (driver == null) return NotFound(new { error = "Водитель не найден" });
+
+        // Определяем авто водителя (переданное или текущее арендованное)
+        Guid? carId = request.CarId;
+        if (!carId.HasValue || carId == Guid.Empty)
+        {
+            var rental = await _db.CarRentals
+                .Include(r => r.Car)
+                .FirstOrDefaultAsync(r => r.DriverId == driverId);
+            carId = rental?.CarId;
+        }
+
+        var repair = new RepairRequest
+        {
+            Id = Guid.NewGuid(),
+            DriverId = driverId.Value,
+            CarId = carId,
+            Text = request.Text.Trim(),
+            Status = RepairStatus.New,
+            CreatedAt = DateTime.UtcNow
+        };
+
+        _db.RepairRequests.Add(repair);
+        await _db.SaveChangesAsync();
+
+        var car = carId.HasValue ? await _db.Cars.AsNoTracking().FirstOrDefaultAsync(c => c.Id == carId) : null;
+        var carInfo = car != null ? $"{car.BrandModel} ({car.PlateNumber})" : "Не указан";
+
+        return Ok(new
+        {
+            id = repair.Id.ToString(),
+            carInfo,
+            text = repair.Text,
+            status = (int)repair.Status,
+            statusName = "Новая",
+            adminComment = string.Empty,
+            createdAt = repair.CreatedAt.ToString("o")
+        });
+    }
+
     [AllowAnonymous]
     [HttpGet("/download-apk")]
     [HttpGet("/apk")]
     [HttpGet("apk")]
+    [HttpGet("/download/app")]
+    [HttpGet("/app.apk")]
     public IActionResult DownloadApk([FromServices] IWebHostEnvironment env)
     {
-        var path = Path.Combine(env.WebRootPath, "apk", "luna2000.apk");
-        if (!System.IO.File.Exists(path))
+        var candidates = new[]
         {
-            var fallback = Path.Combine(env.ContentRootPath, "..", "..", "luna2000-driver.apk");
-            if (System.IO.File.Exists(fallback)) path = fallback;
-            else return NotFound("APK не найден на сервере.");
+            Path.Combine(env.WebRootPath ?? "wwwroot", "apk", "luna2000.apk"),
+            Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "apk", "luna2000.apk"),
+            Path.Combine(Directory.GetCurrentDirectory(), "files", "luna2000.apk"),
+            Path.Combine(Directory.GetCurrentDirectory(), "files", "apk", "luna2000.apk"),
+            Path.Combine(env.ContentRootPath, "files", "luna2000.apk"),
+            Path.Combine(env.ContentRootPath, "..", "..", "luna2000-driver.apk"),
+            Path.Combine(Directory.GetCurrentDirectory(), "luna2000-driver.apk")
+        };
+
+        var path = candidates.FirstOrDefault(System.IO.File.Exists);
+        if (path == null)
+        {
+            return NotFound("APK не найден на сервере.");
         }
         return PhysicalFile(path, "application/vnd.android.package-archive", "luna2000.apk");
     }
@@ -178,10 +337,10 @@ public class MobileController : ControllerBase
     {
         return Ok(new
         {
-            version = "1.0.0",
-            versionCode = 1,
+            version = "1.0.5",
+            versionCode = 6,
             downloadUrl = "/download-apk",
-            changelog = "Релиз с постоянной цифровой подписью и поддержкой обновлений"
+            changelog = "Темная тема в приложении и на сайте, улучшенный дизайн, перенос заявок ремонта канбан-доской"
         });
     }
 }
@@ -189,4 +348,10 @@ public class MobileController : ControllerBase
 public class MobileAuthRequest
 {
     public string DriverId { get; set; } = string.Empty;
+}
+
+public class CreateRepairRequest
+{
+    public string Text { get; set; } = string.Empty;
+    public Guid? CarId { get; set; }
 }
