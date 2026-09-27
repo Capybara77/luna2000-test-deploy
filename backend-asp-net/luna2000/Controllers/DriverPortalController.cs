@@ -12,7 +12,7 @@ namespace luna2000.Controllers;
 /// Портал водителя: только свой баланс, своя история, общий чат.
 /// Роль: Driver.
 /// </summary>
-[Authorize(Roles = "Driver")]
+[Authorize(Roles = "Driver,Admin,Editor")]
 [Route("driver-portal")]
 public class DriverPortalController : Controller
 {
@@ -97,10 +97,20 @@ public class DriverPortalController : Controller
     public async Task<IActionResult> Chat()
     {
         var driverId = GetDriverId();
-        if (driverId == null) return Forbid();
-
-        var driver = await _db.Drivers.AsNoTracking()
-            .FirstOrDefaultAsync(d => d.Id == driverId);
+        DriverEntity? driver = null;
+        if (driverId != null)
+        {
+            driver = await _db.Drivers.AsNoTracking()
+                .FirstOrDefaultAsync(d => d.Id == driverId);
+        }
+        else
+        {
+            driver = new DriverEntity
+            {
+                Id = Guid.Empty,
+                Fio = User.FindFirst("userName")?.Value ?? "Диспетчер"
+            };
+        }
 
         // Последние 50 сообщений общего чата
         var messages = await _db.ChatMessages

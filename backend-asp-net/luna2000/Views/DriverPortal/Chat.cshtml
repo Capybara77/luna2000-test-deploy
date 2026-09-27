@@ -35,16 +35,18 @@
     {
       var isOwn = msg.DriverId == driver?.Id;
       var localTime = TimeZoneInfo.ConvertTimeFromUtc(msg.CreatedAt, tz);
-      var initials = msg.Driver?.Fio?.Split(' ')
+      var senderName = msg.Driver?.Fio ?? (msg.DriverId == Guid.Empty ? "Диспетчер" : "Водитель");
+      var initials = senderName.Split(' ')
           .Where(p => p.Length > 0).Take(2)
           .Select(p => p[0].ToString().ToUpper())
-          .Aggregate("", (a, b) => a + b) ?? "?";
+          .Aggregate("", (a, b) => a + b);
+      if (string.IsNullOrEmpty(initials)) initials = "Д";
       <div class="msg @(isOwn ? "own" : "")">
-        <div class="avatar" title="@msg.Driver?.Fio">@initials</div>
+        <div class="avatar" title="@senderName">@initials</div>
         <div>
           @if (!isOwn)
           {
-            <div style="font-size:0.75rem; font-weight:600; margin-bottom:2px">@msg.Driver?.Fio</div>
+            <div style="font-size:0.75rem; font-weight:600; margin-bottom:2px">@senderName</div>
           }
           <div class="msg-bubble">@msg.Text</div>
           <div class="msg-meta">@localTime.ToString("HH:mm dd.MM")</div>

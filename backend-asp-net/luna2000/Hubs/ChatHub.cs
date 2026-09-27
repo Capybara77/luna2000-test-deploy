@@ -22,10 +22,17 @@ public class ChatHub : Hub
         if (string.IsNullOrWhiteSpace(text)) return;
 
         var driverIdStr = Context.User?.FindFirst("driverId")?.Value;
-        if (!Guid.TryParse(driverIdStr, out var driverId)) return;
+        Guid driverId = Guid.Empty;
+        string driverName = Context.User?.FindFirst("userName")?.Value 
+                         ?? Context.User?.Identity?.Name 
+                         ?? "Диспетчер";
 
-        var driver = await _db.Drivers.FindAsync(driverId);
-        if (driver == null) return;
+        if (Guid.TryParse(driverIdStr, out var dId) && dId != Guid.Empty)
+        {
+            driverId = dId;
+            var driver = await _db.Drivers.FindAsync(driverId);
+            if (driver != null) driverName = driver.Fio;
+        }
 
         var msg = new ChatMessage
         {
@@ -44,7 +51,7 @@ public class ChatHub : Hub
         {
             id = msg.Id,
             driverId = msg.DriverId,
-            driverName = driver.Fio,
+            driverName = driverName,
             channel = msg.Channel,
             text = msg.Text,
             createdAt = msg.CreatedAt

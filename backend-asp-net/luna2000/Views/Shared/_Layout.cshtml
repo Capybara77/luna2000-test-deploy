@@ -54,6 +54,7 @@
                             <a class="navbar-item" asp-area="" asp-controller="Driver" asp-action="Index">Водители</a>
                             <a class="navbar-item" asp-area="" asp-controller="DocEditor" asp-action="Index">Редактор</a>
                             <a class="navbar-item" asp-area="" asp-controller="History" asp-action="Index">История</a>
+                            <a class="navbar-item" href="/driver-portal/chat">💬 Чат</a>
                             @if (User.IsInRole("Admin"))
                             {
                                 <a class="navbar-item has-text-danger" href="/admin">⚙ Админка</a>
