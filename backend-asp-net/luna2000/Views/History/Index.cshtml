@@ -14,41 +14,90 @@
 
     string RowClass(string? objectName, luna2000.Models.EventType eventType) => objectName switch
     {
-        "DeductRent" => "has-background-danger-light",
-        "SmsBalance" => "has-background-success-light",
+        "DeductRent" => "hist-row hist-row-deduct",
+        "SmsBalance" => "hist-row hist-row-sms-bal",
+        "SmsReceived" => "hist-row hist-row-sms-raw",
         _ => eventType switch
         {
-            luna2000.Models.EventType.Delete => "has-background-danger-light",
-            luna2000.Models.EventType.Add => "has-background-success-light",
-            luna2000.Models.EventType.Edit => "has-background-warning-light",
-            _ => ""
-        }
-    };
-
-    string EventIcon(string? objectName, luna2000.Models.EventType eventType) => objectName switch
-    {
-        "DeductRent" => "<i class='fas fa-arrow-down has-text-danger'></i>",
-        "SmsBalance" => "<i class='fas fa-arrow-up has-text-success'></i>",
-        "SmsReceived" => "<i class='fas fa-sms has-text-grey'></i>",
-        _ => eventType switch
-        {
-            luna2000.Models.EventType.Add => "<i class='fas fa-plus-circle has-text-success'></i>",
-            luna2000.Models.EventType.Delete => "<i class='fas fa-trash has-text-danger'></i>",
-            luna2000.Models.EventType.Edit => "<i class='fas fa-pen has-text-warning'></i>",
-            luna2000.Models.EventType.Event => "<i class='fas fa-bolt has-text-info'></i>",
-            _ => "<i class='fas fa-circle'></i>"
+            luna2000.Models.EventType.Delete => "hist-row hist-row-delete",
+            luna2000.Models.EventType.Add => "hist-row hist-row-add",
+            luna2000.Models.EventType.Edit => "hist-row hist-row-edit",
+            _ => "hist-row hist-row-default"
         }
     };
 }
 
 <style>
-    .history-note { white-space: pre-wrap; max-width: 400px; font-size: 0.85rem; }
-    .diff-old { text-decoration: line-through; color: #cc3333; margin-right: 4px; }
-    .diff-new { color: #167e16; font-weight: 600; }
-    .diff-row td { font-size: 0.82rem; padding: 2px 8px !important; background: transparent !important; }
-    .event-icon { width: 28px; text-align: center; }
-    .driver-link { font-weight: 600; color: #363636; }
-    .filter-active { background: #f0f7ff; border: 1px solid #3273dc; border-radius: 4px; padding: 4px 10px; }
+    .history-table { border-collapse: separate; border-spacing: 0; width: 100%; }
+    .history-table th { font-weight: 700; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.5px; padding: 10px 12px !important; }
+    .history-table td { padding: 9px 12px !important; vertical-align: middle; border-bottom: 1px solid var(--border-color); }
+
+    .history-note { white-space: pre-wrap; max-width: 460px; font-size: 0.88rem; line-height: 1.45; word-break: break-word; }
+    .driver-link { display: inline-flex; align-items: center; gap: 4px; font-weight: 700; font-size: 0.92rem; }
+    .driver-link:hover { text-decoration: underline !important; }
+
+    .hist-badge { display: inline-flex; align-items: center; gap: 4px; border-radius: 6px; padding: 4px 8px; font-size: 0.78rem; font-weight: 700; white-space: nowrap; }
+    .hist-time-cell { text-align: right; }
+    .hist-time-time { font-weight: 700; font-size: 0.88rem; line-height: 1.2; }
+    .hist-time-date { font-size: 0.78rem; line-height: 1.2; }
+
+    .hist-diff-line { font-size: 0.84rem; display: flex; align-items: center; flex-wrap: wrap; gap: 4px; }
+    .diff-old { text-decoration: line-through; font-weight: 600; margin-right: 2px; }
+    .diff-new { font-weight: 700; }
+
+    .filter-active { display: inline-flex; align-items: center; border-radius: 6px; padding: 6px 12px; font-size: 0.88rem; }
+
+    /* Light Theme Contrast */
+    [data-theme="light"] .hist-row td, :root:not([data-theme="dark"]) .hist-row td { color: #0f172a !important; }
+    [data-theme="light"] .history-note, :root:not([data-theme="dark"]) .history-note { color: #0f172a !important; font-weight: 500; }
+    [data-theme="light"] .driver-link, :root:not([data-theme="dark"]) .driver-link { color: #1d4ed8 !important; }
+    [data-theme="light"] .hist-object-name, :root:not([data-theme="dark"]) .hist-object-name { color: #1e293b !important; }
+    [data-theme="light"] .hist-time-time, :root:not([data-theme="dark"]) .hist-time-time { color: #0f172a !important; }
+    [data-theme="light"] .hist-time-date, :root:not([data-theme="dark"]) .hist-time-date { color: #475569 !important; font-weight: 600; }
+    [data-theme="light"] .diff-old, :root:not([data-theme="dark"]) .diff-old { color: #dc2626 !important; }
+    [data-theme="light"] .diff-new, :root:not([data-theme="dark"]) .diff-new { color: #15803d !important; }
+    [data-theme="light"] .hist-diff-arrow, :root:not([data-theme="dark"]) .hist-diff-arrow { color: #64748b !important; }
+    [data-theme="light"] .filter-active, :root:not([data-theme="dark"]) .filter-active { background: #eff6ff; border: 1px solid #3b82f6; color: #1e40af; }
+
+    [data-theme="light"] .hist-row-edit, :root:not([data-theme="dark"]) .hist-row-edit { background-color: #fffbeb !important; border-left: 4px solid #d97706; }
+    [data-theme="light"] .hist-row-add, :root:not([data-theme="dark"]) .hist-row-add { background-color: #f0fdf4 !important; border-left: 4px solid #16a34a; }
+    [data-theme="light"] .hist-row-delete, :root:not([data-theme="dark"]) .hist-row-delete { background-color: #fef2f2 !important; border-left: 4px solid #dc2626; }
+    [data-theme="light"] .hist-row-deduct, :root:not([data-theme="dark"]) .hist-row-deduct { background-color: #fef2f2 !important; border-left: 4px solid #dc2626; }
+    [data-theme="light"] .hist-row-sms-bal, :root:not([data-theme="dark"]) .hist-row-sms-bal { background-color: #ecfdf5 !important; border-left: 4px solid #059669; }
+    [data-theme="light"] .hist-row-sms-raw, :root:not([data-theme="dark"]) .hist-row-sms-raw { background-color: #f8fafc !important; border-left: 4px solid #64748b; }
+
+    [data-theme="light"] .hist-badge-edit, :root:not([data-theme="dark"]) .hist-badge-edit { background-color: #fef08a !important; color: #78350f !important; border: 1px solid #ca8a04 !important; }
+    [data-theme="light"] .hist-badge-add, :root:not([data-theme="dark"]) .hist-badge-add { background-color: #dcfce7 !important; color: #14532d !important; border: 1px solid #16a34a !important; }
+    [data-theme="light"] .hist-badge-delete, :root:not([data-theme="dark"]) .hist-badge-delete { background-color: #fee2e2 !important; color: #7f1d1d !important; border: 1px solid #dc2626 !important; }
+    [data-theme="light"] .hist-badge-deduct, :root:not([data-theme="dark"]) .hist-badge-deduct { background-color: #fee2e2 !important; color: #7f1d1d !important; border: 1px solid #dc2626 !important; }
+    [data-theme="light"] .hist-badge-sms-bal, :root:not([data-theme="dark"]) .hist-badge-sms-bal { background-color: #d1fae5 !important; color: #064e3b !important; border: 1px solid #059669 !important; }
+    [data-theme="light"] .hist-badge-sms-raw, :root:not([data-theme="dark"]) .hist-badge-sms-raw { background-color: #f1f5f9 !important; color: #1e293b !important; border: 1px solid #94a3b8 !important; }
+
+    /* Dark Theme Contrast */
+    [data-theme="dark"] .hist-row td { color: #f8fafc !important; }
+    [data-theme="dark"] .history-note { color: #f8fafc !important; font-weight: 500; }
+    [data-theme="dark"] .driver-link { color: #93c5fd !important; }
+    [data-theme="dark"] .hist-object-name { color: #e2e8f0 !important; }
+    [data-theme="dark"] .hist-time-time { color: #f8fafc !important; }
+    [data-theme="dark"] .hist-time-date { color: #94a3b8 !important; }
+    [data-theme="dark"] .diff-old { color: #fca5a5 !important; }
+    [data-theme="dark"] .diff-new { color: #86efac !important; }
+    [data-theme="dark"] .hist-diff-arrow { color: #94a3b8 !important; }
+    [data-theme="dark"] .filter-active { background: #1e293b; border: 1px solid #3b82f6; color: #93c5fd; }
+
+    [data-theme="dark"] .hist-row-edit { background-color: rgba(234, 179, 8, 0.1) !important; border-left: 4px solid #eab308; }
+    [data-theme="dark"] .hist-row-add { background-color: rgba(34, 197, 94, 0.1) !important; border-left: 4px solid #22c55e; }
+    [data-theme="dark"] .hist-row-delete { background-color: rgba(239, 68, 68, 0.14) !important; border-left: 4px solid #ef4444; }
+    [data-theme="dark"] .hist-row-deduct { background-color: rgba(239, 68, 68, 0.14) !important; border-left: 4px solid #ef4444; }
+    [data-theme="dark"] .hist-row-sms-bal { background-color: rgba(34, 197, 94, 0.12) !important; border-left: 4px solid #22c55e; }
+    [data-theme="dark"] .hist-row-sms-raw { background-color: rgba(148, 163, 184, 0.08) !important; border-left: 4px solid #64748b; }
+
+    [data-theme="dark"] .hist-badge-edit { background-color: #854d0e !important; color: #fef08a !important; border: 1px solid #eab308 !important; }
+    [data-theme="dark"] .hist-badge-add { background-color: #14532d !important; color: #86efac !important; border: 1px solid #22c55e !important; }
+    [data-theme="dark"] .hist-badge-delete { background-color: #991b1b !important; color: #fca5a5 !important; border: 1px solid #ef4444 !important; }
+    [data-theme="dark"] .hist-badge-deduct { background-color: #991b1b !important; color: #fca5a5 !important; border: 1px solid #ef4444 !important; }
+    [data-theme="dark"] .hist-badge-sms-bal { background-color: #065f46 !important; color: #6ee7b7 !important; border: 1px solid #10b981 !important; }
+    [data-theme="dark"] .hist-badge-sms-raw { background-color: #1e293b !important; color: #cbd5e1 !important; border: 1px solid #475569 !important; }
 </style>
 
 <div class="container is-fluid px-0">
@@ -58,8 +107,8 @@
         var driverName = Model.DriversMap.TryGetValue(Model.ObjFilterId.Value, out var n) ? n : Model.ObjFilterId.Value.ToString();
         <div class="mb-3 is-flex is-align-items-center" style="gap:10px">
             <span class="filter-active">
-                <i class="fas fa-filter has-text-link mr-1"></i>
-                Фильтр: <strong>@driverName</strong>
+                <i class="fas fa-filter mr-2"></i>
+                Фильтр: <strong class="ml-1">@driverName</strong>
             </span>
             <a href="/History?page=1" class="button is-small is-light">
                 <span class="icon is-small"><i class="fas fa-times"></i></span>
@@ -69,14 +118,13 @@
     }
 
     <div class="table-container">
-        <table class="table is-fullwidth is-hoverable" style="font-size: 0.88rem;">
+        <table class="table is-fullwidth is-hoverable history-table">
             <thead>
                 <tr>
-                    <th style="width:40px"></th>
-                    <th>Событие</th>
-                    <th>Водитель / Объект</th>
+                    <th style="width: 140px;">Событие</th>
+                    <th style="width: 220px;">Водитель / Объект</th>
                     <th>Описание / Изменения</th>
-                    <th style="white-space:nowrap">Время</th>
+                    <th style="width: 120px; text-align: right;">Время</th>
                 </tr>
             </thead>
             <tbody>
@@ -84,32 +132,72 @@
                 {
                     var first = logGroup.First();
                     var rowClass = RowClass(first.ObjectName, first.EventType);
-                    var icon = EventIcon(first.ObjectName, first.EventType);
 
                     <tr class="@rowClass">
-                        <td class="event-icon is-vcentered">@Html.Raw(icon)</td>
                         <td class="is-vcentered" style="white-space:nowrap">
-                            @{
-                                string eventLabel = first.ObjectName switch
-                                {
-                                    "DeductRent" => "Списание аренды",
-                                    "SmsBalance" => "Пополнение (SMS)",
-                                    "SmsReceived" => "SMS входящий",
-                                    _ => first.EventType.GetDescription()
-                                };
+                            @switch (first.ObjectName)
+                            {
+                                case "DeductRent":
+                                    <span class="hist-badge hist-badge-deduct">
+                                        <i class="fas fa-arrow-down mr-1"></i>Списание
+                                    </span>
+                                    break;
+                                case "SmsBalance":
+                                    <span class="hist-badge hist-badge-sms-bal">
+                                        <i class="fas fa-arrow-up mr-1"></i>Пополнение
+                                    </span>
+                                    break;
+                                case "SmsReceived":
+                                    <span class="hist-badge hist-badge-sms-raw">
+                                        <i class="fas fa-sms mr-1"></i>SMS
+                                    </span>
+                                    break;
+                                default:
+                                    switch (first.EventType)
+                                    {
+                                        case luna2000.Models.EventType.Add:
+                                            <span class="hist-badge hist-badge-add">
+                                                <i class="fas fa-plus mr-1"></i>Создание
+                                            </span>
+                                            break;
+                                        case luna2000.Models.EventType.Delete:
+                                            <span class="hist-badge hist-badge-delete">
+                                                <i class="fas fa-trash mr-1"></i>Удаление
+                                            </span>
+                                            break;
+                                        case luna2000.Models.EventType.Edit:
+                                            <span class="hist-badge hist-badge-edit">
+                                                <i class="fas fa-pen mr-1"></i>Изменение
+                                            </span>
+                                            break;
+                                        case luna2000.Models.EventType.Event:
+                                            <span class="hist-badge hist-badge-sms-raw">
+                                                <i class="fas fa-bolt mr-1"></i>Событие
+                                            </span>
+                                            break;
+                                        default:
+                                            <span class="hist-badge hist-badge-sms-raw">
+                                                <i class="fas fa-circle mr-1"></i>Операция
+                                            </span>
+                                            break;
+                                    }
+                                    break;
                             }
-                            <span>@eventLabel</span>
                         </td>
                         <td class="is-vcentered">
                             @if (first.EntryId.HasValue && Model.DriversMap.TryGetValue(first.EntryId.Value, out var fio))
                             {
-                                <a href="/History?page=1&objFilter=@first.EntryId" class="driver-link">
-                                    <i class="fas fa-user fa-xs mr-1 has-text-grey"></i>@fio
+                                <a href="/History?page=1&objFilter=@first.EntryId" class="driver-link" title="Показать операции только этого водителя">
+                                    <i class="fas fa-user-circle mr-1"></i>@fio
                                 </a>
                             }
                             else if (!string.IsNullOrEmpty(first.ObjectName) && first.ObjectName != "DeductRent" && first.ObjectName != "SmsBalance" && first.ObjectName != "SmsReceived")
                             {
-                                <span class="has-text-grey-dark">@first.ObjectName</span>
+                                <span class="hist-object-name">@first.ObjectName</span>
+                            }
+                            else
+                            {
+                                <span style="opacity: 0.5;">—</span>
                             }
                         </td>
                         <td class="is-vcentered">
@@ -125,28 +213,29 @@
                             }
                             @if (balanceChange != null && string.IsNullOrEmpty(first.Note))
                             {
-                                <div class="mt-1">
-                                    <span class="is-size-7 has-text-grey">Баланс: </span>
+                                <div class="hist-diff-line mt-1">
+                                    <span class="font-weight-bold">Баланс:</span>
                                     <span class="diff-old">@balanceChange.OldValue</span>
-                                    <i class="fas fa-arrow-right has-text-grey mx-1" style="font-size:0.7rem"></i>
+                                    <i class="fas fa-arrow-right hist-diff-arrow"></i>
                                     <span class="diff-new">@balanceChange.NewValue</span>
                                 </div>
                             }
                             @foreach (var change in changes)
                             {
-                                <div class="is-size-7 mt-1">
-                                    <strong>@change.PropertyName:</strong>
+                                <div class="hist-diff-line mt-1">
+                                    <span class="font-weight-bold">@change.PropertyName:</span>
                                     @if (!string.IsNullOrEmpty(change.OldValue))
                                     {
                                         <span class="diff-old">@change.OldValue</span>
-                                        <i class="fas fa-arrow-right has-text-grey mx-1" style="font-size:0.7rem"></i>
+                                        <i class="fas fa-arrow-right hist-diff-arrow"></i>
                                     }
                                     <span class="diff-new">@(change.NewValue ?? "—")</span>
                                 </div>
                             }
                         </td>
-                        <td class="is-vcentered has-text-grey is-size-7" style="white-space:nowrap">
-                            @TimeZoneInfo.ConvertTimeFromUtc(first.Created, tz).ToString("HH:mm\ndd.MM.yyyy")
+                        <td class="is-vcentered hist-time-cell" style="white-space:nowrap">
+                            <div class="hist-time-time">@TimeZoneInfo.ConvertTimeFromUtc(first.Created, tz).ToString("HH:mm")</div>
+                            <div class="hist-time-date">@TimeZoneInfo.ConvertTimeFromUtc(first.Created, tz).ToString("dd.MM.yyyy")</div>
                         </td>
                     </tr>
                 }

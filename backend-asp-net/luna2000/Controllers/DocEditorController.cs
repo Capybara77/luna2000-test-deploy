@@ -1,4 +1,4 @@
-﻿using luna2000.Data;
+using luna2000.Data;
 using luna2000.Dto;
 using luna2000.Models;
 using Microsoft.AspNetCore.Authorization;
@@ -9,7 +9,7 @@ using Xceed.Words.NET;
 
 namespace luna2000.Controllers;
 
-[Authorize]
+[Authorize(Roles = "Admin,Editor")]
 public class DocEditorController : Controller
 {
     private readonly LunaDbContext _dbContext;

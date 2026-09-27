@@ -1,4 +1,4 @@
-﻿using luna2000.Data;
+using luna2000.Data;
 using luna2000.Models;
 using luna2000.Service;
 using Microsoft.AspNetCore.Authorization;
@@ -37,6 +37,7 @@ namespace luna2000.Controllers
 
         [HttpPost]
         [Route("photo/delete")]
+        [Authorize(Roles = "Admin,Editor")]
         public async Task<IActionResult> Delete(Guid id)
         {
             var photo = await _context.Set<PhotoEntity>()

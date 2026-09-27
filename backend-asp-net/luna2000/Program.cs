@@ -291,7 +291,14 @@ public class Program
                 };
                 options.Events.OnRedirectToAccessDenied += context =>
                 {
-                    context.HttpContext.Response.Redirect("/login");
+                    if (context.HttpContext.User.IsInRole("Driver"))
+                    {
+                        context.HttpContext.Response.Redirect("/driver-portal");
+                    }
+                    else
+                    {
+                        context.HttpContext.Response.Redirect("/login");
+                    }
                     return Task.CompletedTask;
                 };
 

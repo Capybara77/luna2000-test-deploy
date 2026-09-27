@@ -67,7 +67,7 @@
                                     <button class="button is-warning" onclick="editDriver('@(driver.Id)')">Редактировать</button>
                                     <button class="button is-danger" onclick="deleteDriver('@(driver.Id)')">Удалить</button>
                                     <button class="button is-info" onclick="createUrl('@(driver.Id)')">TG-ссылка</button>
-                                    <button class="button is-success" onclick="generateAccess('@(driver.Id)', '@(driver.Fio)')">🔑 Доступ</button>
+                                    <button class="button is-success" onclick="generateAccess('@(driver.Id)', '@Html.Raw(driver.Fio.Replace("'", "\\'"))')">📱 Доступ</button>
                                 </div>
                             </td>
                         </tr>
@@ -77,6 +77,65 @@
         </div>
     </div>
 </section>
+
+<!-- Модальное окно доступа для водителя (Мобильное приложение) -->
+<div class="modal" id="driverAccessModal">
+    <div class="modal-background" onclick="closeAccessModal()"></div>
+    <div class="modal-card" style="max-width: 520px; border-radius: 14px; overflow: hidden;">
+        <header class="modal-card-head py-3">
+            <p class="modal-card-title is-size-5 mb-0" style="font-weight: 700;">
+                <i class="fas fa-mobile-alt has-text-success mr-2"></i>Доступ в мобильное приложение
+            </p>
+            <button class="delete" aria-label="close" onclick="closeAccessModal()"></button>
+        </header>
+        <section class="modal-card-body">
+            <div class="notification is-light mb-3 p-3">
+                Водитель: <strong id="accessModalFio" class="has-text-primary"></strong>
+            </div>
+
+            <div class="field mb-3">
+                <label class="label mb-1">🔑 ID код для входа в приложение:</label>
+                <div class="box p-3 has-text-centered mb-2" style="background: var(--bg-card-subtle); border: 2px dashed var(--primary-color); border-radius: 8px;">
+                    <div id="accessModalDriverId" style="font-family: monospace; font-size: 1.2rem; font-weight: 800; word-break: break-all; letter-spacing: 0.5px; user-select: all;">
+                    </div>
+                </div>
+                <div class="buttons is-centered mb-0">
+                    <button class="button is-primary is-small" id="btnCopyDriverId" onclick="copyDriverIdOnly()">
+                        <span class="icon"><i class="fas fa-copy"></i></span>
+                        <span>Скопировать только ID</span>
+                    </button>
+                    <button class="button is-success is-small" id="btnCopyFullMessage" onclick="copyDriverFullMessage()">
+                        <span class="icon"><i class="fas fa-share-alt"></i></span>
+                        <span>Скопировать всё сообщение</span>
+                    </button>
+                </div>
+            </div>
+
+            <div class="has-text-centered my-3 p-3" style="background: var(--bg-card-subtle); border-radius: 8px;">
+                <p class="is-size-7 mb-2 font-weight-bold">QR-код для быстрого входа через камеру приложения:</p>
+                <img id="accessModalQr" src="" alt="QR код для входа" style="max-width: 160px; height: auto; border-radius: 8px; border: 1px solid var(--border-color); background: #ffffff; padding: 4px;" />
+            </div>
+
+            <div class="field mb-3">
+                <p class="is-size-7">
+                    📥 <strong>Скачать приложение:</strong> 
+                    <a href="/download-apk" target="_blank" class="has-text-link font-weight-bold">/download-apk</a>
+                </p>
+            </div>
+
+            <div class="notification is-warning is-light py-2 px-3 mb-0 is-size-7">
+                <i class="fas fa-info-circle mr-1"></i>
+                Веб-сайт (только просмотр баланса): логин: <b id="accessModalWebLogin"></b>, пароль: <b id="accessModalWebPassword"></b>
+            </div>
+        </section>
+        <footer class="modal-card-foot py-2 is-justify-content-space-between">
+            <span id="accessCopyToast" class="has-text-success is-size-7 font-weight-bold" style="display:none">
+                <i class="fas fa-check-circle mr-1"></i>Скопировано в буфер!
+            </span>
+            <button class="button is-small ml-auto" onclick="closeAccessModal()">Закрыть</button>
+        </footer>
+    </div>
+</div>
 
 @section Scripts
     {

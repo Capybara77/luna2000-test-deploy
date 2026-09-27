@@ -1,4 +1,4 @@
-﻿using luna2000.Models;
+using luna2000.Models;
 using Microsoft.AspNetCore.Mvc;
 using System.Diagnostics;
 using luna2000.Data;
@@ -11,7 +11,7 @@ using Microsoft.Extensions.Options;
 
 namespace luna2000.Controllers;
 
-[Authorize]
+[Authorize(Roles = "Admin,Editor")]
 public class HomeController : Controller
 {
     private readonly LunaDbContext _dbContext;
@@ -33,6 +33,11 @@ public class HomeController : Controller
 
     public async Task<IActionResult> Index()
     {
+        if (User.IsInRole("Driver"))
+        {
+            return RedirectToAction("Index", "DriverPortal");
+        }
+
         var cars = await _dbContext.Set<CarEntity>()
             .AsNoTracking()
             .ToArrayAsync();

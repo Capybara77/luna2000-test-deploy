@@ -1,4 +1,4 @@
-﻿using AutoMapper;
+using AutoMapper;
 using luna2000.Data;
 using luna2000.Dto;
 using luna2000.Models;
@@ -9,7 +9,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace luna2000.Controllers;
 
-[Authorize]
+[Authorize(Roles = "Admin,Editor")]
 [Route("/car")]
 public class CarController : Controller
 {

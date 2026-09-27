@@ -340,3 +340,82 @@ body {
 ::-webkit-scrollbar-thumb:hover {
   background: rgba(148, 163, 184, 0.7);
 }
+
+/* ══════════════════════════════════════════════════════════════════
+   HIGH CONTRAST HELPERS & BADGES
+   ══════════════════════════════════════════════════════════════════ */
+
+/* Light Mode Bulma Tints */
+:root:not([data-theme="dark"]) .has-background-warning-light,
+[data-theme="light"] .has-background-warning-light {
+  background-color: #fef9c3 !important;
+  color: #78350f !important;
+}
+:root:not([data-theme="dark"]) .has-background-warning-light td,
+[data-theme="light"] .has-background-warning-light td {
+  color: #0f172a !important;
+}
+
+:root:not([data-theme="dark"]) .has-background-success-light,
+[data-theme="light"] .has-background-success-light {
+  background-color: #dcfce7 !important;
+  color: #14532d !important;
+}
+:root:not([data-theme="dark"]) .has-background-success-light td,
+[data-theme="light"] .has-background-success-light td {
+  color: #0f172a !important;
+}
+
+:root:not([data-theme="dark"]) .has-background-danger-light,
+[data-theme="light"] .has-background-danger-light {
+  background-color: #fee2e2 !important;
+  color: #7f1d1d !important;
+}
+:root:not([data-theme="dark"]) .has-background-danger-light td,
+[data-theme="light"] .has-background-danger-light td {
+  color: #0f172a !important;
+}
+
+:root:not([data-theme="dark"]) .has-background-info-light,
+[data-theme="light"] .has-background-info-light {
+  background-color: #e0f2fe !important;
+  color: #0369a1 !important;
+}
+:root:not([data-theme="dark"]) .has-background-info-light td,
+[data-theme="light"] .has-background-info-light td {
+  color: #0f172a !important;
+}
+
+/* Dark Mode Bulma Tints (subtle dark tints with bright text) */
+[data-theme="dark"] .has-background-warning-light {
+  background-color: rgba(234, 179, 8, 0.12) !important;
+  color: #fef08a !important;
+}
+[data-theme="dark"] .has-background-warning-light td {
+  color: #f8fafc !important;
+}
+
+[data-theme="dark"] .has-background-success-light {
+  background-color: rgba(34, 197, 94, 0.12) !important;
+  color: #86efac !important;
+}
+[data-theme="dark"] .has-background-success-light td {
+  color: #f8fafc !important;
+}
+
+[data-theme="dark"] .has-background-danger-light {
+  background-color: rgba(239, 68, 68, 0.15) !important;
+  color: #fca5a5 !important;
+}
+[data-theme="dark"] .has-background-danger-light td {
+  color: #f8fafc !important;
+}
+
+[data-theme="dark"] .has-background-info-light {
+  background-color: rgba(59, 130, 246, 0.12) !important;
+  color: #93c5fd !important;
+}
+[data-theme="dark"] .has-background-info-light td {
+  color: #f8fafc !important;
+}
+

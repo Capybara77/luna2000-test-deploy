@@ -8,7 +8,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace luna2000.Controllers;
 
-[Authorize]
+[Authorize(Roles = "Admin,Editor")]
 public class HistoryController : Controller
 {
     private readonly LunaDbContext _dbContext;

@@ -10,7 +10,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace luna2000.Controllers;
 
-[Authorize]
+[Authorize(Roles = "Admin,Editor")]
 public class DriverController : Controller
 {
     private readonly LunaDbContext _dbContext;
@@ -252,7 +252,15 @@ public class DriverController : Controller
         }
 
         await _dbContext.SaveChangesAsync();
-        return Json(new { success = true, login = user.Login, password });
+        return Json(new
+        {
+            success = true,
+            driverId = driver.Id.ToString(),
+            fio = driver.Fio,
+            login = user.Login,
+            password,
+            apkUrl = "/download-apk"
+        });
     }
 
     private void DeleteDriverPhotos(ICollection<PhotoEntity>? photos)
