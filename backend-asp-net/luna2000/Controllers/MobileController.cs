@@ -168,6 +168,22 @@ public class MobileController : ControllerBase
         }
         return PhysicalFile(path, "application/vnd.android.package-archive", "luna2000.apk");
     }
+
+    /// <summary>
+    /// Проверка актуальной версии приложения для авто-обновлений
+    /// </summary>
+    [AllowAnonymous]
+    [HttpGet("version")]
+    public IActionResult GetAppVersion()
+    {
+        return Ok(new
+        {
+            version = "1.0.0",
+            versionCode = 1,
+            downloadUrl = "/download-apk",
+            changelog = "Релиз с постоянной цифровой подписью и поддержкой обновлений"
+        });
+    }
 }
 
 public class MobileAuthRequest

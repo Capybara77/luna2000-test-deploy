@@ -61,3 +61,36 @@ export async function fetchChatHistory(token: string, channel: number) {
   if (!res.ok) throw new Error('Ошибка загрузки чата');
   return res.json();
 }
+
+export interface AppUpdateInfo {
+  hasUpdate: boolean;
+  currentVersion: string;
+  latestVersion: string;
+  changelog: string;
+  downloadUrl: string;
+}
+
+export const CURRENT_APP_VERSION = '1.0.0';
+
+/** Проверка доступности обновления на сервере */
+export async function checkAppUpdate(): Promise<AppUpdateInfo | null> {
+  try {
+    const res = await fetch(`${API_BASE_URL}/mobile/version`);
+    if (!res.ok) return null;
+    const data = await res.json();
+    const latest = data.version || CURRENT_APP_VERSION;
+    const downloadUrl = data.downloadUrl?.startsWith('http')
+      ? data.downloadUrl
+      : `${API_BASE_URL}${data.downloadUrl || '/download-apk'}`;
+
+    return {
+      hasUpdate: latest !== CURRENT_APP_VERSION,
+      currentVersion: CURRENT_APP_VERSION,
+      latestVersion: latest,
+      changelog: data.changelog || '',
+      downloadUrl,
+    };
+  } catch {
+    return null;
+  }
+}
