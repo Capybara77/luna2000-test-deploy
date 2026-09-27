@@ -1,7 +1,7 @@
 // Настройки подключения к серверу
 // Поменяй IP на реальный адрес твоего компьютера в локальной сети
 
-export const API_BASE_URL = 'http://192.168.1.38:5270';
+export const API_BASE_URL = 'https://t196driveboss.ru';
 export const SIGNALR_HUB_URL = `${API_BASE_URL}/mobile/chathub`;
 
 export const CHANNEL_NAMES: Record<number, string> = {

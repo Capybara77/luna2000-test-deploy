@@ -35,10 +35,35 @@ public class MobileController : ControllerBase
     [HttpPost("auth")]
     public async Task<IActionResult> Auth([FromBody] MobileAuthRequest request)
     {
-        if (!Guid.TryParse(request.DriverId, out var driverId))
-            return BadRequest(new { error = "Неверный формат driverId" });
+        var input = request?.DriverId?.Trim();
+        if (string.IsNullOrWhiteSpace(input))
+            return BadRequest(new { error = "Код доступа не может быть пустым" });
 
-        var driver = await _db.Drivers.AsNoTracking().FirstOrDefaultAsync(d => d.Id == driverId);
+        DriverEntity? driver = null;
+
+        if (Guid.TryParse(input, out var driverId))
+        {
+            driver = await _db.Drivers.AsNoTracking().FirstOrDefaultAsync(d => d.Id == driverId);
+        }
+
+        // Если не найден по Guid, пробуем найти по логину пользователя
+        if (driver == null)
+        {
+            var user = await _db.Set<UserEntity>().AsNoTracking()
+                .FirstOrDefaultAsync(u => u.Login == input && u.DriverId != null);
+            if (user?.DriverId != null)
+            {
+                driver = await _db.Drivers.AsNoTracking().FirstOrDefaultAsync(d => d.Id == user.DriverId.Value);
+            }
+        }
+
+        // Если всё ещё не найден, пробуем найти по контактам
+        if (driver == null)
+        {
+            driver = await _db.Drivers.AsNoTracking()
+                .FirstOrDefaultAsync(d => d.Contacts != null && d.Contacts.Contains(input));
+        }
+
         if (driver == null)
             return NotFound(new { error = "Водитель не найден" });
 
@@ -337,10 +362,10 @@ public class MobileController : ControllerBase
     {
         return Ok(new
         {
-            version = "1.0.5",
-            versionCode = 6,
+            version = "1.0.6",
+            versionCode = 7,
             downloadUrl = "/download-apk",
-            changelog = "Темная тема в приложении и на сайте, улучшенный дизайн, перенос заявок ремонта канбан-доской"
+            changelog = "Подключение к боевому серверу t196driveboss.ru, улучшенная авторизация водителей"
         });
     }
 }

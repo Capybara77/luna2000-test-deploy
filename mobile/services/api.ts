@@ -3,6 +3,25 @@ import { API_BASE_URL } from '../config';
 
 const TOKEN_KEY = 'luna_token';
 const DRIVER_KEY = 'luna_driver';
+const SERVER_URL_KEY = 'luna_server_url';
+
+export async function getServerUrl(): Promise<string> {
+  try {
+    const saved = await SecureStore.getItemAsync(SERVER_URL_KEY);
+    if (saved && saved.trim()) return saved.trim();
+  } catch {}
+  return API_BASE_URL;
+}
+
+export async function setServerUrl(url: string): Promise<void> {
+  try {
+    if (!url || !url.trim() || url.trim() === API_BASE_URL) {
+      await SecureStore.deleteItemAsync(SERVER_URL_KEY);
+    } else {
+      await SecureStore.setItemAsync(SERVER_URL_KEY, url.trim().replace(/\/+$/, ''));
+    }
+  } catch {}
+}
 
 export interface Driver {
   driverId: string;
@@ -12,10 +31,11 @@ export interface Driver {
 
 /** Авторизация по driverId (из QR-кода или ввода) */
 export async function loginWithDriverId(driverId: string): Promise<Driver> {
-  const res = await fetch(`${API_BASE_URL}/mobile/auth`, {
+  const baseUrl = await getServerUrl();
+  const res = await fetch(`${baseUrl}/mobile/auth`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ driverId }),
+    body: JSON.stringify({ driverId: driverId.trim() }),
   });
 
   if (!res.ok) {
@@ -46,7 +66,8 @@ export async function logout() {
 
 /** GET баланс */
 export async function fetchBalance(token: string) {
-  const res = await fetch(`${API_BASE_URL}/mobile/balance`, {
+  const baseUrl = await getServerUrl();
+  const res = await fetch(`${baseUrl}/mobile/balance`, {
     headers: { Authorization: `Bearer ${token}` },
   });
   if (!res.ok) throw new Error('Ошибка загрузки баланса');
@@ -55,7 +76,8 @@ export async function fetchBalance(token: string) {
 
 /** GET история чата */
 export async function fetchChatHistory(token: string, channel: number) {
-  const res = await fetch(`${API_BASE_URL}/mobile/chat/${channel}`, {
+  const baseUrl = await getServerUrl();
+  const res = await fetch(`${baseUrl}/mobile/chat/${channel}`, {
     headers: { Authorization: `Bearer ${token}` },
   });
   if (!res.ok) throw new Error('Ошибка загрузки чата');
@@ -75,7 +97,8 @@ export interface RepairRequestItem {
 
 /** GET заявки на ремонт водителя */
 export async function fetchRepairs(token: string): Promise<RepairRequestItem[]> {
-  const res = await fetch(`${API_BASE_URL}/mobile/repairs`, {
+  const baseUrl = await getServerUrl();
+  const res = await fetch(`${baseUrl}/mobile/repairs`, {
     headers: { Authorization: `Bearer ${token}` },
   });
   if (!res.ok) throw new Error('Ошибка загрузки заявок на ремонт');
@@ -84,7 +107,8 @@ export async function fetchRepairs(token: string): Promise<RepairRequestItem[]> 
 
 /** POST создание заявки на ремонт */
 export async function createRepairRequest(token: string, text: string): Promise<RepairRequestItem> {
-  const res = await fetch(`${API_BASE_URL}/mobile/repairs`, {
+  const baseUrl = await getServerUrl();
+  const res = await fetch(`${baseUrl}/mobile/repairs`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -107,18 +131,19 @@ export interface AppUpdateInfo {
   downloadUrl: string;
 }
 
-export const CURRENT_APP_VERSION = '1.0.5';
+export const CURRENT_APP_VERSION = '1.0.6';
 
 /** Проверка доступности обновления на сервере */
 export async function checkAppUpdate(): Promise<AppUpdateInfo | null> {
   try {
-    const res = await fetch(`${API_BASE_URL}/mobile/version`);
+    const baseUrl = await getServerUrl();
+    const res = await fetch(`${baseUrl}/mobile/version`);
     if (!res.ok) return null;
     const data = await res.json();
     const latest = data.version || CURRENT_APP_VERSION;
     const downloadUrl = data.downloadUrl?.startsWith('http')
       ? data.downloadUrl
-      : `${API_BASE_URL}${data.downloadUrl || '/download-apk'}`;
+      : `${baseUrl}${data.downloadUrl || '/download-apk'}`;
 
     return {
       hasUpdate: latest !== CURRENT_APP_VERSION,

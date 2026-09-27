@@ -27,6 +27,78 @@
     };
 }
 
+@functions {
+    public static (bool HasChange, decimal OldVal, decimal NewVal) TryGetBalanceChange(
+        IEnumerable<luna2000.Dto.HistoryDto> logGroup, 
+        luna2000.Dto.HistoryDto first)
+    {
+        // 1. Прямая запись изменения свойства Balance из ChangeTracker
+        var balLog = logGroup.FirstOrDefault(d => 
+            string.Equals(d.PropertyName, "Balance", StringComparison.OrdinalIgnoreCase) ||
+            string.Equals(d.ObjectName, "Balance", StringComparison.OrdinalIgnoreCase));
+
+        if (balLog != null)
+        {
+            var oldStr = balLog.OldValue?.Replace(',', '.').Trim();
+            var newStr = balLog.NewValue?.Replace(',', '.').Trim();
+            if (decimal.TryParse(oldStr, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out var oVal) &&
+                decimal.TryParse(newStr, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out var nVal))
+            {
+                return (true, oVal, nVal);
+            }
+        }
+
+        var note = first.Note ?? string.Empty;
+
+        // 2. Списание аренды: "Списание аренды: {ФИО} — {Amount} руб. | Новый баланс: {NewBalance} руб."
+        if (first.ObjectName == "DeductRent" || note.Contains("Списание аренды"))
+        {
+            var m = System.Text.RegularExpressions.Regex.Match(note, @"—\s*([\d\.\,\s]+)\s*руб\.\s*\|\s*Новый баланс:\s*([\d\.\,\-\s]+)\s*руб");
+            if (m.Success)
+            {
+                var aStr = m.Groups[1].Value.Replace(" ", "").Replace(',', '.');
+                var nStr = m.Groups[2].Value.Replace(" ", "").Replace(',', '.');
+                if (decimal.TryParse(aStr, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out var amt) &&
+                    decimal.TryParse(nStr, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out var nBal))
+                {
+                    return (true, nBal + amt, nBal);
+                }
+            }
+        }
+
+        // 3. Пополнение баланса (SMS): "Пополнение баланса: {ФИО} — +{Amount} руб. | Новый баланс: {NewBalance} руб."
+        if (first.ObjectName == "SmsBalance" || note.Contains("Пополнение баланса"))
+        {
+            var m = System.Text.RegularExpressions.Regex.Match(note, @"\+\s*([\d\.\,\s]+)\s*руб\.\s*\|\s*Новый баланс:\s*([\d\.\,\-\s]+)\s*руб");
+            if (m.Success)
+            {
+                var aStr = m.Groups[1].Value.Replace(" ", "").Replace(',', '.');
+                var nStr = m.Groups[2].Value.Replace(" ", "").Replace(',', '.');
+                if (decimal.TryParse(aStr, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out var amt) &&
+                    decimal.TryParse(nStr, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out var nBal))
+                {
+                    return (true, nBal - amt, nBal);
+                }
+            }
+        }
+
+        // 4. Текстовый формат "Было: X → Стало: Y"
+        var mText = System.Text.RegularExpressions.Regex.Match(note, @"Было:\s*([\d\.\,\-\s]+)\s*₽?\s*→\s*Стало:\s*([\d\.\,\-\s]+)", System.Text.RegularExpressions.RegexOptions.IgnoreCase);
+        if (mText.Success)
+        {
+            var oStr = mText.Groups[1].Value.Replace(" ", "").Replace(',', '.');
+            var nStr = mText.Groups[2].Value.Replace(" ", "").Replace(',', '.');
+            if (decimal.TryParse(oStr, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out var ob) &&
+                decimal.TryParse(nStr, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out var nb))
+            {
+                return (true, ob, nb);
+            }
+        }
+
+        return (false, 0, 0);
+    }
+}
+
 <style>
     .history-table { border-collapse: separate; border-spacing: 0; width: 100%; }
     .history-table th { font-weight: 700; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.5px; padding: 10px 12px !important; }
@@ -44,6 +116,30 @@
     .hist-diff-line { font-size: 0.84rem; display: flex; align-items: center; flex-wrap: wrap; gap: 4px; }
     .diff-old { text-decoration: line-through; font-weight: 600; margin-right: 2px; }
     .diff-new { font-weight: 700; }
+
+    /* Блок изменения баланса было -> стало */
+    .hist-balance-box {
+        display: inline-flex;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 6px;
+        background: var(--bg-card-subtle);
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        padding: 5px 10px;
+        font-size: 0.86rem;
+    }
+    .hist-balance-tag {
+        font-weight: 700;
+        font-size: 0.76rem;
+        padding: 2px 7px;
+        border-radius: 4px;
+        letter-spacing: 0.3px;
+    }
+    .hist-balance-tag.is-debit { background: #fee2e2; color: #991b1b; border: 1px solid #f87171; }
+    .hist-balance-tag.is-credit { background: #dcfce7; color: #166534; border: 1px solid #4ade80; }
+    [data-theme="dark"] .hist-balance-tag.is-debit { background: #7f1d1d; color: #fca5a5; border: 1px solid #ef4444; }
+    [data-theme="dark"] .hist-balance-tag.is-credit { background: #14532d; color: #86efac; border: 1px solid #22c55e; }
 
     .filter-active { display: inline-flex; align-items: center; border-radius: 6px; padding: 6px 12px; font-size: 0.88rem; }
 
@@ -201,35 +297,42 @@
                             }
                         </td>
                         <td class="is-vcentered">
+                            @{
+                                var (hasBalChange, oldB, newB) = TryGetBalanceChange(logGroup, first);
+                                bool isDebit = newB < oldB;
+                                var diff = Math.Abs(newB - oldB);
+                                var otherChanges = logGroup
+                                    .Where(d => !string.IsNullOrEmpty(d.PropertyName) && 
+                                                !string.Equals(d.PropertyName, "Balance", StringComparison.OrdinalIgnoreCase))
+                                    .ToList();
+                            }
                             @if (!string.IsNullOrEmpty(first.Note))
                             {
                                 <div class="history-note">@first.Note</div>
                             }
-                            @{
-                                var changes = logGroup
-                                    .Where(d => !string.IsNullOrEmpty(d.PropertyName) && d.PropertyName != "Balance")
-                                    .ToList();
-                                var balanceChange = logGroup.FirstOrDefault(d => d.PropertyName == "Balance");
-                            }
-                            @if (balanceChange != null && string.IsNullOrEmpty(first.Note))
+                            @if (hasBalChange)
                             {
-                                <div class="hist-diff-line mt-1">
-                                    <span class="font-weight-bold">Баланс:</span>
-                                    <span class="diff-old">@balanceChange.OldValue</span>
-                                    <i class="fas fa-arrow-right hist-diff-arrow"></i>
-                                    <span class="diff-new">@balanceChange.NewValue</span>
+                                <div class="hist-balance-box mt-2">
+                                    <span class="hist-balance-tag @(isDebit ? "is-debit" : "is-credit")">
+                                        <i class="fas @(isDebit ? "fa-arrow-down" : "fa-arrow-up") mr-1"></i>
+                                        @(isDebit ? $"-{diff:N0} ₽" : $"+{diff:N0} ₽")
+                                    </span>
+                                    <span class="has-text-weight-semibold mr-1">Баланс:</span>
+                                    <span class="diff-old">было: <b>@oldB.ToString("N2") ₽</b></span>
+                                    <i class="fas fa-arrow-right hist-diff-arrow mx-1"></i>
+                                    <span class="diff-new @(isDebit ? "has-text-danger" : "has-text-success")">стало: <b>@newB.ToString("N2") ₽</b></span>
                                 </div>
                             }
-                            @foreach (var change in changes)
+                            @foreach (var change in otherChanges)
                             {
                                 <div class="hist-diff-line mt-1">
                                     <span class="font-weight-bold">@change.PropertyName:</span>
                                     @if (!string.IsNullOrEmpty(change.OldValue))
                                     {
-                                        <span class="diff-old">@change.OldValue</span>
+                                        <span class="diff-old">было @change.OldValue</span>
                                         <i class="fas fa-arrow-right hist-diff-arrow"></i>
                                     }
-                                    <span class="diff-new">@(change.NewValue ?? "—")</span>
+                                    <span class="diff-new">стало @(change.NewValue ?? "—")</span>
                                 </div>
                             }
                         </td>

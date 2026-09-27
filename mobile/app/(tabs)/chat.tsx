@@ -2,8 +2,8 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { View, Text, TextInput, TouchableOpacity, FlatList, StyleSheet, KeyboardAvoidingView, Platform, ActivityIndicator, ScrollView, RefreshControl } from 'react-native';
 import { useFocusEffect } from 'expo-router';
 import { HubConnectionBuilder, LogLevel } from '@microsoft/signalr';
-import { getSavedDriver, fetchChatHistory } from '../../services/api';
-import { SIGNALR_HUB_URL, CHANNEL_NAMES, CHANNEL_ICONS } from '../../config';
+import { getSavedDriver, fetchChatHistory, getServerUrl } from '../../services/api';
+import { CHANNEL_NAMES, CHANNEL_ICONS } from '../../config';
 import { updateChatBadge } from './_layout';
 import { notify } from '../../services/notificationService';
 import { useAppTheme } from '../../services/themeContext';
@@ -134,8 +134,9 @@ export default function ChatScreen() {
       setLoading(false);
 
       // SignalR
+      const currentServerUrl = await getServerUrl();
       const conn = new HubConnectionBuilder()
-        .withUrl(`${SIGNALR_HUB_URL}?access_token=${saved.token}`)
+        .withUrl(`${currentServerUrl}/mobile/chathub?access_token=${saved.token}`)
         .withAutomaticReconnect([0, 1000, 3000, 5000, 10000])
         .configureLogging(LogLevel.Warning)
         .build();
