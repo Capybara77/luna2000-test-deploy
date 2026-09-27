@@ -166,6 +166,21 @@ public class Program
             try { db.Database.ExecuteSqlRaw("ALTER TABLE Users ADD COLUMN Role INTEGER NOT NULL DEFAULT 1;"); } catch { }
             try { db.Database.ExecuteSqlRaw("ALTER TABLE Users ADD COLUMN DriverId TEXT;"); } catch { }
 
+            // Гарантируем, что учетные записи администраторов имеют роль Admin (0)
+            try
+            {
+                db.Database.ExecuteSqlRaw(@"
+                    UPDATE Users 
+                    SET Role = 0 
+                    WHERE LOWER(Login) IN ('admin', 'adminpc', 'admin_pc', 'administrator', 'root') 
+                       OR LOWER(Login) LIKE '%admin%';
+                ");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[Admin role fix]: {ex.Message}");
+            }
+
             // Применяем SQL-скрипт миграции (если есть)
             db.ExecuteMigrationScript();
         }

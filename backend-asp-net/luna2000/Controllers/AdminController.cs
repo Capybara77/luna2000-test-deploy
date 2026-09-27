@@ -9,9 +9,8 @@ namespace luna2000.Controllers;
 
 /// <summary>
 /// Админ-панель: управление пользователями, ролями, паролями.
-/// Доступна только роли Admin.
 /// </summary>
-[Authorize(Roles = "Admin")]
+[Authorize(Roles = "Admin,Editor")]
 [Route("admin")]
 public class AdminController : Controller
 {

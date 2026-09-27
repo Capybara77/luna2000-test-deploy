@@ -64,7 +64,7 @@
                             <a class="navbar-item" href="/repairs">🛠️ Ремонт</a>
                             <a class="navbar-item" href="/driver-portal/chat">💬 Чат <span class="nav-chat-badge tag is-danger is-rounded is-small ml-1" style="display:none; font-size:0.65rem; height:1.4em; padding:0 5px;" id="navChatBadgeStaff"></span></a>
                             <a class="navbar-item" href="/download-apk" title="Скачать Android APK для водителей">📱 Скачать APK</a>
-                            @if (User.IsInRole("Admin"))
+                            @if (User.IsInRole("Admin") || User.IsInRole("Editor") || User.Identity?.Name?.ToLower().Contains("admin") == true)
                             {
                                 <a class="navbar-item has-text-danger" href="/admin">⚙ Админка</a>
                             }
