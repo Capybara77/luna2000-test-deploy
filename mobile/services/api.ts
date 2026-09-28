@@ -184,7 +184,7 @@ export interface AppUpdateInfo {
   downloadUrl: string;
 }
 
-export const CURRENT_APP_VERSION = '1.0.9';
+export const CURRENT_APP_VERSION = '1.1.0';
 
 /** Проверка доступности обновления на сервере */
 export async function checkAppUpdate(): Promise<AppUpdateInfo | null> {

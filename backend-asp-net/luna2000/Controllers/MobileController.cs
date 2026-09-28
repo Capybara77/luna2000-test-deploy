@@ -450,10 +450,10 @@ public class MobileController : ControllerBase
     {
         return Ok(new
         {
-            version = "1.0.9",
-            versionCode = 10,
+            version = "1.1.0",
+            versionCode = 11,
             downloadUrl = "/download-apk",
-            changelog = "Автоматическая компрессия фото дефектов в формат WebP для экономии трафика и мгновенной отправки"
+            changelog = "Размер приложения уменьшен в 6 раз (до 10.8 МБ), оптимизирована скорость запуска и снижено потребление памяти"
         });
     }
 }
