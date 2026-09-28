@@ -54,6 +54,15 @@
 
     <div class="card-text">@r.Text</div>
 
+    @if (!string.IsNullOrEmpty(r.PhotoPath))
+    {
+        <div class="mt-2 mb-2">
+            <a href="@r.PhotoPath" target="_blank" title="Открыть фото поломки в полном размере">
+                <img src="@r.PhotoPath" alt="Фото повреждения" style="max-height: 140px; width: 100%; border-radius: 6px; border: 1px solid var(--border-color); object-fit: cover; display: block;" />
+            </a>
+        </div>
+    }
+
     <div class="card-comment" id="card-comment-@r.Id" style="@(string.IsNullOrWhiteSpace(r.AdminComment) ? "display:none;" : "")">
         💬 <strong>Ответ:</strong> @r.AdminComment
     </div>

@@ -22,6 +22,8 @@ public class RepairRequest : IDoNotLog
 
     public string? AdminComment { get; set; }
 
+    public string? PhotoPath { get; set; }
+
     public DateTime CreatedAt { get; set; }
 
     public DateTime? UpdatedAt { get; set; }

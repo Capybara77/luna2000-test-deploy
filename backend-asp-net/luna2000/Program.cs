@@ -165,6 +165,7 @@ public class Program
             // Добавляем колонки Role и DriverId в Users (игнорируем ошибку если уже есть)
             try { db.Database.ExecuteSqlRaw("ALTER TABLE Users ADD COLUMN Role INTEGER NOT NULL DEFAULT 1;"); } catch { }
             try { db.Database.ExecuteSqlRaw("ALTER TABLE Users ADD COLUMN DriverId TEXT;"); } catch { }
+            try { db.Database.ExecuteSqlRaw("ALTER TABLE RepairRequests ADD COLUMN PhotoPath TEXT;"); } catch { }
 
             // Гарантируем, что учетные записи администраторов имеют роль Admin (0)
             try

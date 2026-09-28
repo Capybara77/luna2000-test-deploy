@@ -160,10 +160,22 @@ public class MobileController : ControllerBase
             };
         });
 
+        var rental = await _db.CarRentals
+            .Include(r => r.Car)
+            .AsNoTracking()
+            .FirstOrDefaultAsync(r => r.DriverId == driverId);
+
+        var carSummary = rental?.Car != null ? new
+        {
+            brandModel = rental.Car.BrandModel,
+            plateNumber = rental.Car.PlateNumber
+        } : null;
+
         return Ok(new
         {
             balance = driver.Balance,
             fio = driver.Fio,
+            car = carSummary,
             operations
         });
     }
@@ -256,6 +268,7 @@ public class MobileController : ControllerBase
             id = r.Id.ToString(),
             carInfo = r.Car != null ? $"{r.Car.BrandModel} ({r.Car.PlateNumber})" : "Не указан",
             text = r.Text,
+            photoUrl = r.PhotoPath,
             status = (int)r.Status,
             statusName = r.Status switch
             {
@@ -269,6 +282,44 @@ public class MobileController : ControllerBase
             createdAt = r.CreatedAt.ToString("o"),
             updatedAt = r.UpdatedAt?.ToString("o")
         }));
+    }
+
+    // ──────────────────────────────────────────────
+    // GET /mobile/car
+    // Returns driver's assigned vehicle details
+    // ──────────────────────────────────────────────
+    [HttpGet("car")]
+    [Authorize(AuthenticationSchemes = "MobileJwt")]
+    public async Task<IActionResult> GetMyCar()
+    {
+        var driverId = GetDriverId();
+        if (driverId == null) return Unauthorized();
+
+        var rental = await _db.CarRentals
+            .Include(r => r.Car)
+            .AsNoTracking()
+            .FirstOrDefaultAsync(r => r.DriverId == driverId);
+
+        if (rental?.Car == null)
+            return Ok(new { hasCar = false });
+
+        var c = rental.Car;
+        return Ok(new
+        {
+            hasCar = true,
+            id = c.Id,
+            brandModel = c.BrandModel,
+            plateNumber = c.PlateNumber,
+            vin = c.Vin,
+            year = c.Year,
+            sts = c.Sts,
+            pts = c.Pts,
+            osago = c.Osago,
+            kasko = c.Kasko,
+            techInspection = c.TechInspection?.ToString("dd.MM.yyyy"),
+            taxiLicense = c.TaxiLicense == true,
+            dailyRent = rental.Rent
+        });
     }
 
     // ──────────────────────────────────────────────
@@ -298,12 +349,38 @@ public class MobileController : ControllerBase
             carId = rental?.CarId;
         }
 
+        string? savedPhotoPath = null;
+        if (!string.IsNullOrWhiteSpace(request.PhotoBase64))
+        {
+            try
+            {
+                var cleanBase64 = request.PhotoBase64;
+                var commaIdx = cleanBase64.IndexOf(',');
+                if (commaIdx >= 0)
+                {
+                    cleanBase64 = cleanBase64.Substring(commaIdx + 1);
+                }
+                var bytes = Convert.FromBase64String(cleanBase64);
+                var dir = Path.Combine(Directory.GetCurrentDirectory(), "files", "repairs");
+                if (!Directory.Exists(dir)) Directory.CreateDirectory(dir);
+                var fileName = $"{Guid.NewGuid():N}.jpg";
+                var fullPath = Path.Combine(dir, fileName);
+                await System.IO.File.WriteAllBytesAsync(fullPath, bytes);
+                savedPhotoPath = $"/files/repairs/{fileName}";
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[Error saving repair photo]: {ex.Message}");
+            }
+        }
+
         var repair = new RepairRequest
         {
             Id = Guid.NewGuid(),
             DriverId = driverId.Value,
             CarId = carId,
             Text = request.Text.Trim(),
+            PhotoPath = savedPhotoPath,
             Status = RepairStatus.New,
             CreatedAt = DateTime.UtcNow
         };
@@ -319,6 +396,7 @@ public class MobileController : ControllerBase
             id = repair.Id.ToString(),
             carInfo,
             text = repair.Text,
+            photoUrl = repair.PhotoPath,
             status = (int)repair.Status,
             statusName = "Новая",
             adminComment = string.Empty,
@@ -362,10 +440,10 @@ public class MobileController : ControllerBase
     {
         return Ok(new
         {
-            version = "1.0.7",
-            versionCode = 8,
+            version = "1.0.8",
+            versionCode = 9,
             downloadUrl = "/download-apk",
-            changelog = "Новый фирменный ярлык приложения и логотип (белая Skoda Rapid на фоне луны)"
+            changelog = "Фирменный Splash Screen, прикрепление фото к заявкам на ремонт, карточка автомобиля в профиле, скрытие баланса и офлайн-кэш"
         });
     }
 }
@@ -379,4 +457,5 @@ public class CreateRepairRequest
 {
     public string Text { get; set; } = string.Empty;
     public Guid? CarId { get; set; }
+    public string? PhotoBase64 { get; set; }
 }

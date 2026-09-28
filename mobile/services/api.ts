@@ -1,9 +1,26 @@
 import * as SecureStore from 'expo-secure-store';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { API_BASE_URL } from '../config';
 
 const TOKEN_KEY = 'luna_token';
 const DRIVER_KEY = 'luna_driver';
 const SERVER_URL_KEY = 'luna_server_url';
+const BALANCE_CACHE_KEY = 'luna_cached_balance';
+
+export async function getCachedBalance(): Promise<any | null> {
+  try {
+    const raw = await AsyncStorage.getItem(BALANCE_CACHE_KEY);
+    return raw ? JSON.parse(raw) : null;
+  } catch {
+    return null;
+  }
+}
+
+export async function setCachedBalance(data: any): Promise<void> {
+  try {
+    await AsyncStorage.setItem(BALANCE_CACHE_KEY, JSON.stringify(data));
+  } catch {}
+}
 
 export async function getServerUrl(): Promise<string> {
   try {
@@ -64,13 +81,41 @@ export async function logout() {
   await SecureStore.deleteItemAsync(DRIVER_KEY);
 }
 
-/** GET баланс */
+/** GET баланс (с авто-кэшированием) */
 export async function fetchBalance(token: string) {
   const baseUrl = await getServerUrl();
   const res = await fetch(`${baseUrl}/mobile/balance`, {
     headers: { Authorization: `Bearer ${token}` },
   });
   if (!res.ok) throw new Error('Ошибка загрузки баланса');
+  const data = await res.json();
+  await setCachedBalance(data);
+  return data;
+}
+
+export interface CarDetails {
+  hasCar: boolean;
+  id?: string;
+  brandModel?: string;
+  plateNumber?: string;
+  vin?: string;
+  year?: string;
+  sts?: string;
+  pts?: string;
+  osago?: string;
+  kasko?: string;
+  techInspection?: string;
+  taxiLicense?: boolean;
+  dailyRent?: number;
+}
+
+/** GET данные привязанного автомобиля водителя */
+export async function fetchMyCar(token: string): Promise<CarDetails> {
+  const baseUrl = await getServerUrl();
+  const res = await fetch(`${baseUrl}/mobile/car`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  if (!res.ok) throw new Error('Ошибка загрузки автомобиля');
   return res.json();
 }
 
@@ -88,6 +133,7 @@ export interface RepairRequestItem {
   id: string;
   carInfo: string;
   text: string;
+  photoUrl?: string;
   status: number;
   statusName: string;
   adminComment: string;
@@ -105,8 +151,12 @@ export async function fetchRepairs(token: string): Promise<RepairRequestItem[]> 
   return res.json();
 }
 
-/** POST создание заявки на ремонт */
-export async function createRepairRequest(token: string, text: string): Promise<RepairRequestItem> {
+/** POST создание заявки на ремонт (с поддержкой фото) */
+export async function createRepairRequest(
+  token: string,
+  text: string,
+  photoBase64?: string
+): Promise<RepairRequestItem> {
   const baseUrl = await getServerUrl();
   const res = await fetch(`${baseUrl}/mobile/repairs`, {
     method: 'POST',
@@ -114,7 +164,10 @@ export async function createRepairRequest(token: string, text: string): Promise<
       'Content-Type': 'application/json',
       Authorization: `Bearer ${token}`,
     },
-    body: JSON.stringify({ text }),
+    body: JSON.stringify({
+      text: text.trim(),
+      photoBase64: photoBase64 || null,
+    }),
   });
   if (!res.ok) {
     const err = await res.json().catch(() => ({}));
@@ -131,7 +184,7 @@ export interface AppUpdateInfo {
   downloadUrl: string;
 }
 
-export const CURRENT_APP_VERSION = '1.0.7';
+export const CURRENT_APP_VERSION = '1.0.8';
 
 /** Проверка доступности обновления на сервере */
 export async function checkAppUpdate(): Promise<AppUpdateInfo | null> {
