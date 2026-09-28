@@ -16,6 +16,7 @@ import {
   ScrollView,
 } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
+import * as ImageManipulator from 'expo-image-manipulator';
 import { getSavedDriver, fetchRepairs, createRepairRequest, RepairRequestItem, getServerUrl } from '../../services/api';
 import { useAppTheme } from '../../services/themeContext';
 
@@ -64,6 +65,7 @@ export default function RepairsScreen() {
   const [modalVisible, setModalVisible] = useState(false);
   const [problemText, setProblemText] = useState('');
   const [photo, setPhoto] = useState<{ uri: string; base64: string } | null>(null);
+  const [compressing, setCompressing] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [previewImage, setPreviewImage] = useState<string | null>(null);
 
@@ -93,6 +95,47 @@ export default function RepairsScreen() {
     setRefreshing(false);
   }, [loadData]);
 
+  const processAndSetPhoto = async (rawUri: string, width?: number) => {
+    setCompressing(true);
+    try {
+      const actions: ImageManipulator.Action[] = [];
+      if (!width || width > 1280) {
+        actions.push({ resize: { width: 1280 } });
+      }
+
+      const manipResult = await ImageManipulator.manipulateAsync(
+        rawUri,
+        actions,
+        {
+          compress: 0.75,
+          format: ImageManipulator.SaveFormat.WEBP,
+          base64: true,
+        }
+      );
+
+      if (manipResult.base64) {
+        setPhoto({
+          uri: manipResult.uri,
+          base64: manipResult.base64,
+        });
+      } else {
+        setPhoto({
+          uri: manipResult.uri,
+          base64: '',
+        });
+      }
+    } catch (err) {
+      console.warn('Error optimizing photo:', err);
+      // Fallback
+      setPhoto({
+        uri: rawUri,
+        base64: '',
+      });
+    } finally {
+      setCompressing(false);
+    }
+  };
+
   const takePhoto = async () => {
     const perm = await ImagePicker.requestCameraPermissionsAsync();
     if (!perm.granted) {
@@ -102,14 +145,10 @@ export default function RepairsScreen() {
     const res = await ImagePicker.launchCameraAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
       allowsEditing: true,
-      quality: 0.6,
-      base64: true,
+      quality: 0.8,
     });
-    if (!res.canceled && res.assets && res.assets[0]?.base64) {
-      setPhoto({
-        uri: res.assets[0].uri,
-        base64: res.assets[0].base64,
-      });
+    if (!res.canceled && res.assets && res.assets[0]?.uri) {
+      await processAndSetPhoto(res.assets[0].uri, res.assets[0].width);
     }
   };
 
@@ -122,14 +161,10 @@ export default function RepairsScreen() {
     const res = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
       allowsEditing: true,
-      quality: 0.6,
-      base64: true,
+      quality: 0.8,
     });
-    if (!res.canceled && res.assets && res.assets[0]?.base64) {
-      setPhoto({
-        uri: res.assets[0].uri,
-        base64: res.assets[0].base64,
-      });
+    if (!res.canceled && res.assets && res.assets[0]?.uri) {
+      await processAndSetPhoto(res.assets[0].uri, res.assets[0].width);
     }
   };
 
@@ -299,12 +334,20 @@ export default function RepairsScreen() {
               {/* Кнопки прикрепления фото */}
               <Text style={[styles.inputLabel, { color: theme.textMuted, marginTop: 8 }]}>Фотография повреждения (необязательно):</Text>
               
-              {photo ? (
+              {compressing ? (
+                <View style={[styles.previewContainer, { paddingVertical: 20, alignItems: 'center', backgroundColor: isDark ? '#1e293b' : '#f1f5f9' }]}>
+                  <ActivityIndicator size="small" color={theme.primary} />
+                  <Text style={{ marginTop: 8, fontSize: 13, color: theme.textMuted }}>Оптимизация в WebP (~150 КБ)...</Text>
+                </View>
+              ) : photo ? (
                 <View style={styles.previewContainer}>
                   <Image source={{ uri: photo.uri }} style={styles.previewImage} />
-                  <TouchableOpacity style={styles.removePhotoBtn} onPress={() => setPhoto(null)}>
-                    <Text style={styles.removePhotoText}>✕ Удалить фото</Text>
-                  </TouchableOpacity>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 8 }}>
+                    <Text style={{ fontSize: 12, color: '#10b981', fontWeight: '600' }}>⚡ Сжато в WebP</Text>
+                    <TouchableOpacity style={styles.removePhotoBtn} onPress={() => setPhoto(null)}>
+                      <Text style={styles.removePhotoText}>✕ Удалить фото</Text>
+                    </TouchableOpacity>
+                  </View>
                 </View>
               ) : (
                 <View style={styles.photoButtonsRow}>

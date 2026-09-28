@@ -201,6 +201,7 @@ public class Program
 
         var contentTypeProvider = new FileExtensionContentTypeProvider();
         contentTypeProvider.Mappings[".apk"] = "application/vnd.android.package-archive";
+        contentTypeProvider.Mappings[".webp"] = "image/webp";
 
         WithStaticFiles(app, contentTypeProvider);
         app.UseStaticFiles(new StaticFileOptions
@@ -233,11 +234,21 @@ public class Program
             Directory.CreateDirectory(filesPath);
         }
 
+        // files as root (for legacy /@photo.FileId.jpg)
         app.UseStaticFiles(new StaticFileOptions
         {
             FileProvider = new PhysicalFileProvider(
                 Path.Combine(Directory.GetCurrentDirectory(), filesPath)),
             RequestPath = "",
+            ContentTypeProvider = contentTypeProvider
+        });
+
+        // files as /files (for /files/repairs/... etc.)
+        app.UseStaticFiles(new StaticFileOptions
+        {
+            FileProvider = new PhysicalFileProvider(
+                Path.Combine(Directory.GetCurrentDirectory(), filesPath)),
+            RequestPath = "/files",
             ContentTypeProvider = contentTypeProvider
         });
     }

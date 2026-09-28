@@ -363,7 +363,17 @@ public class MobileController : ControllerBase
                 var bytes = Convert.FromBase64String(cleanBase64);
                 var dir = Path.Combine(Directory.GetCurrentDirectory(), "files", "repairs");
                 if (!Directory.Exists(dir)) Directory.CreateDirectory(dir);
-                var fileName = $"{Guid.NewGuid():N}.jpg";
+
+                // Detect image format from magic bytes or default to .webp
+                string ext = ".webp";
+                if (bytes.Length > 12 && bytes[0] == 0x52 && bytes[1] == 0x49 && bytes[2] == 0x46 && bytes[3] == 0x46)
+                    ext = ".webp";
+                else if (bytes.Length > 2 && bytes[0] == 0xFF && bytes[1] == 0xD8)
+                    ext = ".jpg";
+                else if (bytes.Length > 8 && bytes[0] == 0x89 && bytes[1] == 0x50 && bytes[2] == 0x4E && bytes[3] == 0x47)
+                    ext = ".png";
+
+                var fileName = $"{Guid.NewGuid():N}{ext}";
                 var fullPath = Path.Combine(dir, fileName);
                 await System.IO.File.WriteAllBytesAsync(fullPath, bytes);
                 savedPhotoPath = $"/files/repairs/{fileName}";
@@ -440,10 +450,10 @@ public class MobileController : ControllerBase
     {
         return Ok(new
         {
-            version = "1.0.8",
-            versionCode = 9,
+            version = "1.0.9",
+            versionCode = 10,
             downloadUrl = "/download-apk",
-            changelog = "Фирменный Splash Screen, прикрепление фото к заявкам на ремонт, карточка автомобиля в профиле, скрытие баланса и офлайн-кэш"
+            changelog = "Автоматическая компрессия фото дефектов в формат WebP для экономии трафика и мгновенной отправки"
         });
     }
 }
