@@ -362,10 +362,10 @@ public class MobileController : ControllerBase
     {
         return Ok(new
         {
-            version = "1.0.6",
-            versionCode = 7,
+            version = "1.0.7",
+            versionCode = 8,
             downloadUrl = "/download-apk",
-            changelog = "Подключение к боевому серверу t196driveboss.ru, улучшенная авторизация водителей"
+            changelog = "Новый фирменный ярлык приложения и логотип (белая Skoda Rapid на фоне луны)"
         });
     }
 }

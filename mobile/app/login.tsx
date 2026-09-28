@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, ActivityIndicator, KeyboardAvoidingView, Platform, Alert } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, ActivityIndicator, KeyboardAvoidingView, Platform, Alert, Image } from 'react-native';
 import { router } from 'expo-router';
 import { loginWithDriverId, getSavedDriver, getServerUrl, setServerUrl } from '../services/api';
 
@@ -58,7 +58,12 @@ export default function LoginScreen() {
   return (
     <KeyboardAvoidingView style={styles.container} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
       <View style={styles.card}>
-        <Text style={styles.logo}>🚗 LUNA</Text>
+        <Image
+          source={require('../assets/logo.png')}
+          style={styles.logoImage}
+          resizeMode="cover"
+        />
+        <Text style={styles.logoTitle}>LUNA 2000</Text>
         <Text style={styles.subtitle}>Портал водителя</Text>
 
         <TextInput
@@ -116,8 +121,9 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#3273dc', justifyContent: 'center', padding: 24 },
   center: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   card: { backgroundColor: '#fff', borderRadius: 16, padding: 28, shadowColor: '#000', shadowOpacity: 0.15, shadowRadius: 10, elevation: 5 },
-  logo: { fontSize: 40, textAlign: 'center', marginBottom: 4 },
-  subtitle: { fontSize: 18, fontWeight: '600', textAlign: 'center', color: '#363636', marginBottom: 24 },
+  logoImage: { width: 92, height: 92, borderRadius: 22, alignSelf: 'center', marginBottom: 12 },
+  logoTitle: { fontSize: 24, fontWeight: '800', textAlign: 'center', color: '#1a1a2e', letterSpacing: 0.5, marginBottom: 2 },
+  subtitle: { fontSize: 16, fontWeight: '600', textAlign: 'center', color: '#666', marginBottom: 20 },
   input: { borderWidth: 1.5, borderColor: '#dbdbdb', borderRadius: 8, padding: 14, fontSize: 16, marginBottom: 14, color: '#363636' },
   button: { backgroundColor: '#3273dc', borderRadius: 8, padding: 16, alignItems: 'center', marginBottom: 12 },
   buttonText: { color: '#fff', fontSize: 16, fontWeight: '700' },
