@@ -1,8 +1,8 @@
-﻿namespace luna2000.SmsServices;
+namespace luna2000.SmsServices;
 
 public interface ISmsParserService
 {
-    decimal? GetAmountByMessageText(string messageText);
+    decimal? GetAmountByMessageText(string? messageText);
 
-    Guid? GetDriverIdByMessageText(string messageText);
+    Guid? GetDriverIdByMessageText(string? messageText);
 }

@@ -1,4 +1,4 @@
-﻿using FluentAssertions;
+using FluentAssertions;
 using luna2000.SmsServices;
 using Xunit;
 
@@ -36,12 +36,40 @@ public class SmsServiceTests
     [InlineData("Karta *7105: 04.11.2024 06:39, popolnenie 7000.00 RUR. Dostupno 14859.20 RUR.",
         7000)]
     [InlineData("VISA8535 20:23 Перевод из Т‑Банк +1800р от АЛЕКСЕЙ К. Баланс: 39783",
-    1800)]
+        1800)]
+    [InlineData("СберБанк. Зачисление 2 500р. от Иван И. через СБП. Баланс 10 500р.",
+        2500)]
+    [InlineData("СберБанк. Пополнение 1500,00р. Баланс: 3000р.",
+        1500)]
+    [InlineData("Пополнение +3 000 ₽ от ПЕТР С. через СБП. Доступно 12 345 ₽",
+        3000)]
+    [InlineData("Перевод 1800₽ от АЛЕКСЕЙ К. Баланс: 16851.67р",
+        1800)]
+    [InlineData("Поступление 5000 руб. от СЕРГЕЙ В. через СБП. Баланс: 8000 руб.",
+        5000)]
+    [InlineData("Зачисление 4000р со счета СБП от Ольга С. Баланс: 4500р",
+        4000)]
+    [InlineData("Зачислено 1500 ₽ от Иван И. Баланс: 3000 ₽",
+        1500)]
+    [InlineData("Перевод 1500,50 руб от Марина Я.",
+        1500.5)]
 
     public void GetAmountByMessage(string message, decimal expectedAmount)
     {
         var smsService = new SmsParserService(null);
         var amount = smsService.GetAmountByMessageText(message);
         amount.Should().Be(expectedAmount);
+    }
+
+    [Theory]
+    [InlineData(null)]
+    [InlineData("")]
+    [InlineData("   ")]
+    [InlineData("Неизвестный текст без суммы")]
+    public void GetAmountByMessage_ReturnsNull_WhenInvalid(string? message)
+    {
+        var smsService = new SmsParserService(null);
+        var amount = smsService.GetAmountByMessageText(message);
+        amount.Should().BeNull();
     }
 }
