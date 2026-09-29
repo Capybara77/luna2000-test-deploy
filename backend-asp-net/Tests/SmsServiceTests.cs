@@ -53,6 +53,8 @@ public class SmsServiceTests
         1500)]
     [InlineData("Перевод 1500,50 руб от Марина Я.",
         1500.5)]
+    [InlineData("Счёт карты VISA8535 08:14 Перевод 10\u00A0000р от Екатерина Б. Баланс: 41\u00A0962.05р «Бабурина Е.Л.»",
+        10000)]
 
     public void GetAmountByMessage(string message, decimal expectedAmount)
     {

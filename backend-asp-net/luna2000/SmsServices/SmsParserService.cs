@@ -33,8 +33,7 @@ public class SmsParserService : ISmsParserService
             return null;
         }
 
-        var amountRaw = match.Groups["amount"].Value
-            .Replace(" ", string.Empty)
+        var amountRaw = new string(match.Groups["amount"].Value.Where(c => !char.IsWhiteSpace(c)).ToArray())
             .Replace(',', '.');
 
         if (decimal.TryParse(amountRaw, NumberStyles.Any, CultureInfo.InvariantCulture,
