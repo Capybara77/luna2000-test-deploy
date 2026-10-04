@@ -50,24 +50,33 @@ export const lightTheme: ThemeColors = {
 
 export const darkTheme: ThemeColors = {
   isDark: true,
-  background: '#0f172a',
-  card: '#1e293b',
-  cardSubtle: '#162032',
-  text: '#f8fafc',
-  textMuted: '#94a3b8',
-  border: '#334155',
+  // Deep navy — base layer
+  background: '#070d1a',
+  // Elevated surfaces — slightly lighter navy
+  card: '#0d1f3c',
+  cardSubtle: '#0b1830',
+  // Text
+  text: '#f0f6ff',
+  textMuted: '#64748b',
+  // Borders — very subtle glow lines
+  border: '#1e3a5f',
+  // Electric blue accent
   primary: '#3b82f6',
-  headerBg: '#1e293b',
-  headerText: '#f8fafc',
-  tabBarBg: '#1e293b',
-  tabBarBorder: '#334155',
-  tabBarInactive: '#64748b',
-  inputBg: '#162032',
-  inputBorder: '#334155',
-  inputText: '#f8fafc',
-  msgOtherBg: '#1e293b',
-  msgOtherText: '#f8fafc',
-  msgOwnBg: '#2563eb',
+  // Header — same as card
+  headerBg: '#0d1f3c',
+  headerText: '#f0f6ff',
+  // Tab bar — deep navy with thin border
+  tabBarBg: '#070d1a',
+  tabBarBorder: '#1e3a5f',
+  tabBarInactive: '#334155',
+  // Inputs — glassy dark
+  inputBg: '#0a1628',
+  inputBorder: '#1e3a5f',
+  inputText: '#f0f6ff',
+  // Chat bubbles
+  msgOtherBg: '#0d1f3c',
+  msgOtherText: '#f0f6ff',
+  msgOwnBg: '#1d4ed8',
   msgOwnText: '#ffffff',
 };
 
@@ -89,17 +98,18 @@ const ThemeContext = createContext<ThemeContextType>({
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const systemScheme = useColorScheme();
-  const [isDark, setIsDark] = useState<boolean>(false);
+  const [isDark, setIsDark] = useState<boolean>(true);
 
   useEffect(() => {
     AsyncStorage.getItem(THEME_STORAGE_KEY).then(saved => {
       if (saved !== null) {
         setIsDark(saved === 'dark');
       } else {
-        setIsDark(systemScheme === 'dark');
+        // По умолчанию — тёмная тема (Dark Premium)
+        setIsDark(true);
       }
     });
-  }, [systemScheme]);
+  }, []);
 
   const setDark = (val: boolean) => {
     setIsDark(val);

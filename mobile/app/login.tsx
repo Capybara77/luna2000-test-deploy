@@ -1,5 +1,8 @@
 import { useState, useEffect } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, ActivityIndicator, KeyboardAvoidingView, Platform, Alert, Image } from 'react-native';
+import {
+  View, Text, TextInput, TouchableOpacity, StyleSheet,
+  ActivityIndicator, KeyboardAvoidingView, Platform, Alert, Image,
+} from 'react-native';
 import { router } from 'expo-router';
 import { loginWithDriverId, getSavedDriver, getServerUrl, setServerUrl } from '../services/api';
 
@@ -11,7 +14,6 @@ export default function LoginScreen() {
   const [editServer, setEditServer] = useState(false);
   const [newServerInput, setNewServerInput] = useState('');
 
-  // При открытии — проверяем сохранённый токен
   useEffect(() => {
     getServerUrl().then(url => {
       setServerState(url);
@@ -50,59 +52,90 @@ export default function LoginScreen() {
   if (checking) {
     return (
       <View style={styles.center}>
-        <ActivityIndicator size="large" color="#3273dc" />
+        <ActivityIndicator size="large" color="#3b82f6" />
       </View>
     );
   }
 
   return (
-    <KeyboardAvoidingView style={styles.container} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+    <KeyboardAvoidingView
+      style={styles.container}
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+    >
+      {/* Deep navy gradient background */}
+      <View style={styles.bgBase}>
+        {/* Top accent blob */}
+        <View style={styles.blob1} />
+        <View style={styles.blob2} />
+      </View>
+
       <View style={styles.card}>
-        <Image
-          source={require('../assets/logo.png')}
-          style={styles.logoImage}
-          resizeMode="cover"
-        />
+        {/* Logo */}
+        <View style={styles.logoWrap}>
+          <Image
+            source={require('../assets/logo.png')}
+            style={styles.logoImage}
+            resizeMode="cover"
+          />
+          {/* Glow ring */}
+          <View style={styles.logoGlow} />
+        </View>
+
         <Text style={styles.logoTitle}>LUNA 2000</Text>
         <Text style={styles.subtitle}>Портал водителя</Text>
 
+        {/* Divider */}
+        <View style={styles.divider} />
+
+        {/* Input */}
+        <Text style={styles.inputLabel}>КОД ДОСТУПА</Text>
         <TextInput
           style={styles.input}
-          placeholder="Код доступа (ID водителя)"
+          placeholder="Введите ID водителя"
+          placeholderTextColor="#334155"
           value={driverId}
           onChangeText={setDriverId}
           autoCapitalize="none"
           autoCorrect={false}
           onSubmitEditing={handleLogin}
+          keyboardType="number-pad"
+          selectionColor="#3b82f6"
         />
 
-        <TouchableOpacity style={styles.button} onPress={handleLogin} disabled={loading}>
+        {/* Login button */}
+        <TouchableOpacity
+          style={[styles.button, loading && styles.buttonDisabled]}
+          onPress={handleLogin}
+          disabled={loading}
+          activeOpacity={0.8}
+        >
           {loading
             ? <ActivityIndicator color="#fff" />
-            : <Text style={styles.buttonText}>Войти</Text>
+            : <Text style={styles.buttonText}>Войти →</Text>
           }
         </TouchableOpacity>
 
-        <Text style={styles.hint}>
-          Код доступа выдаётся администратором
-        </Text>
+        <Text style={styles.hint}>Код доступа выдаётся администратором</Text>
 
+        {/* Server URL */}
         <View style={styles.serverRow}>
           {editServer ? (
             <View style={{ width: '100%', marginTop: 8 }}>
               <TextInput
-                style={[styles.input, { fontSize: 13, padding: 8, marginBottom: 6 }]}
+                style={[styles.input, { fontSize: 12, paddingVertical: 10, marginBottom: 6 }]}
                 value={newServerInput}
                 onChangeText={setNewServerInput}
                 autoCapitalize="none"
                 placeholder="https://t196driveboss.ru"
+                placeholderTextColor="#334155"
+                selectionColor="#3b82f6"
               />
               <View style={{ flexDirection: 'row', justifyContent: 'center', gap: 8 }}>
-                <TouchableOpacity style={[styles.miniButton, { backgroundColor: '#3273dc' }]} onPress={saveServer}>
-                  <Text style={{ color: '#fff', fontSize: 12, fontWeight: 'bold' }}>Сохранить</Text>
+                <TouchableOpacity style={styles.miniButtonPrimary} onPress={saveServer}>
+                  <Text style={{ color: '#fff', fontSize: 12, fontWeight: '700' }}>Сохранить</Text>
                 </TouchableOpacity>
-                <TouchableOpacity style={[styles.miniButton, { backgroundColor: '#dbdbdb' }]} onPress={() => setEditServer(false)}>
-                  <Text style={{ color: '#333', fontSize: 12 }}>Отмена</Text>
+                <TouchableOpacity style={styles.miniButtonGhost} onPress={() => setEditServer(false)}>
+                  <Text style={{ color: '#64748b', fontSize: 12 }}>Отмена</Text>
                 </TouchableOpacity>
               </View>
             </View>
@@ -118,17 +151,155 @@ export default function LoginScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#3273dc', justifyContent: 'center', padding: 24 },
-  center: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-  card: { backgroundColor: '#fff', borderRadius: 16, padding: 28, shadowColor: '#000', shadowOpacity: 0.15, shadowRadius: 10, elevation: 5 },
-  logoImage: { width: 92, height: 92, borderRadius: 22, alignSelf: 'center', marginBottom: 12 },
-  logoTitle: { fontSize: 24, fontWeight: '800', textAlign: 'center', color: '#1a1a2e', letterSpacing: 0.5, marginBottom: 2 },
-  subtitle: { fontSize: 16, fontWeight: '600', textAlign: 'center', color: '#666', marginBottom: 20 },
-  input: { borderWidth: 1.5, borderColor: '#dbdbdb', borderRadius: 8, padding: 14, fontSize: 16, marginBottom: 14, color: '#363636' },
-  button: { backgroundColor: '#3273dc', borderRadius: 8, padding: 16, alignItems: 'center', marginBottom: 12 },
-  buttonText: { color: '#fff', fontSize: 16, fontWeight: '700' },
-  hint: { textAlign: 'center', color: '#999', fontSize: 12 },
+  container: {
+    flex: 1,
+    backgroundColor: '#070d1a',
+    justifyContent: 'center',
+    padding: 24,
+  },
+  center: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#070d1a' },
+
+  // Background decorations
+  bgBase: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: '#070d1a',
+    overflow: 'hidden',
+  },
+  blob1: {
+    position: 'absolute',
+    top: -80,
+    right: -80,
+    width: 280,
+    height: 280,
+    borderRadius: 140,
+    backgroundColor: 'rgba(29, 78, 216, 0.12)',
+  },
+  blob2: {
+    position: 'absolute',
+    bottom: -60,
+    left: -60,
+    width: 220,
+    height: 220,
+    borderRadius: 110,
+    backgroundColor: 'rgba(59, 130, 246, 0.07)',
+  },
+
+  // Card — glassmorphism
+  card: {
+    backgroundColor: 'rgba(13, 31, 60, 0.85)',
+    borderRadius: 24,
+    padding: 28,
+    borderWidth: 1,
+    borderColor: '#1e3a5f',
+    shadowColor: '#1d4ed8',
+    shadowOpacity: 0.2,
+    shadowRadius: 24,
+    elevation: 10,
+  },
+
+  // Logo
+  logoWrap: {
+    alignSelf: 'center',
+    marginBottom: 14,
+    position: 'relative',
+  },
+  logoImage: {
+    width: 80,
+    height: 80,
+    borderRadius: 20,
+    borderWidth: 2,
+    borderColor: '#1e3a5f',
+  },
+  logoGlow: {
+    position: 'absolute',
+    top: -4,
+    left: -4,
+    right: -4,
+    bottom: -4,
+    borderRadius: 24,
+    borderWidth: 1,
+    borderColor: 'rgba(59, 130, 246, 0.3)',
+  },
+
+  logoTitle: {
+    fontSize: 22,
+    fontWeight: '900',
+    textAlign: 'center',
+    color: '#f0f6ff',
+    letterSpacing: 2,
+    marginBottom: 4,
+  },
+  subtitle: {
+    fontSize: 13,
+    fontWeight: '500',
+    textAlign: 'center',
+    color: '#64748b',
+    marginBottom: 20,
+    letterSpacing: 0.3,
+  },
+
+  divider: {
+    height: 1,
+    backgroundColor: '#1e3a5f',
+    marginBottom: 20,
+  },
+
+  inputLabel: {
+    color: '#334155',
+    fontSize: 10,
+    fontWeight: '800',
+    letterSpacing: 1.2,
+    marginBottom: 6,
+  },
+  input: {
+    backgroundColor: '#0a1628',
+    borderWidth: 1,
+    borderColor: '#1e3a5f',
+    borderRadius: 12,
+    padding: 14,
+    fontSize: 16,
+    color: '#f0f6ff',
+    marginBottom: 14,
+  },
+
+  button: {
+    backgroundColor: '#1d4ed8',
+    borderRadius: 12,
+    padding: 16,
+    alignItems: 'center',
+    marginBottom: 12,
+    shadowColor: '#3b82f6',
+    shadowOpacity: 0.4,
+    shadowRadius: 12,
+    elevation: 6,
+  },
+  buttonDisabled: {
+    opacity: 0.6,
+  },
+  buttonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '800',
+    letterSpacing: 0.3,
+  },
+
+  hint: { textAlign: 'center', color: '#334155', fontSize: 11 },
+
   serverRow: { alignItems: 'center' },
-  serverText: { color: '#888', fontSize: 11, textDecorationLine: 'underline' },
-  miniButton: { borderRadius: 6, paddingVertical: 6, paddingHorizontal: 12 },
+  serverText: { color: '#1e3a5f', fontSize: 11, textDecorationLine: 'underline' },
+
+  miniButtonPrimary: {
+    borderRadius: 8,
+    paddingVertical: 7,
+    paddingHorizontal: 14,
+    backgroundColor: '#1d4ed8',
+  },
+  miniButtonGhost: {
+    borderRadius: 8,
+    paddingVertical: 7,
+    paddingHorizontal: 14,
+    backgroundColor: 'transparent',
+    borderWidth: 1,
+    borderColor: '#1e3a5f',
+  },
 });

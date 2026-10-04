@@ -125,7 +125,9 @@ export default function BalanceScreen() {
       refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={theme.primary} />}
     >
       {/* Приветствие */}
-      <View style={[styles.header, { backgroundColor: isDark ? '#0f172a' : '#2563eb' }]}>
+      <View style={[styles.header, { backgroundColor: isDark ? '#070d1a' : '#2563eb' }]}>
+        {/* Subtle glow blob behind header — only in dark mode */}
+        {isDark && <View style={styles.headerGlow} />}
         <Text style={styles.greeting}>👋 Добро пожаловать,</Text>
         <Text style={styles.name}>{driver?.fio || 'Водитель'}</Text>
       </View>
@@ -229,7 +231,16 @@ export default function BalanceScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1 },
   center: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-  header: { padding: 20, paddingTop: 24 },
+  header: { padding: 20, paddingTop: 24, overflow: 'hidden', position: 'relative' },
+  headerGlow: {
+    position: 'absolute',
+    top: -40,
+    right: -40,
+    width: 160,
+    height: 160,
+    borderRadius: 80,
+    backgroundColor: 'rgba(29, 78, 216, 0.15)',
+  },
   greeting: { color: 'rgba(255,255,255,0.75)', fontSize: 13, fontWeight: '500' },
   name: { color: '#ffffff', fontSize: 22, fontWeight: '800', marginTop: 2 },
 
@@ -254,11 +265,11 @@ const styles = StyleSheet.create({
     elevation: 6,
   },
   bankCard: {
-    backgroundColor: '#0b132b',
+    backgroundColor: '#0b1530',
     borderRadius: 20,
     padding: 20,
     borderWidth: 1,
-    borderColor: '#1e293b',
+    borderColor: '#1e3a5f',
   },
   cardTopRow: {
     flexDirection: 'row',
