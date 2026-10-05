@@ -13,4 +13,3 @@ if %ERRORLEVEL% EQU 0 (
     copy /y "app\build\outputs\apk\release\app-release.apk" "..\..\luna2000-driver.apk"
     echo [SUCCESS] APK built and deployed locally!
 )
-pause

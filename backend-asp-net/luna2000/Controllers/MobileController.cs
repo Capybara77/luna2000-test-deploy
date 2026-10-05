@@ -450,10 +450,10 @@ public class MobileController : ControllerBase
     {
         return Ok(new
         {
-            version = "1.1.0",
-            versionCode = 11,
+            version = "1.2.0",
+            versionCode = 12,
             downloadUrl = "/download-apk",
-            changelog = "Размер приложения уменьшен в 6 раз (до 10.8 МБ), оптимизирована скорость запуска и снижено потребление памяти"
+            changelog = "Новый современный дизайн Dark Premium: темная тема по умолчанию, обновленный экран входа и улучшенный баланс"
         });
     }
 }
