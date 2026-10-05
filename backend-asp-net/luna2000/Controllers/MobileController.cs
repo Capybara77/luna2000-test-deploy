@@ -416,10 +416,19 @@ public class MobileController : ControllerBase
 
     [AllowAnonymous]
     [HttpGet("/download-apk")]
+    [HttpHead("/download-apk")]
+    [HttpGet("/download/luna2000.apk")]
+    [HttpHead("/download/luna2000.apk")]
+    [HttpGet("/luna2000.apk")]
+    [HttpHead("/luna2000.apk")]
     [HttpGet("/apk")]
+    [HttpHead("/apk")]
     [HttpGet("apk")]
+    [HttpHead("apk")]
     [HttpGet("/download/app")]
+    [HttpHead("/download/app")]
     [HttpGet("/app.apk")]
+    [HttpHead("/app.apk")]
     public IActionResult DownloadApk([FromServices] IWebHostEnvironment env)
     {
         var candidates = new[]
@@ -438,7 +447,236 @@ public class MobileController : ControllerBase
         {
             return NotFound("APK не найден на сервере.");
         }
-        return PhysicalFile(path, "application/vnd.android.package-archive", "luna2000.apk");
+
+        // Если это запрос страницы /download-apk из браузера — показываем информационную страницу с инструкцией и автоскачиванием
+        var acceptHeader = Request.Headers["Accept"].ToString();
+        var isHtmlRequest = acceptHeader.Contains("text/html", StringComparison.OrdinalIgnoreCase);
+        var isDirectDownload = Request.Path.Value?.EndsWith(".apk", StringComparison.OrdinalIgnoreCase) == true
+            || Request.Query.ContainsKey("direct")
+            || Request.Query.ContainsKey("download");
+
+        if (isHtmlRequest && !isDirectDownload && HttpMethods.IsGet(Request.Method))
+        {
+            var fileInfo = new FileInfo(path);
+            var sizeMb = (fileInfo.Length / (1024.0 * 1024.0)).ToString("0.0", System.Globalization.CultureInfo.InvariantCulture);
+            return Content(RenderApkDownloadPage(sizeMb), "text/html; charset=utf-8");
+        }
+
+        Response.Headers["Content-Disposition"] = "attachment; filename=\"luna2000.apk\"";
+        Response.Headers["X-Content-Type-Options"] = "nosniff";
+        Response.Headers["Cache-Control"] = "no-cache, no-store, must-revalidate";
+        Response.Headers["Pragma"] = "no-cache";
+        Response.Headers["Expires"] = "0";
+
+        return PhysicalFile(path, "application/vnd.android.package-archive", "luna2000.apk", enableRangeProcessing: true);
+    }
+
+    private static string RenderApkDownloadPage(string sizeMb)
+    {
+        return $@"<!DOCTYPE html>
+<html lang=""ru"">
+<head>
+    <meta charset=""utf-8"">
+    <meta name=""viewport"" content=""width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"">
+    <title>Скачать приложение LUNA 2000</title>
+    <link rel=""icon"" href=""/favicon.ico"">
+    <style>
+        * {{ box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; }}
+        body {{
+            background: linear-gradient(165deg, #070d1a 0%, #0d1f3c 60%, #070d1a 100%);
+            color: #f0f6ff;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 16px;
+        }}
+        .card {{
+            background: rgba(13, 31, 60, 0.85);
+            border: 1px solid #1e3a5f;
+            border-radius: 24px;
+            padding: 28px 22px;
+            max-width: 440px;
+            width: 100%;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.5), 0 0 40px rgba(59, 130, 246, 0.15);
+            text-align: center;
+            backdrop-filter: blur(12px);
+        }}
+        .logo-wrap {{
+            width: 72px;
+            height: 72px;
+            margin: 0 auto 14px;
+            border-radius: 20px;
+            background: linear-gradient(135deg, #1d4ed8, #3b82f6);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 34px;
+            box-shadow: 0 8px 24px rgba(59, 130, 246, 0.4);
+        }}
+        h1 {{ font-size: 24px; font-weight: 900; letter-spacing: 1px; margin-bottom: 4px; color: #ffffff; }}
+        .subtitle {{ font-size: 13px; color: #94a3b8; margin-bottom: 20px; }}
+        .badge {{
+            display: inline-block;
+            background: rgba(59, 130, 246, 0.15);
+            color: #60a5fa;
+            border: 1px solid rgba(59, 130, 246, 0.3);
+            border-radius: 20px;
+            padding: 4px 12px;
+            font-size: 11px;
+            font-weight: 700;
+            margin-bottom: 20px;
+        }}
+        .btn-download {{
+            display: block;
+            width: 100%;
+            background: linear-gradient(90deg, #1d4ed8, #2563eb);
+            color: #ffffff;
+            font-size: 16px;
+            font-weight: 800;
+            padding: 16px 20px;
+            border-radius: 14px;
+            text-decoration: none;
+            box-shadow: 0 6px 20px rgba(37, 99, 235, 0.45);
+            transition: transform 0.15s, box-shadow 0.15s;
+            margin-bottom: 12px;
+        }}
+        .btn-download:active {{ transform: scale(0.98); }}
+        .status-msg {{
+            font-size: 12px;
+            color: #94a3b8;
+            margin-bottom: 22px;
+            min-height: 18px;
+        }}
+        .notice-inapp {{
+            display: none;
+            background: rgba(234, 179, 8, 0.12);
+            border: 1px solid rgba(234, 179, 8, 0.35);
+            border-radius: 14px;
+            padding: 12px 14px;
+            margin-bottom: 20px;
+            text-align: left;
+            font-size: 12px;
+            line-height: 1.45;
+            color: #fef08a;
+        }}
+        .notice-inapp b {{ color: #ffffff; }}
+        .steps {{
+            background: rgba(7, 13, 26, 0.6);
+            border: 1px solid #1e3a5f;
+            border-radius: 16px;
+            padding: 16px;
+            text-align: left;
+        }}
+        .steps-title {{
+            font-size: 12px;
+            font-weight: 800;
+            color: #60a5fa;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 12px;
+        }}
+        .step-item {{
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            margin-bottom: 12px;
+        }}
+        .step-item:last-child {{ margin-bottom: 0; }}
+        .step-num {{
+            background: #1e3a5f;
+            color: #93c5fd;
+            font-size: 11px;
+            font-weight: 800;
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            margin-top: 1px;
+        }}
+        .step-text {{ font-size: 12px; line-height: 1.45; color: #cbd5e1; }}
+        .step-text b {{ color: #ffffff; }}
+        .footer-note {{
+            margin-top: 16px;
+            font-size: 11px;
+            color: #64748b;
+        }}
+    </style>
+</head>
+<body>
+    <div class=""card"">
+        <div class=""logo-wrap"">🌙</div>
+        <h1>LUNA 2000</h1>
+        <div class=""subtitle"">Официальное мобильное приложение водителя</div>
+        <div class=""badge"">Версия 1.2.0 • Android • {sizeMb} МБ</div>
+
+        <div id=""inAppNotice"" class=""notice-inapp"">
+            ⚠️ <b>Вы открыли ссылку в мессенджере</b><br>
+            Если загрузка не началась: нажмите <b>три точки (⋮)</b> в правом верхнем углу и выберите <b>«Открыть в браузере»</b> (Chrome, Яндекс, Samsung).
+        </div>
+
+        <a id=""downloadBtn"" href=""/luna2000.apk?direct=1"" class=""btn-download"">
+            📥 Скачать APK ({sizeMb} МБ)
+        </a>
+        <div id=""statusMsg"" class=""status-msg"">⏳ Запуск скачивания...</div>
+
+        <div class=""steps"">
+            <div class=""steps-title"">Как установить (инструкция)</div>
+            <div class=""step-item"">
+                <div class=""step-num"">1</div>
+                <div class=""step-text"">
+                    При вопросе браузера <b>«Файл может быть опасным»</b> нажмите <b>«Всё равно скачать»</b>. Это стандартное системное уведомление Android для любых приложений не из Google Play.
+                </div>
+            </div>
+            <div class=""step-item"">
+                <div class=""step-num"">2</div>
+                <div class=""step-text"">
+                    После окончания загрузки нажмите <b>«Открыть»</b> в панели уведомлений или шторке телефона.
+                </div>
+            </div>
+            <div class=""step-item"">
+                <div class=""step-num"">3</div>
+                <div class=""step-text"">
+                    Если телефон напишет о блокировке: нажмите <b>«Настройки»</b> → включите <b>«Разрешить установку из этого источника»</b> и нажмите <b>«Установить»</b>.
+                </div>
+            </div>
+        </div>
+
+        <div class=""footer-note"">
+            Не началось? <a href=""/luna2000.apk?direct=1"" style=""color:#60a5fa; font-weight:700;"">Нажмите сюда для повтора</a>
+        </div>
+    </div>
+
+    <script>
+        (function() {{
+            var ua = navigator.userAgent || '';
+            var isInApp = /telegram|fban|fbav|instagram|vkclient|whatsapp|micromessenger|line/i.test(ua);
+            if (isInApp) {{
+                var el = document.getElementById('inAppNotice');
+                if (el) el.style.display = 'block';
+            }}
+
+            // Автостарт скачивания через 600мс
+            setTimeout(function() {{
+                try {{
+                    var iframe = document.createElement('iframe');
+                    iframe.style.display = 'none';
+                    iframe.src = '/luna2000.apk?direct=1';
+                    document.body.appendChild(iframe);
+                }} catch(e) {{}}
+
+                var status = document.getElementById('statusMsg');
+                if (status) {{
+                    status.innerHTML = '✅ Если загрузка не началась — нажмите на синюю кнопку выше';
+                }}
+            }}, 600);
+        }})();
+    </script>
+</body>
+</html>";
     }
 
     /// <summary>
@@ -452,7 +690,7 @@ public class MobileController : ControllerBase
         {
             version = "1.2.0",
             versionCode = 12,
-            downloadUrl = "/download-apk",
+            downloadUrl = "/luna2000.apk?direct=1",
             changelog = "Новый современный дизайн Dark Premium: темная тема по умолчанию, обновленный экран входа и улучшенный баланс"
         });
     }
@@ -469,3 +707,4 @@ public class CreateRepairRequest
     public Guid? CarId { get; set; }
     public string? PhotoBase64 { get; set; }
 }
+
