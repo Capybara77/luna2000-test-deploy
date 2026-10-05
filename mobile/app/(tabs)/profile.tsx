@@ -144,6 +144,67 @@ export default function ProfileScreen() {
         )}
       </View>
 
+      {/* Контакты парка (Пункт 2) */}
+      <View style={[styles.settingsCard, dynamicStyles.settingsCard]}>
+        <Text style={[styles.settingsHeader, dynamicStyles.settingsHeader]}>📞 Контакты парка</Text>
+
+        <TouchableOpacity
+          style={styles.contactItemRow}
+          onPress={() => Linking.openURL('tel:89617776992')}
+          activeOpacity={0.7}
+        >
+          <View style={styles.contactIconWrap}>
+            <Text style={{ fontSize: 20 }}>👔</Text>
+          </View>
+          <View style={{ flex: 1 }}>
+            <Text style={[styles.contactRoleTitle, { color: theme.text }]}>Начальник</Text>
+            <Text style={[styles.contactPhoneNum, { color: theme.primary }]}>+7 (961) 777-69-92</Text>
+          </View>
+          <View style={styles.contactCallBtn}>
+            <Text style={styles.contactCallText}>Вызов</Text>
+          </View>
+        </TouchableOpacity>
+
+        <View style={[styles.settingDivider, dynamicStyles.settingDivider]} />
+
+        <TouchableOpacity
+          style={styles.contactItemRow}
+          onPress={() => Linking.openURL('tel:89002023337')}
+          activeOpacity={0.7}
+        >
+          <View style={styles.contactIconWrap}>
+            <Text style={{ fontSize: 20 }}>🔧</Text>
+          </View>
+          <View style={{ flex: 1 }}>
+            <Text style={[styles.contactRoleTitle, { color: theme.text }]}>Механик</Text>
+            <Text style={[styles.contactPhoneNum, { color: theme.primary }]}>+7 (900) 202-33-37</Text>
+          </View>
+          <View style={styles.contactCallBtn}>
+            <Text style={styles.contactCallText}>Вызов</Text>
+          </View>
+        </TouchableOpacity>
+
+        <View style={[styles.settingDivider, dynamicStyles.settingDivider]} />
+
+        <TouchableOpacity
+          style={styles.contactItemRow}
+          onPress={() => Linking.openURL('tel:89995664114')}
+          activeOpacity={0.7}
+        >
+          <View style={styles.contactIconWrap}>
+            <Text style={{ fontSize: 20 }}>📱</Text>
+          </View>
+          <View style={{ flex: 1 }}>
+            <Text style={[styles.contactRoleTitle, { color: theme.text }]}>Техподдержка</Text>
+            <Text style={{ fontSize: 11, color: '#eab308', fontWeight: '600' }}>(только по приложению)</Text>
+            <Text style={[styles.contactPhoneNum, { color: theme.primary }]}>+7 (999) 566-41-14</Text>
+          </View>
+          <View style={styles.contactCallBtn}>
+            <Text style={styles.contactCallText}>Вызов</Text>
+          </View>
+        </TouchableOpacity>
+      </View>
+
       <View style={[styles.infoCard, dynamicStyles.infoCard]}>
         <Text style={[styles.infoLabel, dynamicStyles.infoLabel]}>ID водителя</Text>
         <Text style={[styles.infoValue, dynamicStyles.infoValue]} selectable>{driver?.driverId}</Text>
@@ -317,4 +378,39 @@ const styles = StyleSheet.create({
   updateBannerTitle: { fontWeight: '800', color: '#166534', fontSize: 14 },
   updateBannerDesc: { fontSize: 12, color: '#374151', marginTop: 4 },
   updateBannerAction: { fontWeight: '800', color: '#2563eb', marginTop: 8, fontSize: 13 },
+
+  contactItemRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 6,
+  },
+  contactIconWrap: {
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    backgroundColor: 'rgba(59, 130, 246, 0.15)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 10,
+  },
+  contactRoleTitle: {
+    fontSize: 14,
+    fontWeight: '800',
+  },
+  contactPhoneNum: {
+    fontSize: 12,
+    fontWeight: '700',
+    marginTop: 2,
+  },
+  contactCallBtn: {
+    backgroundColor: '#1d4ed8',
+    borderRadius: 14,
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+  },
+  contactCallText: {
+    color: '#ffffff',
+    fontSize: 11,
+    fontWeight: '800',
+  },
 });

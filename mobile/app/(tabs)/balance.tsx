@@ -1,5 +1,16 @@
-import { useState, useEffect, useCallback } from 'react';
-import { View, Text, ScrollView, StyleSheet, ActivityIndicator, RefreshControl, TouchableOpacity } from 'react-native';
+import { useState, useEffect, useCallback, useMemo } from 'react';
+import {
+  View,
+  Text,
+  ScrollView,
+  StyleSheet,
+  ActivityIndicator,
+  RefreshControl,
+  TouchableOpacity,
+  Modal,
+  Linking,
+  Platform,
+} from 'react-native';
 import { useFocusEffect } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { getSavedDriver, fetchBalance, getCachedBalance } from '../../services/api';
@@ -11,12 +22,43 @@ interface Operation {
   note: string;
   createdAt: string;
   isDebit: boolean;
+  amount?: number | null;
 }
 
 interface AssignedCar {
   brandModel: string;
   plateNumber: string;
 }
+
+interface ContactPerson {
+  role: string;
+  phone: string;
+  displayPhone: string;
+  note?: string;
+  icon: string;
+}
+
+export const PARK_CONTACTS: ContactPerson[] = [
+  {
+    role: 'Начальник',
+    phone: '89617776992',
+    displayPhone: '+7 (961) 777-69-92',
+    icon: '👔',
+  },
+  {
+    role: 'Механик',
+    phone: '89002023337',
+    displayPhone: '+7 (900) 202-33-37',
+    icon: '🔧',
+  },
+  {
+    role: 'Техподдержка',
+    note: 'только по приложению',
+    phone: '89995664114',
+    displayPhone: '+7 (999) 566-41-14',
+    icon: '📱',
+  },
+];
 
 function formatDateTime(dateStr: string): string {
   if (!dateStr) return '';
@@ -35,6 +77,33 @@ function formatDateTime(dateStr: string): string {
   }
 }
 
+function parseOpAmount(op: Operation): number {
+  if (typeof op.amount === 'number' && op.amount > 0) {
+    return op.amount;
+  }
+  if (!op.note) return 0;
+  const match = op.note.match(/(?:[—+-]\s*)?([0-9\s]+(?:[.,][0-9]{1,2})?)\s*(?:руб|₽)/i);
+  if (match && match[1]) {
+    const clean = match[1].replace(/\s+/g, '').replace(',', '.');
+    const val = parseFloat(clean);
+    return isNaN(val) ? 0 : val;
+  }
+  return 0;
+}
+
+function isCurrentMonth(dateStr: string): boolean {
+  if (!dateStr) return false;
+  try {
+    const s = dateStr.endsWith('Z') || dateStr.includes('+') ? dateStr : dateStr + 'Z';
+    const d = new Date(s);
+    if (isNaN(d.getTime())) return false;
+    const now = new Date();
+    return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
+  } catch {
+    return false;
+  }
+}
+
 const HIDE_BALANCE_KEY = 'luna_hide_balance';
 
 export default function BalanceScreen() {
@@ -48,6 +117,8 @@ export default function BalanceScreen() {
   const [error, setError] = useState<string | null>(null);
   const [isOffline, setIsOffline] = useState(false);
   const [hideBalance, setHideBalance] = useState(false);
+  const [showContacts, setShowContacts] = useState(false);
+  const [opFilter, setOpFilter] = useState<'all' | 'credit' | 'debit'>('all');
 
   useEffect(() => {
     AsyncStorage.getItem(HIDE_BALANCE_KEY).then((val) => {
@@ -77,7 +148,6 @@ export default function BalanceScreen() {
         checkBalanceChange(data.balance);
       }
     } catch (e: any) {
-      // Пытаемся взять данные из кэша
       const cached = await getCachedBalance();
       if (cached) {
         setBalance(cached.balance);
@@ -106,10 +176,66 @@ export default function BalanceScreen() {
     setRefreshing(false);
   }, [load]);
 
-  const balanceColor = balance === null ? '#94a3b8' : balance > 0 ? '#22c55e' : balance < 0 ? '#ef4444' : '#94a3b8';
-  const balanceStatus = balance === null ? '' : balance < 0 ? '⚠ Пополните баланс' : balance < 1500 ? '⚠ Баланс низкий' : '✓ Баланс в норме';
-  const statusBg = balance !== null && balance < 0 ? 'rgba(239, 68, 68, 0.15)' : balance !== null && balance < 1500 ? 'rgba(234, 179, 8, 0.15)' : 'rgba(34, 197, 94, 0.15)';
-  const statusColor = balance !== null && balance < 0 ? '#ef4444' : balance !== null && balance < 1500 ? '#eab308' : '#22c55e';
+  const handleCall = (phone: string) => {
+    Linking.openURL(`tel:${phone}`);
+  };
+
+  // Расчет месячной статистики
+  const stats = useMemo(() => {
+    const currentMonthOps = operations.filter((op) => isCurrentMonth(op.createdAt));
+    const activeOps = currentMonthOps.length > 0 ? currentMonthOps : operations;
+    const isAllTime = currentMonthOps.length === 0 && operations.length > 0;
+
+    const income = activeOps
+      .filter((op) => !op.isDebit)
+      .reduce((sum, op) => sum + parseOpAmount(op), 0);
+
+    const expense = activeOps
+      .filter((op) => op.isDebit)
+      .reduce((sum, op) => sum + parseOpAmount(op), 0);
+
+    const monthNames = [
+      'январь', 'февраль', 'март', 'апрель', 'май', 'июнь',
+      'июль', 'август', 'сентябрь', 'октябрь', 'ноябрь', 'декабрь'
+    ];
+    const monthName = monthNames[new Date().getMonth()];
+    const label = isAllTime ? 'За всё время' : `За ${monthName}`;
+
+    return { income, expense, label };
+  }, [operations]);
+
+  // Фильтрация операций
+  const filteredOperations = useMemo(() => {
+    if (opFilter === 'credit') return operations.filter((op) => !op.isDebit);
+    if (opFilter === 'debit') return operations.filter((op) => op.isDebit);
+    return operations;
+  }, [operations, opFilter]);
+
+  const creditCount = useMemo(() => operations.filter((op) => !op.isDebit).length, [operations]);
+  const debitCount = useMemo(() => operations.filter((op) => op.isDebit).length, [operations]);
+
+  const balanceColor =
+    balance === null ? '#94a3b8' : balance > 0 ? '#22c55e' : balance < 0 ? '#ef4444' : '#94a3b8';
+  const balanceStatus =
+    balance === null
+      ? ''
+      : balance < 0
+      ? '⚠ Пополните баланс'
+      : balance < 1500
+      ? '⚠ Баланс низкий'
+      : '✓ Баланс в норме';
+  const statusBg =
+    balance !== null && balance < 0
+      ? 'rgba(239, 68, 68, 0.15)'
+      : balance !== null && balance < 1500
+      ? 'rgba(234, 179, 8, 0.15)'
+      : 'rgba(34, 197, 94, 0.15)';
+  const statusColor =
+    balance !== null && balance < 0
+      ? '#ef4444'
+      : balance !== null && balance < 1500
+      ? '#eab308'
+      : '#22c55e';
 
   if (loading) {
     return (
@@ -124,12 +250,23 @@ export default function BalanceScreen() {
       style={[styles.container, { backgroundColor: theme.background }]}
       refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={theme.primary} />}
     >
-      {/* Приветствие */}
+      {/* Приветствие с кнопкой быстрой связи */}
       <View style={[styles.header, { backgroundColor: isDark ? '#070d1a' : '#2563eb' }]}>
-        {/* Subtle glow blob behind header — only in dark mode */}
         {isDark && <View style={styles.headerGlow} />}
-        <Text style={styles.greeting}>👋 Добро пожаловать,</Text>
-        <Text style={styles.name}>{driver?.fio || 'Водитель'}</Text>
+        <View style={styles.headerRow}>
+          <View style={{ flex: 1, paddingRight: 8 }}>
+            <Text style={styles.greeting}>👋 Добро пожаловать,</Text>
+            <Text style={styles.name} numberOfLines={1}>{driver?.fio || 'Водитель'}</Text>
+          </View>
+          <TouchableOpacity
+            style={styles.headerContactBtn}
+            onPress={() => setShowContacts(true)}
+            activeOpacity={0.8}
+          >
+            <Text style={styles.headerContactIcon}>📞</Text>
+            <Text style={styles.headerContactText}>Связь</Text>
+          </TouchableOpacity>
+        </View>
       </View>
 
       {/* Офлайн баннер */}
@@ -191,13 +328,80 @@ export default function BalanceScreen() {
         </View>
       )}
 
-      {/* История операций */}
+      {/* Месячная статистика (Пункт 6) */}
+      <View style={[styles.statsCard, { backgroundColor: isDark ? '#0d1f3c' : '#ffffff', borderColor: theme.border }]}>
+        <View style={styles.statsHeader}>
+          <Text style={[styles.statsTitle, { color: theme.text }]}>📊 Итоги ({stats.label})</Text>
+        </View>
+        <View style={styles.statsRow}>
+          <View style={[styles.statCol, { backgroundColor: isDark ? '#0e2417' : '#f0fdf4', borderColor: isDark ? '#14532d' : '#bbf7d0' }]}>
+            <Text style={styles.statLabel}>🟢 Пополнено</Text>
+            <Text style={styles.statIncomeValue}>+{stats.income.toLocaleString('ru')} ₽</Text>
+          </View>
+          <View style={[styles.statCol, { backgroundColor: isDark ? '#261318' : '#fef2f2', borderColor: isDark ? '#7f1d1d' : '#fecaca' }]}>
+            <Text style={styles.statLabel}>🔻 Списано</Text>
+            <Text style={styles.statExpenseValue}>-{stats.expense.toLocaleString('ru')} ₽</Text>
+          </View>
+        </View>
+      </View>
+
+      {/* История операций с фильтрами (Пункт 6) */}
       <View style={styles.section}>
-        <Text style={[styles.sectionTitle, { color: theme.text }]}>История операций</Text>
-        {operations.length === 0 ? (
-          <Text style={[styles.empty, { color: theme.textMuted }]}>Операций пока нет</Text>
+        <View style={styles.sectionHeaderRow}>
+          <Text style={[styles.sectionTitle, { color: theme.text }]}>История операций</Text>
+        </View>
+
+        {/* Фильтры */}
+        <View style={styles.filterRow}>
+          <TouchableOpacity
+            style={[
+              styles.filterTab,
+              opFilter === 'all' && styles.filterTabActive,
+              { borderColor: isDark ? '#1e3a5f' : '#e2e8f0' }
+            ]}
+            onPress={() => setOpFilter('all')}
+          >
+            <Text style={[styles.filterTabText, opFilter === 'all' ? styles.filterTabTextActive : { color: theme.textMuted }]}>
+              Все ({operations.length})
+            </Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[
+              styles.filterTab,
+              opFilter === 'credit' && styles.filterTabActive,
+              { borderColor: isDark ? '#1e3a5f' : '#e2e8f0' }
+            ]}
+            onPress={() => setOpFilter('credit')}
+          >
+            <Text style={[styles.filterTabText, opFilter === 'credit' ? styles.filterTabTextActive : { color: theme.textMuted }]}>
+              🟢 Пополнения ({creditCount})
+            </Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[
+              styles.filterTab,
+              opFilter === 'debit' && styles.filterTabActive,
+              { borderColor: isDark ? '#1e3a5f' : '#e2e8f0' }
+            ]}
+            onPress={() => setOpFilter('debit')}
+          >
+            <Text style={[styles.filterTabText, opFilter === 'debit' ? styles.filterTabTextActive : { color: theme.textMuted }]}>
+              🔻 Списания ({debitCount})
+            </Text>
+          </TouchableOpacity>
+        </View>
+
+        {/* Список операций */}
+        {filteredOperations.length === 0 ? (
+          <View style={[styles.emptyBox, { backgroundColor: isDark ? '#0d1f3c' : '#ffffff', borderColor: theme.border }]}>
+            <Text style={[styles.empty, { color: theme.textMuted }]}>
+              {operations.length === 0 ? 'Операций пока нет' : 'В этой категории операций нет'}
+            </Text>
+          </View>
         ) : (
-          operations.map((op, i) => (
+          filteredOperations.map((op, i) => (
             <View
               key={i}
               style={[
@@ -224,6 +428,78 @@ export default function BalanceScreen() {
           ))
         )}
       </View>
+
+      {/* Модальное окно контактов (Пункт 2) */}
+      <Modal
+        visible={showContacts}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setShowContacts(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={[styles.modalCard, { backgroundColor: isDark ? '#0d1f3c' : '#ffffff', borderColor: theme.border }]}>
+            <View style={styles.modalHeader}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                <Text style={{ fontSize: 22 }}>📞</Text>
+                <Text style={[styles.modalTitle, { color: isDark ? '#ffffff' : '#0f172a' }]}>
+                  Контакты парка
+                </Text>
+              </View>
+              <TouchableOpacity onPress={() => setShowContacts(false)} style={styles.modalCloseBtn}>
+                <Text style={{ color: theme.textMuted, fontSize: 18, fontWeight: '700' }}>✕</Text>
+              </TouchableOpacity>
+            </View>
+
+            <Text style={[styles.modalSubtitle, { color: theme.textMuted }]}>
+              Нажмите, чтобы позвонить нужному специалисту:
+            </Text>
+
+            {PARK_CONTACTS.map((c, idx) => (
+              <TouchableOpacity
+                key={idx}
+                style={[
+                  styles.contactCard,
+                  {
+                    backgroundColor: isDark ? '#070d1a' : '#f8fafc',
+                    borderColor: isDark ? '#1e3a5f' : '#e2e8f0',
+                  },
+                ]}
+                onPress={() => handleCall(c.phone)}
+                activeOpacity={0.7}
+              >
+                <View style={styles.contactIconWrap}>
+                  <Text style={{ fontSize: 22 }}>{c.icon}</Text>
+                </View>
+
+                <View style={{ flex: 1, paddingRight: 8 }}>
+                  <Text style={[styles.contactRoleText, { color: isDark ? '#ffffff' : '#0f172a' }]}>
+                    {c.role}
+                  </Text>
+                  {!!c.note && (
+                    <Text style={{ color: '#eab308', fontSize: 11, fontWeight: '600' }}>
+                      ({c.note})
+                    </Text>
+                  )}
+                  <Text style={styles.contactPhoneText}>{c.displayPhone}</Text>
+                </View>
+
+                <View style={styles.callPill}>
+                  <Text style={styles.callPillText}>Вызов</Text>
+                </View>
+              </TouchableOpacity>
+            ))}
+
+            <TouchableOpacity
+              style={[styles.modalDoneBtn, { backgroundColor: isDark ? '#1e293b' : '#e2e8f0' }]}
+              onPress={() => setShowContacts(false)}
+            >
+              <Text style={[styles.modalDoneText, { color: isDark ? '#f8fafc' : '#334155' }]}>
+                Закрыть
+              </Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
     </ScrollView>
   );
 }
@@ -232,6 +508,11 @@ const styles = StyleSheet.create({
   container: { flex: 1 },
   center: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   header: { padding: 20, paddingTop: 24, overflow: 'hidden', position: 'relative' },
+  headerRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
   headerGlow: {
     position: 'absolute',
     top: -40,
@@ -242,7 +523,21 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(29, 78, 216, 0.15)',
   },
   greeting: { color: 'rgba(255,255,255,0.75)', fontSize: 13, fontWeight: '500' },
-  name: { color: '#ffffff', fontSize: 22, fontWeight: '800', marginTop: 2 },
+  name: { color: '#ffffff', fontSize: 20, fontWeight: '800', marginTop: 2 },
+
+  headerContactBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(255,255,255,0.12)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.2)',
+    borderRadius: 20,
+    paddingHorizontal: 12,
+    paddingVertical: 7,
+    gap: 5,
+  },
+  headerContactIcon: { fontSize: 14 },
+  headerContactText: { color: '#ffffff', fontSize: 12, fontWeight: '700' },
 
   offlineBanner: {
     backgroundColor: '#f59e0b',
@@ -375,8 +670,83 @@ const styles = StyleSheet.create({
     letterSpacing: 0.5,
   },
 
-  section: { margin: 16, marginTop: 4 },
-  sectionTitle: { fontSize: 16, fontWeight: '800', marginBottom: 10 },
+  // Статистика
+  statsCard: {
+    marginHorizontal: 16,
+    marginBottom: 14,
+    borderRadius: 16,
+    padding: 14,
+    borderWidth: 1,
+  },
+  statsHeader: {
+    marginBottom: 8,
+  },
+  statsTitle: {
+    fontSize: 13,
+    fontWeight: '800',
+    letterSpacing: 0.3,
+  },
+  statsRow: {
+    flexDirection: 'row',
+    gap: 10,
+  },
+  statCol: {
+    flex: 1,
+    borderRadius: 12,
+    padding: 10,
+    borderWidth: 1,
+  },
+  statLabel: {
+    fontSize: 11,
+    color: '#94a3b8',
+    fontWeight: '700',
+    marginBottom: 2,
+  },
+  statIncomeValue: {
+    color: '#22c55e',
+    fontSize: 15,
+    fontWeight: '800',
+  },
+  statExpenseValue: {
+    color: '#ef4444',
+    fontSize: 15,
+    fontWeight: '800',
+  },
+
+  // Фильтры и операции
+  section: { marginHorizontal: 16, marginBottom: 24 },
+  sectionHeaderRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 10,
+  },
+  sectionTitle: { fontSize: 16, fontWeight: '800' },
+
+  filterRow: {
+    flexDirection: 'row',
+    gap: 8,
+    marginBottom: 12,
+  },
+  filterTab: {
+    paddingVertical: 6,
+    paddingHorizontal: 10,
+    borderRadius: 20,
+    borderWidth: 1,
+    backgroundColor: 'rgba(255,255,255,0.04)',
+  },
+  filterTabActive: {
+    backgroundColor: '#1d4ed8',
+    borderColor: '#3b82f6',
+  },
+  filterTabText: {
+    fontSize: 11,
+    fontWeight: '700',
+  },
+  filterTabTextActive: {
+    color: '#ffffff',
+  },
+
   opRow: {
     flexDirection: 'row',
     gap: 10,
@@ -390,8 +760,99 @@ const styles = StyleSheet.create({
   opTitle: { fontSize: 13, fontWeight: '700' },
   opNote: { fontSize: 12, lineHeight: 18, marginTop: 2 },
   opTime: { fontSize: 11 },
-  empty: { textAlign: 'center', padding: 20, fontSize: 13 },
+  emptyBox: {
+    borderRadius: 12,
+    borderWidth: 1,
+    padding: 24,
+    alignItems: 'center',
+  },
+  empty: { textAlign: 'center', fontSize: 13, fontWeight: '600' },
   errorBox: { margin: 16, padding: 14, borderRadius: 10, alignItems: 'center' },
   errorText: { color: '#ef4444', marginBottom: 6, fontWeight: '600' },
   retryText: { fontWeight: '700' },
+
+  // Модалка контактов
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.7)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  modalCard: {
+    width: '100%',
+    borderRadius: 20,
+    borderWidth: 1,
+    padding: 20,
+    shadowColor: '#000',
+    shadowOpacity: 0.3,
+    shadowRadius: 16,
+    elevation: 8,
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 4,
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: '800',
+  },
+  modalCloseBtn: {
+    padding: 4,
+  },
+  modalSubtitle: {
+    fontSize: 12,
+    marginBottom: 16,
+  },
+  contactCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderRadius: 14,
+    borderWidth: 1,
+    padding: 12,
+    marginBottom: 10,
+  },
+  contactIconWrap: {
+    width: 42,
+    height: 42,
+    borderRadius: 21,
+    backgroundColor: 'rgba(59, 130, 246, 0.15)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 12,
+  },
+  contactRoleText: {
+    fontSize: 15,
+    fontWeight: '800',
+    marginBottom: 1,
+  },
+  contactPhoneText: {
+    color: '#38bdf8',
+    fontSize: 13,
+    fontWeight: '700',
+    marginTop: 2,
+  },
+  callPill: {
+    backgroundColor: '#1d4ed8',
+    borderRadius: 16,
+    paddingVertical: 7,
+    paddingHorizontal: 12,
+  },
+  callPillText: {
+    color: '#ffffff',
+    fontSize: 12,
+    fontWeight: '800',
+  },
+  modalDoneBtn: {
+    borderRadius: 12,
+    paddingVertical: 12,
+    alignItems: 'center',
+    marginTop: 8,
+  },
+  modalDoneText: {
+    fontWeight: '700',
+    fontSize: 14,
+  },
 });

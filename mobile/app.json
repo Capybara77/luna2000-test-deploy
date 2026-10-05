@@ -2,7 +2,7 @@
   "expo": {
     "name": "Luna2000",
     "slug": "luna2000-driver",
-    "version": "1.2.0",
+    "version": "1.3.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "splash": {
@@ -17,7 +17,7 @@
       "bundleIdentifier": "com.luna2000.app"
     },
     "android": {
-      "versionCode": 12,
+      "versionCode": 13,
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#0b132b"

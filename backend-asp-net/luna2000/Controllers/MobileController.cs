@@ -120,22 +120,30 @@ public class MobileController : ControllerBase
 
             string noteText = l.Note ?? string.Empty;
 
+            decimal? opAmount = null;
+
             if (l.ObjectName == "DeductRent")
             {
                 isDebit = true;
+                var m = System.Text.RegularExpressions.Regex.Match(noteText, @"—\s*([0-9\s]+(?:[.,][0-9]{1,2})?)\s*руб");
+                if (m.Success && decimal.TryParse(m.Groups[1].Value.Replace(" ", "").Replace(",", "."), System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out var a))
+                    opAmount = a;
             }
             else if (l.ObjectName == "SmsBalance")
             {
                 isDebit = false;
+                var m = System.Text.RegularExpressions.Regex.Match(noteText, @"\+\s*([0-9\s]+(?:[.,][0-9]{1,2})?)\s*руб");
+                if (m.Success && decimal.TryParse(m.Groups[1].Value.Replace(" ", "").Replace(",", "."), System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out var a))
+                    opAmount = a;
             }
             else if (l.PropertyName == "Balance" || l.ObjectName == "Balance")
             {
                 if (decimal.TryParse(l.OldValue, out var oldVal) && decimal.TryParse(l.NewValue, out var newVal))
                 {
                     isDebit = newVal < oldVal;
-                    var diff = Math.Abs(newVal - oldVal);
+                    opAmount = Math.Abs(newVal - oldVal);
                     title = isDebit ? "Списание с баланса" : "Пополнение баланса";
-                    noteText = $"{(isDebit ? "-" : "+")}{diff:0.##} ₽  (Было: {oldVal:0.##} ₽ → Стало: {newVal:0.##} ₽)";
+                    noteText = $"{(isDebit ? "-" : "+")}{opAmount:0.##} ₽  (Было: {oldVal:0.##} ₽ → Стало: {newVal:0.##} ₽)";
                 }
             }
             else if (!string.IsNullOrEmpty(noteText) && (noteText.Contains("Списание") || noteText.Contains("списание")))
@@ -156,7 +164,8 @@ public class MobileController : ControllerBase
                 type = title,
                 note = noteText,
                 createdAt = l.Created.ToString("o"),
-                isDebit
+                isDebit,
+                amount = opAmount
             };
         });
 
@@ -611,7 +620,7 @@ public class MobileController : ControllerBase
         <div class=""logo-wrap"">🌙</div>
         <h1>LUNA 2000</h1>
         <div class=""subtitle"">Официальное мобильное приложение водителя</div>
-        <div class=""badge"">Версия 1.2.0 • Android • {sizeMb} МБ</div>
+        <div class=""badge"">Версия 1.3.0 • Android • {sizeMb} МБ</div>
 
         <div id=""inAppNotice"" class=""notice-inapp"">
             ⚠️ <b>Вы открыли ссылку в мессенджере</b><br>
@@ -688,10 +697,10 @@ public class MobileController : ControllerBase
     {
         return Ok(new
         {
-            version = "1.2.0",
-            versionCode = 12,
+            version = "1.3.0",
+            versionCode = 13,
             downloadUrl = "/luna2000.apk?direct=1",
-            changelog = "Новый современный дизайн Dark Premium: темная тема по умолчанию, обновленный экран входа и улучшенный баланс"
+            changelog = "Добавлены быстрые контакты парка (Начальник, Механик, Техподдержка), фильтры истории операций и месячные итоги"
         });
     }
 }
